@@ -1,0 +1,296 @@
+TABLE OF CONTENTS
+
+mpegv.library/--background--
+mpegv.library/MpvClose
+mpegv.library/MpvControl
+mpegv.library/MpvDecode
+mpegv.library/MpvGetInfo
+mpegv.library/MpvOpen
+mpegv.library/MpvPump
+mpegv.library/MpvToGrey
+mpegv.library/MpvToRGB
+mpegv.library/MpvToYUV422
+mpegv.library/MpvVersion
+mpegv.library/MpvWrite
+
+mpegv.library/--background--                   mpegv.library/--background--
+
+    PURPOSE
+        Decodes MPEG-1 video (a .mpg Program Stream, a VCD's .dat, a bare
+        .m1v stream) by the CPU, for any program, as mpega.library decodes
+        MPEG audio. A 68020 or better; no FPU needed.
+
+        The decoder is pl_mpeg (Dominic Szablewski), made about 2.6 times
+        faster on a 68020 than it was, its pictures the same bit for bit.
+        A VCD's picture (352 x 240) takes about 11 million 68020 cycles
+        (vamos's count); an emulated 68060 decoded one in about 4 ms, well
+        inside the 33 ms a picture lasts. A 68030 or 68020 is too slow for
+        every picture: pass B pictures over (MpvControl's MPVC_SKIPB).
+
+    USE
+        Open a decoder (MpvOpen) with a read hook that gives it the
+        stream's bytes, and, for a Program Stream, a packet hook that is
+        given its other packets (its sound: MPEG audio for mpega.library,
+        private stream 1 for ac3.library). Then MpvDecode, again and
+        again: each picture in display order, the decoder's own Y, Cb and
+        Cr planes (4:2:0, not copied), with its time in 90 kHz ticks. Show
+        it with a helper: MpvToYUV422 for a graphics card's overlay
+        (Picasso96's PIP), MpvToRGB to draw (WritePixelArray), MpvToGrey
+        for an AGA screen of greys (WriteChunkyPixels or your own c2p).
+
+        Without a read hook the program gives the bytes itself (MpvWrite)
+        whenever MpvDecode answers MPVE_MORE, and says when there are no
+        more (MpvControl MPVC_END).
+
+        A decoder is used by one task at a time; different decoders may be
+        used by different tasks at once. The helpers may be called by any
+        task (they use only the picture they are given).
+
+    HOOKS
+        Called as the Amiga calls hooks: A0 the hook, A2 the decoder, A1
+        the message; with the calling task's stack. In C (gcc):
+
+        ULONG read(register struct Hook *h __asm("a0"),
+                   register APTR mpv __asm("a2"),
+                   register struct MpvRead *r __asm("a1"))
+
+        The read hook may be called during MpvOpen (a Program Stream's
+        first headers are read at once), and during MpvDecode, MpvPump and
+        MpvGetInfo. The packet hook, during MpvDecode and MpvPump.
+
+    TIMES
+        All 90 kHz ticks, integers, as MPEG stores them. A picture's
+        mpic_Time counts from the first picture's (its number times the
+        frame period, exactly: 3003 ticks a picture at 29.97); mpic_PTS adds
+        the stream's first video time stamp (a Program Stream's), to set it
+        beside its sound's (struct MpvPacket's mp_PTS).
+
+    MEMORY
+        About 3 pictures' planes and two 128 KB buffers a decoder (a VCD:
+        about 640 KB), from exec (MEMF_ANY).
+
+    LIBRARIES
+        Opens mathieeedoubbas.library (pl_mpeg keeps a picture's and a
+        packet's time in floating point too, a division each) and, if it
+        is there, mathieeesingbas.library.
+
+    LICENCE
+        MIT (LICENSE): the library, its interface and pl_mpeg alike.
+
+mpegv.library/MpvClose                               mpegv.library/MpvClose
+
+    NAME
+        MpvClose -- a decoder freed (V1)
+
+    SYNOPSIS
+        MpvClose(mpv)
+                 A0
+        VOID MpvClose(APTR);
+
+    FUNCTION
+        Frees a decoder from MpvOpen and its pictures. NULL is ignored.
+
+mpegv.library/MpvControl                           mpegv.library/MpvControl
+
+    NAME
+        MpvControl -- a setting changed, or a count read (V1)
+
+    SYNOPSIS
+        result = MpvControl(mpv, cmd, value)
+        D0                  A0   D0   D1
+        LONG MpvControl(APTR, ULONG, ULONG);
+
+    FUNCTION
+        MPVC_SKIPB      value TRUE: B pictures passed over from here, not
+                        decoded (nothing is predicted from them: a VCD's
+                        are two in three); FALSE: decoded again. Their
+                        times still count. Returns the last setting.
+        MPVC_SKIPPEDB   returns how many B pictures were passed over.
+        MPVC_ENDED      returns TRUE once the stream's end was reached.
+        MPVC_FIRSTPTS   returns the first video time stamp (90 kHz), or
+                        -1 if none has been read.
+        MPVC_END        (without a read hook) no more bytes will come:
+                        what is held is decoded, then MPVE_END.
+        MPVC_HELD       returns the bytes held, read but not yet decoded.
+
+mpegv.library/MpvDecode                             mpegv.library/MpvDecode
+
+    NAME
+        MpvDecode -- the next picture (V1)
+
+    SYNOPSIS
+        pic = MpvDecode(mpv, error)
+        D0              A0   A1
+        struct MpvPicture *MpvDecode(APTR, LONG *);
+
+    FUNCTION
+        Decodes up to the next picture in display order, reading what it
+        needs (the read hook, or what MpvWrite gave). The picture is the
+        decoder's own: valid until the next MpvDecode or MpvClose.
+
+    RESULT
+        The picture, or NULL with *error (if error is not NULL):
+        MPVE_END    the stream's end
+        MPVE_MORE   no picture yet: call again (without a read hook,
+                    after MpvWrite)
+        MPVE_READ   the read hook said it could not read
+        MPVE_STREAM not an MPEG-1 stream mpegv decodes
+
+mpegv.library/MpvGetInfo                           mpegv.library/MpvGetInfo
+
+    NAME
+        MpvGetInfo -- the stream's size and pace (V1)
+
+    SYNOPSIS
+        ok = MpvGetInfo(mpv, info)
+        D0              A0   A1
+        LONG MpvGetInfo(APTR, struct MpvInfo *);
+
+    FUNCTION
+        Fills info from the stream's sequence header (read first if it
+        has not been): its size, its pictures a second (mi_RateNum /
+        mi_RateDen, and mi_Period in 90 kHz ticks), its pixels' shape
+        (mi_AspectCode, and mi_ShownWidth: its width for its height as it
+        is meant to be seen), its bit rate, and what kind of stream it
+        turned out to be.
+
+    RESULT
+        TRUE, or FALSE if no sequence header could be read (yet).
+
+mpegv.library/MpvOpen                                 mpegv.library/MpvOpen
+
+    NAME
+        MpvOpen -- a decoder (V1)
+        MpvOpenTags -- the same, its tags as arguments
+
+    SYNOPSIS
+        mpv = MpvOpen(tags)
+        D0            A0
+        APTR MpvOpen(struct TagItem *);
+
+        mpv = MpvOpenTags(tag1, ...)
+        APTR MpvOpenTags(Tag, ...);
+
+    FUNCTION
+        A decoder for one stream.
+
+    TAGS
+        MPVA_ReadHook (struct Hook *) - the stream's bytes: the hook is
+            given a struct MpvRead (mr_Buffer, mr_Length) and returns how
+            many it put there, 0 at the end, -1 if it could not read.
+            Without one, give the bytes with MpvWrite.
+        MPVA_PacketHook (struct Hook *) - each packet of a Program Stream
+            that is not its video: a struct MpvPacket (its stream id, its
+            time if it has one, its bytes: valid during the call).
+        MPVA_Stream (ULONG) - MPVS_PROGRAM, MPVS_VIDEO, or MPVS_AUTO (the
+            default: a pack header or a sequence header first says).
+        MPVA_ReadSize (ULONG) - bytes asked of the read hook at once
+            (default 16384, at least 2048).
+        MPVA_SkipB (BOOL) - B pictures passed over from the start.
+
+    RESULT
+        The decoder, or NULL (no memory; or the read hook failed at once).
+
+mpegv.library/MpvPump                                 mpegv.library/MpvPump
+
+    NAME
+        MpvPump -- one more packet demultiplexed (V1)
+
+    SYNOPSIS
+        more = MpvPump(mpv)
+        D0             A0
+        LONG MpvPump(APTR);
+
+    FUNCTION
+        A Program Stream's next packet: video to the decoder (held until
+        MpvDecode wants it), anything else to the packet hook. For a
+        program that wants its sound ahead of the pictures (mpega.library
+        reading from a queue the packet hook fills): when the queue is
+        empty, MpvPump until it is not.
+
+    RESULT
+        TRUE, or FALSE at the stream's end (or, without a read hook, when
+        it wants more bytes; or for a bare video stream).
+
+mpegv.library/MpvToGrey                             mpegv.library/MpvToGrey
+
+    NAME
+        MpvToGrey -- a picture made 8-bit greys (V1)
+
+    SYNOPSIS
+        MpvToGrey(pic, dst, modulo, levels)
+                  A0   A1   D0      D1
+        VOID MpvToGrey(struct MpvPicture *, UBYTE *, ULONG, ULONG);
+
+    FUNCTION
+        Writes mpic_Width x mpic_Height bytes at dst, modulo bytes a row:
+        each pixel's brightness, full range 0-255 (levels 0 or 256), or
+        0 to levels - 1 (a screen's grey pens, its palette set to match).
+        For an AGA screen: WriteChunkyPixels (graphics.library 40), or a
+        chunky-to-planar routine.
+
+mpegv.library/MpvToRGB                               mpegv.library/MpvToRGB
+
+    NAME
+        MpvToRGB -- a picture made RGB (V1)
+
+    SYNOPSIS
+        MpvToRGB(pic, dst, modulo, format)
+                 A0   A1   D0      D1
+        VOID MpvToRGB(struct MpvPicture *, UBYTE *, ULONG, ULONG);
+
+    FUNCTION
+        Writes the picture at dst, modulo bytes a row, in format:
+        MPVR_RGB24 and MPVR_BGR24 (3 bytes a pixel), MPVR_ARGB32,
+        MPVR_RGBA32 and MPVR_BGRA32 (4, alpha 0xFF), MPVR_RGB565 (big-
+        endian), MPVR_RGB565PC (little-endian) and MPVR_RGB555 (2).
+        BT.601, as pl_mpeg converts. MPVR_RGB24 is WritePixelArray's
+        RECTFMT_RGB, MPVR_ARGB32 its RECTFMT_ARGB.
+
+mpegv.library/MpvToYUV422                         mpegv.library/MpvToYUV422
+
+    NAME
+        MpvToYUV422 -- a picture made packed YUV 4:2:2 (V1)
+
+    SYNOPSIS
+        MpvToYUV422(pic, dst, modulo, order)
+                    A0   A1   D0      D1
+        VOID MpvToYUV422(struct MpvPicture *, UBYTE *, ULONG, ULONG);
+
+    FUNCTION
+        Writes the picture at dst, modulo bytes a row, two pixels a
+        longword (each chroma row twice): for a graphics card's overlay,
+        which scales it (Picasso96's PIP: p96PIP_OpenTags, then
+        p96LockBitMap its P96PIP_SourceBitMap and write here). A
+        longword at a time: the card's memory across the bus.
+        order: MPVY_Y0UY1V (Y0 Cb Y1 Cr: RGBFB_YUV422CGX as the ZZ9000
+        shows it), MPVY_UY0VY1, MPVY_Y1UY0V (RGBFB_YUV422), MPVY_Y0VY1U.
+        Which a card wants for which format is the card's driver's: try
+        them on yours.
+
+mpegv.library/MpvVersion                           mpegv.library/MpvVersion
+
+    NAME
+        MpvVersion -- the library's version, in words (V1)
+
+    SYNOPSIS
+        text = MpvVersion()
+        D0
+        CONST_STRPTR MpvVersion(void);
+
+mpegv.library/MpvWrite                               mpegv.library/MpvWrite
+
+    NAME
+        MpvWrite -- the stream's next bytes given (V1)
+
+    SYNOPSIS
+        taken = MpvWrite(mpv, buf, len)
+        D0               A0   A1   D0
+        LONG MpvWrite(APTR, CONST UBYTE *, LONG);
+
+    FUNCTION
+        Without a read hook: len more bytes of the stream (copied).
+        Typically when MpvDecode answers MPVE_MORE.
+
+    RESULT
+        len, or 0 after MPVC_END.

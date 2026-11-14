@@ -1,0 +1,27 @@
+==id $Id: mpegv_lib.sfd,v 1.0 2026/11/14 $
+* mpegv.library: MPEG-1 video decoded by the CPU (pl_mpeg inside).
+* The structures and constants are in <libraries/mpegv.h>. MIT licence,
+* (c) 2026 Brian King.
+==base _MpegvBase
+==basetype struct Library *
+==libname mpegv.library
+==bias 30
+==public
+==include <exec/types.h>
+==include <utility/tagitem.h>
+==include <libraries/mpegv.h>
+==version 1
+APTR MpvOpen(struct TagItem * tags) (a0)
+==varargs
+APTR MpvOpenTags(Tag tag1, ...) (a0)
+VOID MpvClose(APTR mpv) (a0)
+LONG MpvWrite(APTR mpv, CONST UBYTE * buf, LONG len) (a0,a1,d0)
+LONG MpvPump(APTR mpv) (a0)
+struct MpvPicture * MpvDecode(APTR mpv, LONG * error) (a0,a1)
+LONG MpvGetInfo(APTR mpv, struct MpvInfo * info) (a0,a1)
+LONG MpvControl(APTR mpv, ULONG cmd, ULONG value) (a0,d0,d1)
+VOID MpvToYUV422(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG order) (a0,a1,d0,d1)
+VOID MpvToRGB(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG format) (a0,a1,d0,d1)
+VOID MpvToGrey(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG levels) (a0,a1,d0,d1)
+CONST_STRPTR MpvVersion() ()
+==end

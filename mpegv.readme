@@ -1,0 +1,45 @@
+Short:        MPEG-1 video decoder library (pl_mpeg)
+Author:       Brian King; pl_mpeg by Dominic Szablewski
+Uploader:     Brian King
+Type:         util/libs
+Version:      1.0
+Architecture: m68k-amigaos >= 3.0.0
+Distribution: Aminet
+Requires:     68020+, mathieeedoubbas.library
+Replaces:     -
+
+mpegv.library decodes MPEG-1 video by the CPU, for any program, as
+mpega.library decodes MPEG audio. A 68020 or better; no FPU needed.
+
+- Program Streams (.mpg, a VCD's .dat) are demultiplexed as they are
+  read: the video decoded, the other packets (MPEG audio, private stream
+  1) handed to the program with their times, for mpega.library or
+  ac3.library. Bare video streams (.m1v) too.
+- Pictures in display order as the decoder's own Y, Cb and Cr planes,
+  not copied, with integer 90 kHz times.
+- B pictures can be passed over when the CPU is behind.
+- Helpers: packed YUV 4:2:2 for a graphics card's overlay (Picasso96's
+  PIP, which scales it), RGB in eight formats for WritePixelArray, 8-bit
+  greys for an AGA screen (WriteChunkyPixels).
+
+The decoder is pl_mpeg by Dominic Szablewski, made about 2.6 times faster
+on a 68020, its pictures the same bit for bit. A VCD picture (352 x 240)
+takes about 11.5 million 68020 cycles; an emulated 68060 decodes one in
+about 4 ms.
+
+Contents:
+
+  mpegv/Libs/mpegv.library      copy to LIBS:
+  mpegv/Include/                libraries, clib, inline and proto headers
+  mpegv/mpegv.doc               the autodoc
+  mpegv/mpegv_lib.sfd
+  mpegv/Example/mpvplay         plays a file's pictures (RTG: in a window,
+                                RGB; AGA: a screen of greys); and its source
+  mpegv/Source/                 everything, with the tests
+
+Licence: MIT (mpegv/LICENSE), the library and pl_mpeg alike.
+
+Source: https://github.com/luvwagn/mpegv.library
+
+History:
+1.0  First release. Made for AmigaMCE.
