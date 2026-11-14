@@ -81,6 +81,15 @@ int main(int argc, char **argv)
     uint8_t h4[4];
     if (argc < 2 || !(fh = fopen(argv[1], "rb")))
         return 20;
+#ifdef __amigaos__
+    {
+        FILE *b = fopen("plm_ref.base", "w");  /* where its code is: for tests/prof.py */
+        if (b) {
+            fprintf(b, "code at %08lx\n", (unsigned long)(uintptr_t)main);
+            fclose(b);
+        }
+    }
+#endif
     if (!(fread(h4, 1, 4, fh) == 4 && !h4[0] && !h4[1] && h4[2] == 1 && h4[3] == 0xB3)) {
         fseek(fh, 0, SEEK_SET);             /* (before the demuxer: it reads at once) */
         fbuf = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);

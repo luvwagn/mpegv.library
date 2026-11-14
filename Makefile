@@ -90,15 +90,22 @@ test: build/host/mpv_test build/host/plm_ref build/68k/mpv_test build/68k/plm_re
 		|| { diff all.txt ../../tests/expected.txt | head; cat err.txt; exit 1; }
 
 # a 68020's cycles (vamos counts them): pl_mpeg built into the program, and
-# the same pictures through mpegv.library
+# the same pictures through mpegv.library; then where pl_mpeg's go, by
+# function (tests/prof.py: its PC sampled), to see what to make faster
 N ?= 60
 VAMOS_PYTHON ?= $(dir $(shell command -v vamos))python
 prof: build/68k/mpv_test build/68k/plm_ref
 	@ln -sf $(abspath $(MPG)) build/68k/bench.mpg
+	@echo "pl_mpeg built in:"
 	@cd build/68k && $(VAMOS_PYTHON) $(abspath tests/cycles.py) -- -C 68020 -m 8192 -s 64 \
 		-V prog:$(abspath build/68k) -- prog:plm_ref prog:bench.mpg $(N) nohash
+	@echo "through mpegv.library:"
 	@cd build/68k && $(VAMOS_PYTHON) $(abspath tests/cycles.py) -- -C 68020 -m 8192 -s 64 \
 		-V prog:$(abspath build/68k) -- prog:mpv_test -n $(N) -nohash prog:bench.mpg
+	@echo "by function:"
+	@m68k-amigaos-nm build/68k/plm_ref > build/68k/plm_ref.syms
+	@cd build/68k && rm -f plm_ref.base && $(VAMOS_PYTHON) $(abspath tests/prof.py) plm_ref.syms -- \
+		-C 68020 -m 8192 -s 64 --slice-cycles 700 plm_ref bench.mpg $(N) nohash 2>&1 | grep -A14 "^total"
 
 # ---- the Aminet archive: the library, its includes, autodoc, the example
 # and the whole source
