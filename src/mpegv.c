@@ -655,30 +655,18 @@ API CONST_STRPTR MpvVersion(void)
 
 #ifdef __amigaos__
 /* ---- the library */
-/* pl_mpeg keeps a few times in floating point (a picture's, a packet's:
- * a division or two each, not in its decoding); the toolchain's soft
- * float does them through the maths libraries, which a program's start-up
- * opens and a library must itself (single precision: pl_mpeg's audio
- * decoder, not used here, but linked) */
-extern struct Library *MathIeeeDoubBasBase, *MathIeeeSingBasBase;
-
+/* No maths libraries: pl_mpeg's times, frame rate and aspect are kept as
+ * stored (90 kHz, its codes), its MP2 decoder and player left out, so
+ * there is no floating point in it at all */
 int __UserLibInit(struct Library *lib)
 {
     (void)lib;
     SysBase = *(struct ExecBase *volatile *)4L;
-    if (!(MathIeeeDoubBasBase = OpenLibrary((CONST_STRPTR) "mathieeedoubbas.library", 34)))
-        return 1;
-    MathIeeeSingBasBase = OpenLibrary((CONST_STRPTR) "mathieeesingbas.library", 34);
     return 0;
 }
 
 void __UserLibCleanup(void)
 {
-    if (MathIeeeSingBasBase)
-        CloseLibrary(MathIeeeSingBasBase);
-    if (MathIeeeDoubBasBase)
-        CloseLibrary(MathIeeeDoubBasBase);
-    MathIeeeDoubBasBase = MathIeeeSingBasBase = NULL;
 }
 
 /* the jump table, in mpegv_lib.sfd's order (from bias 30) */

@@ -70,9 +70,9 @@ mpegv.library/--background--                   mpegv.library/--background--
         about 640 KB), from exec (MEMF_ANY).
 
     LIBRARIES
-        Opens mathieeedoubbas.library (pl_mpeg keeps a picture's and a
-        packet's time in floating point too, a division each) and, if it
-        is there, mathieeesingbas.library.
+        None but exec: no floating point anywhere (pl_mpeg's times are
+        kept as stored, 90 kHz; its audio decoder and player are left out),
+        so no maths libraries and no FPU.
 
     LICENCE
         MIT (LICENSE): the library, its interface and pl_mpeg alike.

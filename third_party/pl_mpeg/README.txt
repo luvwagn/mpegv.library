@@ -27,6 +27,14 @@ codes and bit rate kept (plm_video_t), and each frame's number in display
 order and picture type (plm_frame_t's index and type). None changes a
 picture.
 
+Taken out for mpegv.library (lean: video and its demuxer only, and no
+floating point, so no maths libraries): the MP2 audio decoder
+(mpega.library is faster on a 68k, and does layers I-III), the plm_t
+player and its callbacks, the demuxer's seek, start time and duration,
+and every double (a packet's time in seconds, the video's frame rate,
+pixel aspect and running time: the rate and aspect codes and 90 kHz times
+are kept; a picture's time is worked out from its number by the caller).
+
 Checked with tests/plm_ref.c and tests/mpv_test.c (each picture's hash,
 pl_mpeg's own against the library's, built for this computer and for the
 68020 under vamos: make test), and timed with tests/cycles.py (make prof).

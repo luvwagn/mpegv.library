@@ -5,7 +5,7 @@ Type:         util/libs
 Version:      1.0
 Architecture: m68k-amigaos >= 3.0.0
 Distribution: Aminet
-Requires:     68020+, mathieeedoubbas.library
+Requires:     68020+
 Replaces:     -
 
 mpegv.library decodes MPEG-1 video by the CPU, for any program, as

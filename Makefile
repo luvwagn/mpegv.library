@@ -42,7 +42,7 @@ build/mpegv.o: src/mpegv.c $(HDR)
 
 $(LIB): build/libinit.o build/mpegv.o
 	@echo "  LD    $@"
-	@$(LIBCC) -o $@.dbg $^ -lm -lamiga
+	@$(LIBCC) -o $@.dbg $^ -lamiga
 	@$(STRIP) -o $@ $@.dbg
 
 # the example: a file played in a window on an RTG (or AGA) screen
