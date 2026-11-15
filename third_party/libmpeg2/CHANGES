@@ -97,3 +97,12 @@ Half-pel both ways: each row's sums once (15 November 2026)
   sums (top six bits, low two bits) made once and used for the output
   rows above and below it: two longword reads per output longword, not
   four. The same bytes (tests/mc_test.c).
+
+Coefficients' dequantising and sign (15 November 2026)
+------------------------------------------------------
+
+- libmpeg2/slice.c: each coefficient's (2 * level + 1) or level times its
+  quantiser as MULU.W (both 16 bits: the quantiser at most 255 * 112),
+  where gcc used MULS.L; its sign by a test and NEG, not the mask
+  (SBITS) made twice. The same values; the escape codes' rare paths are
+  as they were.

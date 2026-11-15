@@ -344,6 +344,20 @@ static inline int get_chroma_dc_dct_diff (mpeg2_decoder_t * const decoder)
 #undef bit_ptr
 }
 
+/* mpegv: a coefficient's dequantising, (2 * level + 1) or level times
+ * its quantiser (the matrix's value times the scale: at most 255 * 112),
+ * as a 16 x 16 bit MULU.W: gcc would use a 68020's MULS.L, half as fast
+ * again, for the same product */
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+#define MV_MULQ(a,q) ((int) ((uint32_t) (uint16_t) (a) * (uint16_t) (q)))
+/* and its sign, the bit after its code: a test and a NEG, not the mask
+ * made twice (the same value) */
+#define MV_SIGN(val,bit_buf) do { if ((int32_t) (bit_buf) < 0) val = -val; } while (0)
+#else
+#define MV_MULQ(a,q) ((a) * (q))
+#define MV_SIGN(val,bit_buf) (val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1))
+#endif
+
 #define SATURATE(val)				\
 do {						\
     val <<= 4;					\
@@ -387,10 +401,10 @@ static void get_intra_block_B14 (mpeg2_decoder_t * const decoder,
 	    j = scan[i];
 	    bit_buf <<= tab->len;
 	    bits += tab->len + 1;
-	    val = (tab->level * quant_matrix[j]) >> 4;
+	    val = MV_MULQ (tab->level, quant_matrix[j]) >> 4;
 
 	    /* if (bitstream_get (1)) val = -val; */
-	    val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1);
+	    MV_SIGN (val, bit_buf);
 
 	    SATURATE (val);
 	    dest[j] = val;
@@ -497,10 +511,10 @@ static void get_intra_block_B15 (mpeg2_decoder_t * const decoder,
 		j = scan[i];
 		bit_buf <<= tab->len;
 		bits += tab->len + 1;
-		val = (tab->level * quant_matrix[j]) >> 4;
+		val = MV_MULQ (tab->level, quant_matrix[j]) >> 4;
 
 		/* if (bitstream_get (1)) val = -val; */
-		val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1);
+		MV_SIGN (val, bit_buf);
 
 		SATURATE (val);
 		dest[j] = val;
@@ -614,10 +628,10 @@ static int get_non_intra_block (mpeg2_decoder_t * const decoder,
 	    j = scan[i];
 	    bit_buf <<= tab->len;
 	    bits += tab->len + 1;
-	    val = ((2 * tab->level + 1) * quant_matrix[j]) >> 5;
+	    val = MV_MULQ (2 * tab->level + 1, quant_matrix[j]) >> 5;
 
 	    /* if (bitstream_get (1)) val = -val; */
-	    val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1);
+	    MV_SIGN (val, bit_buf);
 
 	    SATURATE (val);
 	    dest[j] = val;
@@ -728,13 +742,13 @@ static void get_mpeg1_intra_block (mpeg2_decoder_t * const decoder)
 	    j = scan[i];
 	    bit_buf <<= tab->len;
 	    bits += tab->len + 1;
-	    val = (tab->level * quant_matrix[j]) >> 4;
+	    val = MV_MULQ (tab->level, quant_matrix[j]) >> 4;
 
 	    /* oddification */
 	    val = (val - 1) | 1;
 
 	    /* if (bitstream_get (1)) val = -val; */
-	    val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1);
+	    MV_SIGN (val, bit_buf);
 
 	    SATURATE (val);
 	    dest[j] = val;
@@ -851,13 +865,13 @@ static int get_mpeg1_non_intra_block (mpeg2_decoder_t * const decoder)
 	    j = scan[i];
 	    bit_buf <<= tab->len;
 	    bits += tab->len + 1;
-	    val = ((2 * tab->level + 1) * quant_matrix[j]) >> 5;
+	    val = MV_MULQ (2 * tab->level + 1, quant_matrix[j]) >> 5;
 
 	    /* oddification */
 	    val = (val - 1) | 1;
 
 	    /* if (bitstream_get (1)) val = -val; */
-	    val = (val ^ SBITS (bit_buf, 1)) - SBITS (bit_buf, 1);
+	    MV_SIGN (val, bit_buf);
 
 	    SATURATE (val);
 	    dest[j] = val;
