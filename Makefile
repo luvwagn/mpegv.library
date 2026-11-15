@@ -48,6 +48,11 @@ build/libinit.o: src/libinit.c src/libinit.h
 	@echo "  CC    $<"
 	@$(LIBCC) -Wall -Isrc -DLIB_RT_VERSION=2 -c -o $@ $<
 
+build/%.o: src/%.s
+	@mkdir -p build
+	@echo "  AS    $<"
+	@$(AS) -o $@ $<
+
 build/%.o: src/%.c $(HDR)
 	@mkdir -p build
 	@echo "  CC    $<"
@@ -63,7 +68,7 @@ build/l2/%.o: $(L2)/libmpeg2/%.c $(HDR)
 	@echo "  CC    $<"
 	@$(LIBCC) -Wall -Wno-unused $(INC) -c -o $@ $<
 
-$(LIB): build/libinit.o build/mpegv.o build/convert.o $(L2OBJ)
+$(LIB): build/libinit.o build/mpegv.o build/convert.o build/convert_68k.o $(L2OBJ)
 	@echo "  LD    $@"
 	@$(LIBCC) -o $@.dbg $^ -lamiga
 	@$(STRIP) -o $@ $@.dbg
@@ -91,7 +96,8 @@ build/68k/mpv_test: tests/mpv_test.c $(HDR) $(LIB)
 	@cp $(LIB) build/68k/Libs/
 # the decoder built into the program (for make prof), each source its own
 # object, so that their static functions can be placed (tests/syms.py)
-PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC))) build/l2/idct_68k.o
+PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC))) build/l2/idct_68k.o \
+          build/convert_68k.o
 build/68k/obj/%.o: tests/%.c $(HDR)
 	@mkdir -p build/68k/obj
 	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w -DMPV_STATIC $(INC) -c -o $@ $<
