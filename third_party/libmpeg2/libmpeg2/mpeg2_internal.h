@@ -313,5 +313,6 @@ extern mpeg2_mc_t mpeg2_mc_altivec;
 extern mpeg2_mc_t mpeg2_mc_alpha;
 extern mpeg2_mc_t mpeg2_mc_vis;
 extern mpeg2_mc_t mpeg2_mc_arm;
+extern mpeg2_mc_t mpeg2_mc_mpegv;	/* mpegv: motion_comp.c's */
 
 #endif /* LIBMPEG2_MPEG2_INTERNAL_H */

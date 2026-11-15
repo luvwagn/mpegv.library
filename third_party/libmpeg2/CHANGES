@@ -42,3 +42,17 @@ The IDCT made quicker, the same to the bit (14 November 2026)
   tests/idct_test.c checks it against libmpeg2's C on random blocks of
   every kind (and on a 68020 under vamos), and libmpeg2's IEEE 1180
   accuracy.
+
+Motion compensation four pixels at a time, the same to the bit (14 November 2026)
+---------------------------------------------------------------------------------
+
+- libmpeg2/motion_comp.c, libmpeg2/mpeg2_internal.h: mpeg2_mc_mpegv, the
+  sixteen prediction functions (put and average; whole, half across,
+  half down, half both ways; 16 and 8 wide) a longword at a time, chosen
+  by mpeg2_mc_init in place of libmpeg2's C (kept for MPEGV_PLAIN). Each
+  byte's average as libmpeg2's: (a + b + 1) >> 1 as (a | b) - (((a ^ b) &
+  0xfe) >> 1), (a + b + c + d + 2) >> 2 from the top six bits' sum and
+  the low two bits' (and 2) apart. A longword is read at any address (a
+  68020 or later allows it); on the build machine through memcpy-like
+  unaligned access. tests/mc_test.c checks every function against
+  libmpeg2's C at every alignment.

@@ -6,7 +6,8 @@
  * each picture's planes hashed.
  * GPL-3.0-or-later, (c) 2026 Brian King.
  *
- *   mpv_test [-n pictures] [-nohash] [-skipb] [-all] [-s kind] [-dump out.yuv] file
+ *   mpv_test [-n pictures] [-nohash] [-skipb] [-all] [-s kind] [-dump out.yuv]
+ *            [-convert y|r|g] file
  *
  * Without -all: each picture's hash, and the total. With -all: the
  * stream's details, and each picture's planes, packed YUV (each order),
@@ -35,6 +36,7 @@ struct Library *MpegvBase;
 #endif
 
 static FILE *fh, *dump;
+static int convert;                         /* -convert: each picture made YUV 4:2:2, RGB565 or grey (make prof) */
 static unsigned long packets, packet_bytes, packet_times, packet_sub, packet_nav;
 static unsigned long stream_kind = MPVS_AUTO;
 
@@ -176,6 +178,17 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
         }
         lw = p->mpic_Width;
         lh = p->mpic_Height;
+        if (convert) {
+            static UBYTE *cv;
+            if (!cv && !(cv = malloc((size_t)lw * lh * 2)))
+                break;
+            if (convert == 'y')
+                MpvToYUV422(p, cv, (ULONG)lw * 2, MPVY_Y0UY1V);
+            else if (convert == 'r')
+                MpvToRGB(p, cv, (ULONG)lw * 2, MPVR_RGB565);
+            else
+                MpvToGrey(p, cv, lw, 0);
+        }
         if (!n && all && !skipb && !push && !flush_run && MpvGetInfo(m, &in)) {
             printf("info %ux%u rate %u %lu/%lu period %lu aspect %u shown %lu bitrate %lu kind %lu\n",
                    (unsigned)in.mi_Width, (unsigned)in.mi_Height, (unsigned)in.mi_RateCode,
@@ -254,6 +267,8 @@ int main(int argc, char **argv)
             max = atol(argv[++i]);
         else if (!strcmp(argv[i], "-nohash"))
             nohash = 1;
+        else if (!strcmp(argv[i], "-convert") && i + 1 < argc)
+            convert = argv[++i][0];
         else if (!strcmp(argv[i], "-skipb"))
             skipb = 1;
         else if (!strcmp(argv[i], "-dump") && i + 1 < argc) {
