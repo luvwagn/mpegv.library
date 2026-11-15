@@ -104,7 +104,9 @@ make test       each picture against libmpeg2's own C (as released) on
                 this computer, built with 2.0's exact IDCT; the IDCT
                 block by block against the whole transform's C (its 68k
                 columns too), and its IEEE 1180 accuracy; motion
-                compensation block by block against libmpeg2's; times,
+                compensation block by block against libmpeg2's; the
+                68k's coefficient decoding against slice.c's C on random
+                streams; times,
                 flags, helpers, B-skipping, pushing and flushing as
                 expected, here and through the library on a 68020 under
                 vamos (amitools)

@@ -22,7 +22,8 @@ def stage(n):
         return "IDCT"
     if n.startswith("MC_") or n.startswith("motion_") or n.startswith("mpeg2_mc") or n.startswith("mc_"):
         return "motion comp."
-    if n.startswith("get_") or n.startswith("slice_") or n == "mpeg2_slice" or n.startswith("decode_"):
+    if n.startswith("get_") or n.startswith("slice_") or n == "mpeg2_slice" or n.startswith("decode_") \
+            or n.startswith("mv_vlc"):
         return "VLC/blocks"
     if n.startswith("mpeg2_") or n in ("step", "packet", "queue", "give", "more", "run", "begin", "shown",
                                         "copy_chunk", "skip_chunk", "seek_chunk", "memcpy", "memmove"):

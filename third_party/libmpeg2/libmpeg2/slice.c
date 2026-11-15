@@ -344,6 +344,11 @@ static inline int get_chroma_dc_dct_diff (mpeg2_decoder_t * const decoder)
 #undef bit_ptr
 }
 
+#if defined (MPEGV) && !defined (MPEGV_PLAIN) && defined (__mc68020__) \
+    && !defined (MPEGV_NO_ASM)
+#define MV_VLC_ASM 1
+#endif
+
 /* mpegv: a coefficient's dequantising, (2 * level + 1) or level times
  * its quantiser (the matrix's value times the scale: at most 255 * 112),
  * as a 16 x 16 bit MULU.W: gcc would use a 68020's MULS.L, half as fast
@@ -365,6 +370,7 @@ do {						\
 	val = (SBITS (val, 1) ^ 2047) << 4;	\
 } while (0)
 
+#if !defined (MV_VLC_ASM) || defined (MPEGV_VLC_TEST)
 static void get_intra_block_B14 (mpeg2_decoder_t * const decoder,
 				 const uint16_t * const quant_matrix)
 {
@@ -953,6 +959,89 @@ static int get_mpeg1_non_intra_block (mpeg2_decoder_t * const decoder)
     return i;
 }
 
+#endif /* !MV_VLC_ASM || MPEGV_VLC_TEST */
+
+/* mpegv 2.1: on a 68020 or later the blocks' coefficients are vlc_68k.s's
+ * (the functions above, to the bit, with the bit buffer in registers
+ * across the block). Its codes of 8 bits or fewer are one look-up in a
+ * table of 256 by the next 8 bits, built here from the tables above:
+ * the run (0x1000 + 65 an escape, 0x2000 a longer code), the level, the
+ * code's length with its sign's (the end of the block's: its own), the
+ * code's own (past the block's end). */
+#ifdef MV_VLC_ASM
+typedef struct {
+    const int16_t (* fast)[4];	/* the next 8 bits' code */
+    const int16_t (* first)[4];	/* a non-intra block's first */
+    const DCTtab * t10, * t13, * t15, * t16;
+} mv_vlctabs;
+
+/* (a non-intra block's tables: its level 2 * level + 1) */
+static int16_t mv_fast_b14[256][4], mv_fast_b15[256][4];
+static int16_t mv_fast_ni[256][4], mv_fast_dc[256][4];
+static const mv_vlctabs mv_tabs_b14 = {
+    mv_fast_b14, mv_fast_dc, DCT_B14_10, DCT_13, DCT_15, DCT_16
+};
+static const mv_vlctabs mv_tabs_ni = {
+    mv_fast_ni, mv_fast_dc, DCT_B14_10, DCT_13, DCT_15, DCT_16
+};
+static const mv_vlctabs mv_tabs_b15 = {
+    mv_fast_b15, mv_fast_dc, DCT_B15_10, DCT_13, DCT_15, DCT_16
+};
+
+#define MV_VLC_ARGS uint32_t * bitstream, const uint16_t * quant, \
+    const uint8_t * scan, int16_t * dest, const mv_vlctabs * tabs
+extern int mv_vlc68k_ni2 (MV_VLC_ARGS);
+extern int mv_vlc68k_intra2 (MV_VLC_ARGS);
+extern int mv_vlc68k_ni1 (MV_VLC_ARGS);
+extern int mv_vlc68k_intra1 (MV_VLC_ARGS);
+#define MV_VLC(f,decoder,quant,tabs)					\
+    mv_vlc68k_ ## f (&(decoder)->bitstream_buf, (quant), (decoder)->scan,	\
+		     (decoder)->DCTblock, (tabs))
+
+static void mv_vlc_entry (int16_t * e, const DCTtab * tab, int esc, int ni)
+{
+    if (!tab) {			/* longer than 8 bits */
+	e[0] = 0x2000;
+	e[1] = e[2] = 0;
+    } else if (tab->run == 65) {	/* escape */
+	e[0] = 0x1000 + 65;
+	e[1] = 0;
+	e[2] = 12;
+    } else if (tab->run == 129) {	/* end of block */
+	e[0] = 129;
+	e[1] = 0;
+	e[2] = tab->len;
+    } else {
+	e[0] = tab->run;
+	e[1] = ni ? 2 * tab->level + 1 : tab->level;
+	e[2] = tab->len + 1;
+    }
+    /* past the block's end: the length taken, and whether (as a code of
+     * 6 to 8 bits) slice.c takes it for an escape */
+    e[3] = tab ? tab->len | (esc ? 0x100 : 0) : 0;
+}
+
+void mv_vlc_init (void)
+{
+    int k;
+
+    for (k = 0; k < 256; k++) {
+	const DCTtab * b14 = (k < 4) ? (const DCTtab *) 0 :
+	    (k >= 0x28) ? DCT_B14AC_5 + (k >> 3) - 5 : DCT_B14_8 + k - 4;
+	mv_vlc_entry (mv_fast_b14[k], b14, k < 0x28, 0);
+	mv_vlc_entry (mv_fast_ni[k], b14, k < 0x28, 1);
+	mv_vlc_entry (mv_fast_dc[k],
+		      (k >= 0x28) ? DCT_B14DC_5 + (k >> 3) - 5 : b14, k < 0x28, 1);
+	mv_vlc_entry (mv_fast_b15[k],
+		      (k < 4) ? (const DCTtab *) 0 : DCT_B15_8 + k - 4, 1, 0);
+    }
+}
+#elif defined (MPEGV) && !defined (MPEGV_PLAIN)
+void mv_vlc_init (void)
+{
+}
+#endif
+
 static inline void slice_intra_DCT (mpeg2_decoder_t * const decoder,
 				    const int cc,
 				    uint8_t * const dest, const int stride)
@@ -969,6 +1058,14 @@ static inline void slice_intra_DCT (mpeg2_decoder_t * const decoder,
 	decoder->DCTblock[0] =
 	    decoder->dc_dct_pred[cc] += get_chroma_dc_dct_diff (decoder);
 
+#ifdef MV_VLC_ASM
+    if (decoder->mpeg1) {
+	if (decoder->coding_type != D_TYPE)
+	    MV_VLC (intra1, decoder, decoder->quantizer_matrix[0], &mv_tabs_b14);
+    } else
+	MV_VLC (intra2, decoder, decoder->quantizer_matrix[cc ? 2 : 0],
+		decoder->intra_vlc_format ? &mv_tabs_b15 : &mv_tabs_b14);
+#else
     if (decoder->mpeg1) {
 	if (decoder->coding_type != D_TYPE)
 	    get_mpeg1_intra_block (decoder);
@@ -976,6 +1073,7 @@ static inline void slice_intra_DCT (mpeg2_decoder_t * const decoder,
 	get_intra_block_B15 (decoder, decoder->quantizer_matrix[cc ? 2 : 0]);
     else
 	get_intra_block_B14 (decoder, decoder->quantizer_matrix[cc ? 2 : 0]);
+#endif
     MV_IDCT_COPY (decoder) (decoder->DCTblock, dest, stride);
 #undef bit_buf
 #undef bits
@@ -988,11 +1086,19 @@ static inline void slice_non_intra_DCT (mpeg2_decoder_t * const decoder,
 {
     int last;
 
+#ifdef MV_VLC_ASM
+    if (decoder->mpeg1)
+	last = MV_VLC (ni1, decoder, decoder->quantizer_matrix[1], &mv_tabs_ni);
+    else
+	last = MV_VLC (ni2, decoder, decoder->quantizer_matrix[cc ? 3 : 1],
+		       &mv_tabs_ni);
+#else
     if (decoder->mpeg1)
 	last = get_mpeg1_non_intra_block (decoder);
     else
 	last = get_non_intra_block (decoder,
 				    decoder->quantizer_matrix[cc ? 3 : 1]);
+#endif
     MV_IDCT_ADD (decoder) (last, decoder->DCTblock, dest, stride);
 }
 

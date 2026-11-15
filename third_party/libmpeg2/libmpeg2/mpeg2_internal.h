@@ -260,6 +260,10 @@ void mpeg2_set_fbuf (mpeg2dec_t * mpeg2dec, int b_type);
 
 /* idct.c */
 extern void mpeg2_idct_init (uint32_t accel);
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+/* slice.c: vlc_68k.s's tables (mpegv) */
+void mv_vlc_init (void);
+#endif
 extern uint8_t mpeg2_scan_norm[64];
 extern uint8_t mpeg2_scan_alt[64];
 

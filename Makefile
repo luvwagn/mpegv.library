@@ -33,9 +33,10 @@ L2SRC   = $(addprefix $(L2)/libmpeg2/,alloc.c cpu_accel.c cpu_state.c decode.c h
           motion_comp.c slice.c)
 SRC     = src/mpegv.c src/convert.c $(L2SRC)
 L2OBJ   = $(patsubst $(L2)/libmpeg2/%.c,build/l2/%.o,$(L2SRC)) build/l2/idct_68k.o \
-          build/l2/idct_aan_68k.o
-# the 68k's own: the IDCT's columns written by hand (the host builds the C)
-L2ASM   = $(L2)/libmpeg2/idct_68k.s $(L2)/libmpeg2/idct_aan_68k.s
+          build/l2/idct_aan_68k.o build/l2/vlc_68k.o
+# the 68k's own: the IDCT's columns and the coefficients' decoding written
+# by hand (the host builds the C)
+L2ASM   = $(L2)/libmpeg2/idct_68k.s $(L2)/libmpeg2/idct_aan_68k.s $(L2)/libmpeg2/vlc_68k.s
 AS      = m68k-amigaos-as -m68020
 FIX     = tests/fixtures/ps.mpg tests/fixtures/es.m1v tests/fixtures/pal.m2v \
           tests/fixtures/ntsc.m2v tests/fixtures/dvd.vob
@@ -105,7 +106,7 @@ build/68k/mpv_test: tests/mpv_test.c $(HDR) $(LIB)
 	@cp $(LIB) build/68k/Libs/
 # the decoder built into the program (for make prof), each source its own
 # object, so that their static functions can be placed (tests/syms.py)
-PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC))) build/l2/idct_68k.o build/l2/idct_aan_68k.o \
+PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC))) build/l2/idct_68k.o build/l2/idct_aan_68k.o build/l2/vlc_68k.o \
           build/convert_68k.o
 build/68k/obj/%.o: tests/%.c $(HDR)
 	@mkdir -p build/68k/obj
@@ -139,9 +140,16 @@ build/68k/mc_test: tests/mc_test.c $(HDR) $(SRC)
 	@mkdir -p build/68k
 	@echo "  CC    $@"
 	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $<
+# the blocks' coefficients as vlc_68k.s decodes them against slice.c's C
+# (the rest of libmpeg2 linked in, as slice.c needs it)
+VLCOBJ  = $(filter-out build/l2/slice.o,$(L2OBJ))
+build/68k/vlc_test: tests/vlc_test.c $(HDR) $(L2)/libmpeg2/slice.c $(VLCOBJ)
+	@mkdir -p build/68k
+	@echo "  CC    $@"
+	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $< $(VLCOBJ)
 
 test: build/host/mpv_test build/host/mpv_exact build/host/mpv_plain build/68k/mpv_test $(FIX) build/host/idct_test \
-		build/host/idct_exact build/host/mc_test build/68k/idct_test build/68k/mc_test $(LIB)
+		build/host/idct_exact build/host/mc_test build/68k/idct_test build/68k/mc_test build/68k/vlc_test $(LIB)
 	@python3 -c "import sys; d=open('$(LIB)','rb').read(); i=d.find(bytes([0x4a,0xfc])); \
 		sys.exit(0 if i >= 0 and d[i+11] == $(LIBVER) else 'its Resident says version %d, not $(LIBVER)' % d[i+11])" \
 		&& echo "  CHECK the library's Resident: version $(LIBVER), as LibVersion (ramlib turns an older one away)"
@@ -149,7 +157,8 @@ test: build/host/mpv_test build/host/mpv_exact build/host/mpv_plain build/68k/mp
 		&& build/host/idct_exact 20000 | sed 's/^/(2.0, MPEGV_EXACT_IDCT) /' >> build/host/idct.txt \
 		|| { cat build/host/idct.txt; exit 1; }; sed 's/^/  /' build/host/idct.txt
 	@cd build/68k && { vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:idct_test 20000 2>/dev/null \
-		&& vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:mc_test 300; } 2>/dev/null \
+		&& vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:mc_test 300 \
+		&& vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:vlc_test 20000; } 2>/dev/null \
 		> idct.txt || { cat idct.txt; exit 1; }; sed 's/^/  (68020) /' idct.txt
 	@for f in $(FIX); do \
 		build/host/mpv_plain $$f > build/host/ref.txt; \

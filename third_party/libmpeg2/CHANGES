@@ -137,3 +137,15 @@ A faster IDCT, within IEEE 1180 (mpegv 2.1, 15 November 2026)
   mean 0.0004). MPEGV_EXACT_IDCT builds 2.0's IDCT, libmpeg2's to the
   bit, which make test uses to check everything else against libmpeg2's
   own C.
+
+- libmpeg2/slice.c, libmpeg2/vlc_68k.s (new): a block's coefficients
+  (get_non_intra_block, get_intra_block_B14 and _B15, and MPEG-1's two)
+  decoded in 68k assembler on a 68020 or later, the bit buffer, its count
+  and pointer in registers across the block. A code of 8 bits or fewer is
+  one look-up by the next 8 bits in a table of 256 (built at start from
+  vlc.h's: run, level or 2 * level + 1, the code's length with its
+  sign's), one LSL.L taking the code and its sign together (the sign into
+  the carry). Longer codes and escapes are the C's sums. The same
+  coefficients, i and bitstream state as the C, corrupt streams included
+  (a code past the block's end of 6 to 8 bits taken for an escape, as the
+  C does): tests/vlc_test.c holds them to it on random streams.
