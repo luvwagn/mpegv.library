@@ -56,3 +56,10 @@ Motion compensation four pixels at a time, the same to the bit (14 November 2026
   68020 or later allows it); on the build machine through memcpy-like
   unaligned access. tests/mc_test.c checks every function against
   libmpeg2's C at every alignment.
+
+The bitstream's 16 bits as one word (14 November 2026)
+------------------------------------------------------
+
+- libmpeg2/vlc.h: GETWORD reads the next two bytes as one (big-endian)
+  word on a 68020 or later (any address), not as two bytes shifted
+  together. The same bits.

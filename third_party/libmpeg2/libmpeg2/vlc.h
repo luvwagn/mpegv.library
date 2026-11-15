@@ -24,11 +24,22 @@
 #ifndef LIBMPEG2_VLC_H
 #define LIBMPEG2_VLC_H
 
+#if defined (MPEGV) && !defined (MPEGV_PLAIN) && defined (__mc68020__)
+/* mpegv: on a 68020 or later the stream's next 16 bits are one word,
+ * read at any address (big-endian, as the stream is) */
+typedef uint16_t __attribute__ ((__may_alias__)) mv_word;
+#define GETWORD(bit_buf,shift,bit_ptr)				\
+do {								\
+    bit_buf |= (uint32_t) *(const mv_word *)(bit_ptr) << (shift);	\
+    bit_ptr += 2;						\
+} while (0)
+#else
 #define GETWORD(bit_buf,shift,bit_ptr)				\
 do {								\
     bit_buf |= ((bit_ptr[0] << 8) | bit_ptr[1]) << (shift);	\
     bit_ptr += 2;						\
 } while (0)
+#endif
 
 static inline void bitstream_init (mpeg2_decoder_t * decoder,
 				   const uint8_t * start)
