@@ -106,3 +106,12 @@ Coefficients' dequantising and sign (15 November 2026)
   where gcc used MULS.L; its sign by a test and NEG, not the mask
   (SBITS) made twice. The same values; the escape codes' rare paths are
   as they were.
+
+The start-code scan four bytes at a time (15 November 2026)
+-----------------------------------------------------------
+
+- libmpeg2/decode.c: copy_chunk and skip_chunk take four bytes at once
+  (a longword read, and for copy_chunk written) while they cannot end a
+  start code: none of them zero, and the last two bytes before them not
+  both zero (nor 00 00 01). Otherwise byte by byte as before. The same
+  chunks, the same state.

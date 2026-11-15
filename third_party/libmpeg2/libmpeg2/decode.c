@@ -48,6 +48,19 @@ const mpeg2_info_t * mpeg2_info (mpeg2dec_t * mpeg2dec)
     return &(mpeg2dec->info);
 }
 
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+/* mpegv: a longword at any address, big-endian (the stream's order) */
+#if defined (__mc68020__)
+#define MV_LD32(p) (*(const uint32_t *)(p))
+#define MV_ST32(p,v) (*(uint32_t *)(p) = (v))
+#else
+#define MV_LD32(p) (((uint32_t)(p)[0] << 24) | ((uint32_t)(p)[1] << 16) | \
+		    ((uint32_t)(p)[2] << 8) | (p)[3])
+#define MV_ST32(p,v) ((p)[0] = (v) >> 24, (p)[1] = (v) >> 16,		\
+		      (p)[2] = (v) >> 8, (p)[3] = (v))
+#endif
+#endif
+
 static inline int skip_chunk (mpeg2dec_t * mpeg2dec, int bytes)
 {
     uint8_t * current;
@@ -63,6 +76,21 @@ static inline int skip_chunk (mpeg2dec_t * mpeg2dec, int bytes)
     limit = current + bytes;
 
     do {
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+	/* mpegv: four bytes at once while they cannot end a start code: no
+	 * zero among them, and the two before not both zero (nor 00 00 01) */
+	while (limit - current >= 4 && (shift & 0x00ffff00) &&
+	       shift != 0x00000100) {
+	    uint32_t w = MV_LD32 (current);
+
+	    if ((w - 0x01010101u) & ~w & 0x80808080u)
+		break;
+	    shift = w << 8;
+	    current += 4;
+	}
+	if (current >= limit)
+	    break;
+#endif
 	byte = *current++;
 	if (shift == 0x00000100) {
 	    int skipped;
@@ -97,6 +125,23 @@ static inline int copy_chunk (mpeg2dec_t * mpeg2dec, int bytes)
     limit = current + bytes;
 
     do {
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+	/* mpegv: four bytes at once while they cannot end a start code (as
+	 * skip_chunk's), copied as a longword */
+	while (limit - current >= 4 && (shift & 0x00ffff00) &&
+	       shift != 0x00000100) {
+	    uint32_t w = MV_LD32 (current);
+
+	    if ((w - 0x01010101u) & ~w & 0x80808080u)
+		break;
+	    MV_ST32 (chunk_ptr, w);
+	    shift = w << 8;
+	    current += 4;
+	    chunk_ptr += 4;
+	}
+	if (current >= limit)
+	    break;
+#endif
 	byte = *current++;
 	if (shift == 0x00000100) {
 	    int copied;
