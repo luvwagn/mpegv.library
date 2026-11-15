@@ -115,3 +115,10 @@ The start-code scan four bytes at a time (15 November 2026)
   start code: none of them zero, and the last two bytes before them not
   both zero (nor 00 00 01). Otherwise byte by byte as before. The same
   chunks, the same state.
+
+Positions times strides as 16-bit products (15 November 2026)
+-------------------------------------------------------------
+
+- libmpeg2/slice.c: in the 4:2:0 motion macros (frame, field, dual
+  prime, zero), a row position times the stride as MULS.W (both 16
+  bits), where gcc used MULS.L. The same addresses.
