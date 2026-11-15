@@ -88,3 +88,12 @@ MPEG-2's mismatch row done once (15 November 2026)
 - libmpeg2/slice.c, libmpeg2/idct.c: MPEG-1's blocks go to their own
   IDCT entries (mpegv_idct_copy1, mpegv_idct_add1: decoder->mpeg1 chooses
   at each block), which do not look for the mismatch row.
+
+Half-pel both ways: each row's sums once (15 November 2026)
+-----------------------------------------------------------
+
+- libmpeg2/motion_comp.c: MC_put_xy and MC_avg_xy (16 and 8 wide) work
+  down a strip four pixels wide, each reference row's horizontal pair
+  sums (top six bits, low two bits) made once and used for the output
+  rows above and below it: two longword reads per output longword, not
+  four. The same bytes (tests/mc_test.c).

@@ -212,8 +212,51 @@ MV_MC_FUNC (put,x)
 MV_MC_FUNC (avg,x)
 MV_MC_FUNC (put,y)
 MV_MC_FUNC (avg,y)
-MV_MC_FUNC (put,xy)
-MV_MC_FUNC (avg,xy)
+
+/* half-pel both ways: a strip four pixels wide at a time, down the
+ * block, each reference row's pair sums (its top six bits', its low two
+ * bits') made once and used for the output rows above and below it:
+ * two reads a longword, not four, and half the adding */
+#define MV_XY_FUNC(op,w)						\
+static void MC_##op##_xy_##w##_mpegv (uint8_t * dest, const uint8_t * ref, \
+				      const int stride, int height)	\
+{									\
+    int i;								\
+									\
+    for (i = 0; i < w; i += 4) {					\
+	const uint8_t * r = ref + i;					\
+	uint8_t * d = dest + i;						\
+	uint32_t a = MV_LD (r), b = MV_LD (r + 1);			\
+	uint32_t hi = ((a >> 2) & 0x3f3f3f3fu) + ((b >> 2) & 0x3f3f3f3fu);	\
+	uint32_t lo = (a & 0x03030303u) + (b & 0x03030303u) + 0x02020202u;	\
+	int n = height;							\
+									\
+	do {								\
+	    uint32_t h2, l2, p;						\
+									\
+	    r += stride;						\
+	    a = MV_LD (r);						\
+	    b = MV_LD (r + 1);						\
+	    h2 = ((a >> 2) & 0x3f3f3f3fu) + ((b >> 2) & 0x3f3f3f3fu);	\
+	    l2 = (a & 0x03030303u) + (b & 0x03030303u);		\
+	    p = hi + h2 + (((lo + l2) >> 2) & 0x03030303u);		\
+	    hi = h2;							\
+	    lo = l2 + 0x02020202u;					\
+	    MV_XY_##op (d, p);						\
+	    d += stride;						\
+	} while (--n);							\
+    }									\
+}
+#define MV_XY_put(d,p) (*(mv_long *)(d) = (p))
+#define MV_XY_avg(d,p) do {						\
+    uint32_t q = MV_LD (d);						\
+    *(mv_long *)(d) = MV_AVG2 ((p), q);					\
+} while (0)
+
+MV_XY_FUNC (put,16)
+MV_XY_FUNC (put,8)
+MV_XY_FUNC (avg,16)
+MV_XY_FUNC (avg,8)
 
 MPEG2_MC_EXTERN (mpegv)
 #endif
