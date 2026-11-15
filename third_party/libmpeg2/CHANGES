@@ -85,3 +85,6 @@ MPEG-2's mismatch row done once (15 November 2026)
   with rows 0, 1, 4, 5 otherwise, the products go into rows 2 and 3 for
   the new MV_LOW7M columns (mv_cols68k_<copy|add>_low7m), else the row
   is copied in whole. The same sums, so the same pixels.
+- libmpeg2/slice.c, libmpeg2/idct.c: MPEG-1's blocks go to their own
+  IDCT entries (mpegv_idct_copy1, mpegv_idct_add1: decoder->mpeg1 chooses
+  at each block), which do not look for the mismatch row.

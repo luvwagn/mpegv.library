@@ -487,7 +487,7 @@ void mv_cols (const int16_t * b, uint8_t * dest, const int stride,
 
 static inline __attribute__ ((always_inline))
 void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
-	      const int add)
+	      const int add, const int mpeg2)
 {
     int r, used = 0, mm = 0;
 
@@ -497,7 +497,7 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	int32_t high = ((int32_t *)b)[1] | ((int32_t *)b)[3];
 	int32_t low = ((int32_t *)b)[2] | b[1];
 
-	if (r == 7 && !(low | ((int32_t *)b)[1] | b[0] | b[6]) &&
+	if (mpeg2 && r == 7 && !(low | ((int32_t *)b)[1] | b[0] | b[6]) &&
 	    (b[7] == 16 || b[7] == -16)) {
 	    /* the last row MPEG-2's mismatch coefficient alone, +16 or
 	     * -16: below, not as a row */
@@ -623,14 +623,26 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 static void mpegv_idct_copy (int16_t * block, uint8_t * dest,
 			     const int stride)
 {
-    mv_idct (block, dest, stride, 0);
+    mv_idct (block, dest, stride, 0, 1);
 }
 
-static void mpegv_idct_add (const int last, int16_t * block,
-			    uint8_t * dest, const int stride)
+/* MPEG-1's: no mismatch coefficient to look for */
+static void mpegv_idct_copy_1 (int16_t * block, uint8_t * dest,
+			       const int stride)
+{
+    mv_idct (block, dest, stride, 0, 0);
+}
+
+void (* mpegv_idct_copy1) (int16_t * block, uint8_t * dest, int stride);
+void (* mpegv_idct_add1) (int last, int16_t * block, uint8_t * dest,
+			  int stride);
+
+static inline __attribute__ ((always_inline))
+void mv_add (const int last, int16_t * block, uint8_t * dest,
+	     const int stride, const int mpeg2)
 {
     if (last != 129 || (block[0] & (7 << 4)) == (4 << 4))
-	mv_idct (block, dest, stride, 1);
+	mv_idct (block, dest, stride, 1, mpeg2);
     else {
 	/* libmpeg2's: the DC coefficient alone (and MPEG-2's mismatch
 	 * control's in the last place, which changes nothing here) */
@@ -651,6 +663,18 @@ static void mpegv_idct_add (const int last, int16_t * block,
 	    dest += stride;
 	} while (--i);
     }
+}
+
+static void mpegv_idct_add (const int last, int16_t * block,
+			    uint8_t * dest, const int stride)
+{
+    mv_add (last, block, dest, stride, 1);
+}
+
+static void mpegv_idct_add_1 (const int last, int16_t * block,
+			      uint8_t * dest, const int stride)
+{
+    mv_add (last, block, dest, stride, 0);
 }
 #endif
 
@@ -708,6 +732,8 @@ void mpeg2_idct_init (uint32_t accel)
 	    }
 	}
 	mpeg2_idct_copy = mpegv_idct_copy;	/* mpegv: the quicker one */
+	mpegv_idct_copy1 = mpegv_idct_copy_1;	/* (MPEG-1's) */
+	mpegv_idct_add1 = mpegv_idct_add_1;
 	mpeg2_idct_add = mpegv_idct_add;
 #else
 	mpeg2_idct_copy = mpeg2_idct_copy_c;

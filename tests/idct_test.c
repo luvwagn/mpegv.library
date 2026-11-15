@@ -85,10 +85,10 @@ static int same(int blocks)
                 if (a[i])
                     last = 63;
             mpeg2_idct_add_c(last, a, pa, 16);
-            mpegv_idct_add(last, b, pb, 16);
+            (rnd(2) ? mpegv_idct_add : mpegv_idct_add_1)(last, b, pb, 16); /* MPEG-2's, MPEG-1's */
         } else {
             mpeg2_idct_copy_c(a, pa, 16);
-            mpegv_idct_copy(b, pb, 16);
+            (rnd(2) ? mpegv_idct_copy : mpegv_idct_copy_1)(b, pb, 16);
         }
         if (memcmp(pa, pb, sizeof(pa)) || memcmp(b, z, sizeof(z)) || memcmp(a, z, sizeof(z))) {
             if (bad++ < 5)

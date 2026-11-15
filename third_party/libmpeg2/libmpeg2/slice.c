@@ -32,6 +32,17 @@
 
 extern mpeg2_mc_t mpeg2_mc;
 extern void (* mpeg2_idct_copy) (int16_t * block, uint8_t * dest, int stride);
+#if defined (MPEGV) && !defined (MPEGV_PLAIN)
+/* mpegv: MPEG-1's IDCT apart (it has no mismatch coefficient to look for) */
+extern void (* mpegv_idct_copy1) (int16_t * block, uint8_t * dest, int stride);
+extern void (* mpegv_idct_add1) (int last, int16_t * block,
+				 uint8_t * dest, int stride);
+#define MV_IDCT_COPY(d) (d->mpeg1 ? mpegv_idct_copy1 : mpeg2_idct_copy)
+#define MV_IDCT_ADD(d) (d->mpeg1 ? mpegv_idct_add1 : mpeg2_idct_add)
+#else
+#define MV_IDCT_COPY(d) mpeg2_idct_copy
+#define MV_IDCT_ADD(d) mpeg2_idct_add
+#endif
 extern void (* mpeg2_idct_add) (int last, int16_t * block,
 				uint8_t * dest, int stride);
 extern void (* mpeg2_cpu_state_save) (cpu_state_t * state);
@@ -951,7 +962,7 @@ static inline void slice_intra_DCT (mpeg2_decoder_t * const decoder,
 	get_intra_block_B15 (decoder, decoder->quantizer_matrix[cc ? 2 : 0]);
     else
 	get_intra_block_B14 (decoder, decoder->quantizer_matrix[cc ? 2 : 0]);
-    mpeg2_idct_copy (decoder->DCTblock, dest, stride);
+    MV_IDCT_COPY (decoder) (decoder->DCTblock, dest, stride);
 #undef bit_buf
 #undef bits
 #undef bit_ptr
@@ -968,7 +979,7 @@ static inline void slice_non_intra_DCT (mpeg2_decoder_t * const decoder,
     else
 	last = get_non_intra_block (decoder,
 				    decoder->quantizer_matrix[cc ? 3 : 1]);
-    mpeg2_idct_add (last, decoder->DCTblock, dest, stride);
+    MV_IDCT_ADD (decoder) (last, decoder->DCTblock, dest, stride);
 }
 
 #define MOTION_420(table,ref,motion_x,motion_y,size,y)			      \
