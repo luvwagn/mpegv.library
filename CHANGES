@@ -1,6 +1,22 @@
 mpegv.library: changes
 ======================
 
+2.1 (14 November 2026)
+----------------------
+
+- Faster, to leave a 68k's CPU room for AC-3 sound: 7-9% fewer cycles a
+  picture (a PAL DVD's about 73 million, a VCD's about 10.6 million).
+- The IDCT's columns are Arai, Agui and Nakajima's transform in 68k
+  assembler (five multiplies, not eleven), its rows prescaled for it.
+  No longer libmpeg2's to the bit: within IEEE 1180 (mean square error
+  0.015 to libmpeg2's 0.013), 66 dB of luma PSNR on average against an
+  exact decoder, as 2.0. Everything else is still libmpeg2's to the bit
+  (make test builds 2.0's IDCT, MPEGV_EXACT_IDCT, to check it).
+- A block's coefficients are decoded in 68k assembler, the bit buffer in
+  registers across the block; the same as libmpeg2's C to the bit.
+- third_party/libmpeg2/CHANGES has the details; README.md's Speed the
+  cycles.
+
 2.0 (14 November 2026)
 ----------------------
 

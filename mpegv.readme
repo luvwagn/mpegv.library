@@ -2,7 +2,7 @@ Short:        MPEG-1 and MPEG-2 video decoder library
 Author:       Brian King; libmpeg2 by Aaron Holtzman, Michel Lespinasse et al.
 Uploader:     Brian King
 Type:         util/libs
-Version:      2.0
+Version:      2.1
 Architecture: m68k-amigaos >= 3.0.0
 Distribution: Aminet
 Requires:     68020+
@@ -26,10 +26,11 @@ needed.
   PIP, which scales it), RGB in eight formats for WritePixelArray, 8-bit
   greys for an AGA screen (WriteChunkyPixels).
 
-The decoder is libmpeg2 0.5.1, made faster for a 68k (its IDCT partly in
-68k assembler), its pictures the same bit for bit. A VCD picture
-(352 x 240) takes about 11.5 million 68020 cycles, a DVD's (720 x 576)
-about 79 million: under Amiberry's JIT, a DVD plays at its full rate.
+The decoder is libmpeg2 0.5.1, made faster for a 68k (its IDCT and its
+coefficients' decoding partly in 68k assembler): its IDCT within IEEE
+1180, everything else libmpeg2's to the bit. A VCD picture (352 x 240)
+takes about 10.6 million 68020 cycles, a DVD's (720 x 576) about 73
+million: under Amiberry's JIT, a DVD plays at its full rate.
 
 Version 2 is source-compatible with version 1: programs built for 1 run
 unchanged.
@@ -49,10 +50,13 @@ The includes, the sfd and the autodoc are MIT: any program may open the
 library.
 
 Source (this archive has none): https://github.com/luvwagn/mpegv.library
-The source of this version is the repository's history at "mpegv 2.0",
+The source of this version is the repository's history at "mpegv 2.1",
 with the example's and the tests'.
 
 History:
+2.1  7-9% faster: the IDCT's columns Arai, Agui and Nakajima's in 68k
+     assembler (within IEEE 1180, no longer libmpeg2's to the bit), the
+     coefficients decoded in 68k assembler.
 2.0  libmpeg2 decodes: MPEG-2 (DVDs) as well as MPEG-1; MPEG-2 Program
      Streams (VOBs); MpvExamine, each picture's fields and duration,
      MPVC_FLUSH. Now GPL-3.0-or-later.
