@@ -4,6 +4,7 @@ mpegv.library/--background--
 mpegv.library/MpvClose
 mpegv.library/MpvControl
 mpegv.library/MpvDecode
+mpegv.library/MpvExamine
 mpegv.library/MpvGetInfo
 mpegv.library/MpvOpen
 mpegv.library/MpvPump
@@ -16,22 +17,26 @@ mpegv.library/MpvWrite
 mpegv.library/--background--                   mpegv.library/--background--
 
     PURPOSE
-        Decodes MPEG-1 video (a .mpg Program Stream, a VCD's .dat, a bare
-        .m1v stream) by the CPU, for any program, as mpega.library decodes
-        MPEG audio. A 68020 or better; no FPU needed.
+        Decodes MPEG-1 and MPEG-2 video (a .mpg Program Stream, a VCD's
+        .dat, a DVD's .vob, a bare .m1v or .m2v stream) by the CPU, for
+        any program, as mpega.library decodes MPEG audio. A 68020 or
+        better; no FPU needed.
 
-        The decoder is pl_mpeg (Dominic Szablewski), made about 2.6 times
-        faster on a 68020 than it was, its pictures the same bit for bit.
-        A VCD's picture (352 x 240) takes about 11 million 68020 cycles
-        (vamos's count); an emulated 68060 decoded one in about 4 ms, well
-        inside the 33 ms a picture lasts. A 68030 or 68020 is too slow for
-        every picture: pass B pictures over (MpvControl's MPVC_SKIPB).
+        The decoder is libmpeg2 0.5.1, made faster for a 68k (its IDCT
+        and motion compensation), its pictures libmpeg2's own bit for
+        bit. MPEG-2 main profile 4:2:0, as on a DVD: interlaced and
+        progressive, frame and field pictures, 3:2 pulldown flags.
+        A VCD's picture (352 x 240) takes about 12.5 million 68020 cycles
+        (vamos's count), a DVD's (720 x 576) about 89 million; under
+        Amiberry's JIT that is about 4 ms and 30 ms. A real 68060 needs B
+        pictures passed over (MpvControl's MPVC_SKIPB) for a VCD, and
+        cannot keep up with a DVD.
 
     USE
         Open a decoder (MpvOpen) with a read hook that gives it the
         stream's bytes, and, for a Program Stream, a packet hook that is
         given its other packets (its sound: MPEG audio for mpega.library,
-        private stream 1 for ac3.library). Then MpvDecode, again and
+        private stream 1's AC-3 for ac3.library). Then MpvDecode, again and
         again: each picture in display order, the decoder's own Y, Cb and
         Cr planes (4:2:0, not copied), with its time in 90 kHz ticks. Show
         it with a helper: MpvToYUV422 for a graphics card's overlay
@@ -60,22 +65,29 @@ mpegv.library/--background--                   mpegv.library/--background--
 
     TIMES
         All 90 kHz ticks, integers, as MPEG stores them. A picture's
-        mpic_Time counts from the first picture's (its number times the
-        frame period, exactly: 3003 ticks a picture at 29.97); mpic_PTS adds
-        the stream's first video time stamp (a Program Stream's), to set it
-        beside its sound's (struct MpvPacket's mp_PTS).
+        mpic_PTS is its own time stamp (its packet's, a Program Stream's),
+        or carried on from the last picture that had one; set it beside
+        its sound's (struct MpvPacket's mp_PTS). mpic_Time counts from the
+        first picture by the fields shown (3003 ticks a picture at 29.97;
+        a picture with its first field repeated, 3:2 pulldown, 4504 or
+        4505), and mpic_Duration is how long the picture is shown.
 
     MEMORY
-        About 3 pictures' planes and two 128 KB buffers a decoder (a VCD:
-        about 640 KB), from exec (MEMF_ANY).
+        Three pictures' planes, a 256 KB slice buffer and about 230 KB of
+        stream buffers a decoder (a VCD: about 0.85 MB; a DVD: about
+        2.35 MB), from exec (MEMF_ANY).
 
     LIBRARIES
-        None but exec: no floating point anywhere (pl_mpeg's times are
-        kept as stored, 90 kHz; its audio decoder and player are left out),
-        so no maths libraries and no FPU.
+        None but exec: libmpeg2 is integers throughout, and times are kept
+        as stored (90 kHz), so there is no floating point anywhere: no
+        maths libraries and no FPU.
 
     LICENCE
-        MIT (LICENSE): the library, its interface and pl_mpeg alike.
+        The library is GPL-3.0-or-later (libmpeg2 is GPL-2.0-or-later);
+        its source is at https://github.com/luvwagn/mpegv.library. This
+        autodoc, the includes and mpegv_lib.sfd are MIT, so any program
+        may use the library: one that opens it at run time is not bound
+        by its licence. See LICENSE.
 
 mpegv.library/MpvClose                               mpegv.library/MpvClose
 
@@ -112,6 +124,13 @@ mpegv.library/MpvControl                           mpegv.library/MpvControl
         MPVC_END        (without a read hook) no more bytes will come:
                         what is held is decoded, then MPVE_END.
         MPVC_HELD       returns the bytes held, read but not yet decoded.
+        MPVC_FLUSH      (V2) after a seek: the bytes held and the
+                        decoder's pictures are dropped; decoding starts
+                        again at the next I picture (B pictures that
+                        would need an earlier picture are passed over).
+                        With a read hook, from its next bytes; without,
+                        from what MpvWrite gives next. mpic_Number and
+                        mpic_Time carry on; mpic_PTS is the stream's.
 
 mpegv.library/MpvDecode                             mpegv.library/MpvDecode
 
@@ -126,7 +145,13 @@ mpegv.library/MpvDecode                             mpegv.library/MpvDecode
     FUNCTION
         Decodes up to the next picture in display order, reading what it
         needs (the read hook, or what MpvWrite gave). The picture is the
-        decoder's own: valid until the next MpvDecode or MpvClose.
+        decoder's own: valid until the next MpvDecode, MPVC_FLUSH or
+        MpvClose. An interlaced picture is both its fields, woven. From
+        version 2, struct MpvPicture also has mpic_Duration (how long it
+        is shown, 90 kHz), mpic_Fields (2, or 3 with its first field
+        repeated) and flags: MPVPF_TOPFIRST, MPVPF_REPEAT,
+        MPVPF_PROGRESSIVE (a progressive frame), MPVPF_FIELDS (coded as
+        two field pictures).
 
     RESULT
         The picture, or NULL with *error (if error is not NULL):
@@ -134,7 +159,40 @@ mpegv.library/MpvDecode                             mpegv.library/MpvDecode
         MPVE_MORE   no picture yet: call again (without a read hook,
                     after MpvWrite)
         MPVE_READ   the read hook said it could not read
-        MPVE_STREAM not an MPEG-1 stream mpegv decodes
+        MPVE_STREAM not an MPEG stream mpegv decodes
+        MPVE_FORMAT (V2) MPEG-2 that is not 4:2:0 (4:2:2, 4:4:4): the
+                    library decodes only 4:2:0, a DVD's
+        MPVE_NOMEM  no memory
+
+    NOTES
+        B pictures that need a picture the decoder has not had (an open
+        GOP's first, at the stream's start or after MPVC_FLUSH), and
+        every picture before the first I picture, are passed over, not
+        shown; their numbers and times still count.
+
+mpegv.library/MpvExamine                           mpegv.library/MpvExamine
+
+    NAME
+        MpvExamine -- the stream's size, pace and kind, all of it (V2)
+
+    SYNOPSIS
+        ok = MpvExamine(mpv, info, size)
+        D0              A0   A1    D0
+        LONG MpvExamine(APTR, struct MpvInfo *, ULONG);
+
+    FUNCTION
+        As MpvGetInfo, and the fields after mi_Kind too (as many of
+        struct MpvInfo's as size bytes hold: pass sizeof(struct MpvInfo)):
+        mi_Flags (MPVIF_MPEG2, MPVIF_PROGRESSIVE: a progressive sequence,
+        else interlaced; MPVIF_LOWDELAY; MPVIF_PACKS2: MPEG-2 packs, a
+        DVD's), MPEG-2's mi_Profile and mi_Level (4 and 8: Main profile
+        at Main level, a DVD's), mi_Chroma (MPVCF_420), mi_AspectNum and
+        mi_AspectDen (the picture's shape as shown: 4/3, 16/9) and
+        mi_DisplayWidth and mi_DisplayHeight (the part meant to be shown:
+        MPEG-2's display extension, else the picture's size).
+
+    RESULT
+        TRUE, or FALSE if no sequence header could be read (yet).
 
 mpegv.library/MpvGetInfo                           mpegv.library/MpvGetInfo
 
@@ -152,7 +210,9 @@ mpegv.library/MpvGetInfo                           mpegv.library/MpvGetInfo
         mi_RateDen, and mi_Period in 90 kHz ticks), its pixels' shape
         (mi_AspectCode, and mi_ShownWidth: its width for its height as it
         is meant to be seen), its bit rate, and what kind of stream it
-        turned out to be.
+        turned out to be. The fields mpegv 1 had (to mi_Kind): a program
+        built for version 1 has a struct MpvInfo that size. MpvExamine
+        fills the rest.
 
     RESULT
         TRUE, or FALSE if no sequence header could be read (yet).
@@ -181,12 +241,20 @@ mpegv.library/MpvOpen                                 mpegv.library/MpvOpen
             Without one, give the bytes with MpvWrite.
         MPVA_PacketHook (struct Hook *) - each packet of a Program Stream
             that is not its video: a struct MpvPacket (its stream id, its
-            time if it has one, its bytes: valid during the call).
+            time if it has one, its bytes after its PES header: valid
+            during the call). MPEG audio (0xC0-0xDF); private stream 1
+            (0xBD: a DVD's AC-3, DTS, LPCM, subpictures), its first byte
+            the substream, also in mp_SubStream (V2); private stream 2
+            (0xBF: a DVD's navigation packets, PCI and DSI, whole); other
+            video streams. Padding, system headers and stream maps are not
+            passed on.
         MPVA_Stream (ULONG) - MPVS_PROGRAM, MPVS_VIDEO, or MPVS_AUTO (the
             default: a pack header or a sequence header first says).
         MPVA_ReadSize (ULONG) - bytes asked of the read hook at once
             (default 16384, at least 2048).
         MPVA_SkipB (BOOL) - B pictures passed over from the start.
+        MPVA_VideoStream (ULONG) - (V2) which video stream of a Program
+            Stream to decode: 0xE0-0xEF (default 0: the first found).
 
     RESULT
         The decoder, or NULL (no memory; or the read hook failed at once).

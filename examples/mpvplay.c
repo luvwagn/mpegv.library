@@ -1,11 +1,14 @@
 /*
- * mpvplay: mpegv.library's example. Plays an MPEG-1 file's pictures (no
- * sound) at their pace: in a window on Workbench, drawn as RGB, where it
- * is an RTG screen of 15 bits or more (cybergraphics.library); else on a
- * screen of its own, 256 greys (AGA, graphics.library 40's
- * WriteChunkyPixels). The window's close gadget or Ctrl-C stops it.
+ * mpvplay: mpegv.library's example. Plays an MPEG-1 or MPEG-2 file's
+ * pictures (.mpg, .m1v, .m2v, a DVD's .vob; no sound) at their pace: in
+ * a window on Workbench, drawn as RGB, where it is an RTG screen of 15 bits
+ * or more (cybergraphics.library); else on a screen of its own, 256 greys
+ * (AGA, graphics.library 40's WriteChunkyPixels; high resolution and
+ * interlaced for a DVD's 720 x 576). When it falls behind it passes B
+ * pictures over until it has caught up. The window's close gadget or
+ * Ctrl-C stops it.
  *
- *   mpvplay file.mpg
+ *   mpvplay file
  *
  * MIT licence, (c) 2026 Brian King.
  */
@@ -41,6 +44,7 @@ int main(int argc, char **argv)
     struct Screen *wb = NULL, *scr = NULL;
     struct Window *win = NULL;
     struct MpvInfo in;
+    BOOL skipping = FALSE;
     struct MpvPicture *p;
     UBYTE *buf = NULL;
     APTR m = NULL;
@@ -48,7 +52,7 @@ int main(int argc, char **argv)
     LONG e = 0, rc = 20;
     struct DateStamp t0, now;
     if (argc < 2) {
-        printf("usage: mpvplay file.mpg\n");
+        printf("usage: mpvplay file (.mpg, .m1v, .m2v, .vob)\n");
         return 5;
     }
     if (!(MpegvBase = OpenLibrary((CONST_STRPTR)MPEGVNAME, MPEGVVERSION))) {
@@ -60,12 +64,15 @@ int main(int argc, char **argv)
         goto out;
     }
     rh.h_Entry = (HOOKFUNC)(APTR)read_hook;
-    if (!(m = MpvOpenTags(MPVA_ReadHook, (ULONG)&rh, TAG_DONE)) || !MpvGetInfo(m, &in)) {
-        printf("mpvplay: not an MPEG-1 stream mpegv.library decodes\n");
+    if (!(m = MpvOpenTags(MPVA_ReadHook, (ULONG)&rh, TAG_DONE)) || !MpvExamine(m, &in, sizeof(in))) {
+        printf("mpvplay: not an MPEG stream mpegv.library decodes\n");
         goto out;
     }
-    printf("%ux%u, %lu/%lu pictures a second (%s)\n", (unsigned)in.mi_Width, (unsigned)in.mi_Height,
-           (unsigned long)in.mi_RateNum, (unsigned long)in.mi_RateDen, (const char *)MpvVersion());
+    printf("%s %ux%u (%u:%u), %lu/%lu pictures a second, %s (%s)\n",
+           in.mi_Flags & MPVIF_MPEG2 ? "MPEG-2" : "MPEG-1", (unsigned)in.mi_Width,
+           (unsigned)in.mi_Height, (unsigned)in.mi_AspectNum, (unsigned)in.mi_AspectDen,
+           (unsigned long)in.mi_RateNum, (unsigned long)in.mi_RateDen,
+           in.mi_Flags & MPVIF_PROGRESSIVE ? "progressive" : "interlaced", (const char *)MpvVersion());
     CyberGfxBase = OpenLibrary((CONST_STRPTR) "cybergraphics.library", 40);
     if (CyberGfxBase && (wb = LockPubScreen(NULL)) &&
         GetCyberMapAttr(wb->RastPort.BitMap, CYBRMATTR_ISCYBERGFX) &&
@@ -85,8 +92,9 @@ int main(int argc, char **argv)
             cols[1 + i * 3] = cols[2 + i * 3] = cols[3 + i * 3] = i * 0x01010101UL;
         cols[1 + 256 * 3] = 0;
         scr = OpenScreenTags(NULL, SA_Width, in.mi_Width, SA_Height, in.mi_Height, SA_Depth, 8,
-                             SA_DisplayID, LORES_KEY, SA_Colors32, (ULONG)cols, SA_Quiet, TRUE,
-                             TAG_DONE);
+                             SA_DisplayID, (in.mi_Width > 400 ? HIRES_KEY : LORES_KEY) |
+                                               (in.mi_Height > 300 ? LACE : 0),
+                             SA_Colors32, (ULONG)cols, SA_Quiet, TRUE, TAG_DONE);
         if (scr)
             win = OpenWindowTags(NULL, WA_CustomScreen, (ULONG)scr, WA_Borderless, TRUE,
                                  WA_Backdrop, TRUE, WA_RMBTrap, TRUE, WA_Activate, TRUE, TAG_DONE);
@@ -117,6 +125,12 @@ int main(int argc, char **argv)
         due = (LONG)(p->mpic_Time / 90);
         if (due > ms + 20)
             Delay((due - ms) / 20);
+        /* more than two pictures behind: B pictures passed over (nothing
+         * is predicted from them) until it has caught up */
+        if (!skipping && ms > due + 2 * (LONG)(in.mi_Period / 90))
+            MpvControl(m, MPVC_SKIPB, skipping = TRUE);
+        else if (skipping && ms < due)
+            MpvControl(m, MPVC_SKIPB, skipping = FALSE);
         if (rtg) {
             MpvToRGB(p, buf, (ULONG)p->mpic_Width * 3, MPVR_RGB24);
             WritePixelArray(buf, 0, 0, (UWORD)(p->mpic_Width * 3), win->RPort, win->BorderLeft,

@@ -1,20 +1,24 @@
-Short:        MPEG-1 video decoder library (pl_mpeg)
-Author:       Brian King; pl_mpeg by Dominic Szablewski
+Short:        MPEG-1 and MPEG-2 video decoder library
+Author:       Brian King; libmpeg2 by Aaron Holtzman, Michel Lespinasse et al.
 Uploader:     Brian King
 Type:         util/libs
-Version:      1.0
+Version:      2.0
 Architecture: m68k-amigaos >= 3.0.0
 Distribution: Aminet
 Requires:     68020+
 Replaces:     -
 
-mpegv.library decodes MPEG-1 video by the CPU, for any program, as
-mpega.library decodes MPEG audio. A 68020 or better; no FPU needed.
+mpegv.library decodes MPEG-1 and MPEG-2 video by the CPU, for any
+program, as mpega.library decodes MPEG audio. A 68020 or better; no FPU
+needed.
 
-- Program Streams (.mpg, a VCD's .dat) are demultiplexed as they are
-  read: the video decoded, the other packets (MPEG audio, private stream
-  1) handed to the program with their times, for mpega.library or
-  ac3.library. Bare video streams (.m1v) too.
+- Program Streams are demultiplexed as they are read: MPEG-1's (.mpg, a
+  VCD's .dat) and MPEG-2's (a DVD's .vob). The video is decoded, the
+  other packets (MPEG audio; private stream 1's AC-3, DTS, LPCM and
+  subpictures; navigation packets) handed to the program with their
+  times. Bare video streams (.m1v, .m2v) too.
+- MPEG-2 main profile 4:2:0, as on a DVD: interlaced and progressive,
+  frame and field pictures, 3:2 pulldown, 4:3 and 16:9.
 - Pictures in display order as the decoder's own Y, Cb and Cr planes,
   not copied, with integer 90 kHz times.
 - B pictures can be passed over when the CPU is behind.
@@ -22,10 +26,13 @@ mpega.library decodes MPEG audio. A 68020 or better; no FPU needed.
   PIP, which scales it), RGB in eight formats for WritePixelArray, 8-bit
   greys for an AGA screen (WriteChunkyPixels).
 
-The decoder is pl_mpeg by Dominic Szablewski, made about 2.6 times faster
-on a 68020, its pictures the same bit for bit. A VCD picture (352 x 240)
-takes about 11.5 million 68020 cycles; an emulated 68060 decodes one in
-about 4 ms.
+The decoder is libmpeg2 0.5.1, its IDCT and motion compensation made
+faster for a 68k, its pictures the same bit for bit. A VCD picture
+(352 x 240) takes about 12.5 million 68020 cycles, a DVD's (720 x 576)
+about 89 million: under Amiberry's JIT, a DVD plays at its full rate.
+
+Version 2 is source-compatible with version 1: programs built for 1 run
+unchanged.
 
 Contents:
 
@@ -34,12 +41,19 @@ Contents:
   mpegv/mpegv.doc               the autodoc
   mpegv/mpegv_lib.sfd
   mpegv/Example/mpvplay         plays a file's pictures (RTG: in a window,
-                                RGB; AGA: a screen of greys); and its source
-  mpegv/Source/                 everything, with the tests
+                                RGB; AGA: a screen of greys)
+  mpegv/README.md, CHANGES
 
-Licence: MIT (mpegv/LICENSE), the library and pl_mpeg alike.
+Licence: GPL-3.0-or-later (mpegv/LICENSE): libmpeg2 is GPL-2.0-or-later.
+The includes, the sfd and the autodoc are MIT: any program may open the
+library.
 
-Source: https://github.com/luvwagn/mpegv.library
+Source (this archive has none): https://github.com/luvwagn/mpegv.library
+The source of this version is the repository's history at "mpegv 2.0",
+with the example's and the tests'.
 
 History:
-1.0  First release. Made for AmigaMCE.
+2.0  libmpeg2 decodes: MPEG-2 (DVDs) as well as MPEG-1; MPEG-2 Program
+     Streams (VOBs); MpvExamine, each picture's fields and duration,
+     MPVC_FLUSH. Now GPL-3.0-or-later.
+1.0  First release (pl_mpeg, MPEG-1). Made for AmigaMCE.

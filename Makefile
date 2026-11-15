@@ -150,13 +150,14 @@ prof: build/68k/mpv_prof
 		> prof.txt 2>&1; python3 $(abspath tests/stages.py) prof.txt
 
 # ---- the Aminet archive: the library, its includes, autodoc and the
-# example (built); the source is on GitHub (README.md, mpegv.readme)
+# example, built; no source: it is on GitHub (README.md, mpegv.readme;
+# GPL-3 section 6(d))
 lha: all
 	@rm -rf build/lha && mkdir -p build/lha/mpegv/Libs build/lha/mpegv/Include build/lha/mpegv/Example
 	@cp $(LIB) build/lha/mpegv/Libs/
 	@cp -R include/* build/lha/mpegv/Include/
 	@cp mpegv.doc mpegv_lib.sfd README.md LICENSE CHANGES build/lha/mpegv/
-	@cp build/mpvplay examples/mpvplay.c build/lha/mpegv/Example/
+	@cp build/mpvplay build/lha/mpegv/Example/
 	@cp mpegv.readme build/lha/mpegv.readme
 	@cd build/lha && rm -f ../mpegv.lha && lha aqo5 ../mpegv.lha mpegv mpegv.readme
 	@echo "  LHA   build/mpegv.lha"

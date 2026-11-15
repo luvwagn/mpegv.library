@@ -1,0 +1,40 @@
+mpegv.library: changes
+======================
+
+2.0 (14 November 2026)
+----------------------
+
+- The decoder is libmpeg2 0.5.1, not pl_mpeg: MPEG-2 (main profile,
+  4:2:0, as on a DVD: interlaced, field pictures, 3:2 pulldown) as well
+  as MPEG-1. Its pictures are libmpeg2's own, bit for bit; its IDCT does
+  only what each block needs with 16-bit products, its motion
+  compensation works four pixels at a time, its bitstream is read a word
+  at a time (third_party/libmpeg2/CHANGES). MPEG-2 that is not 4:2:0 is
+  refused (MPVE_FORMAT).
+- The library's own Program Stream demultiplexer: MPEG-1 and MPEG-2 pack
+  and PES headers, a DVD's VOB (private stream 1 with its substream,
+  navigation packets passed to the packet hook, padding passed over). Each
+  picture has its own time stamp (mpic_PTS), not the first one's plus its
+  number's time.
+- New: MpvExamine (MPEG-2, profile and level, interlace, the picture's
+  shape as shown, the display extension); each picture's mpic_Duration,
+  mpic_Fields and flags (top field first, repeated first field,
+  progressive frame, field pictures); mpic_Time counts fields shown;
+  mp_SubStream; MPVA_VideoStream; MPVC_FLUSH (after a seek).
+- B pictures that need a picture the decoder has not had (an open GOP's
+  first) and pictures before the first I picture are passed over, not
+  shown as garbage.
+- A bare video stream's last picture is no longer lost.
+- Source-compatible with 1: MpvGetInfo fills only 1's fields, the
+  structures the library hands out only grew at their ends.
+- GPL-3.0-or-later (libmpeg2 is GPL-2.0-or-later); the interface and the
+  example stay MIT. The Aminet archive no longer carries the source: it
+  is at https://github.com/luvwagn/mpegv.library.
+- A 68020's cycles a picture (vamos): a VCD's about 12.5 million, a PAL
+  DVD's about 89 million (README.md's Speed).
+
+1.0 (14 November 2026)
+----------------------
+
+- First release: pl_mpeg's MPEG-1 decoder and demultiplexer, made about
+  2.6 times faster on a 68020. Made for AmigaMCE.
