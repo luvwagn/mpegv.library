@@ -44,8 +44,10 @@ def psnr(x, y):
 
 
 # ffmpeg's first picture: mpegv's number 0, or (if ffmpeg passed over the
-# same B pictures) its first picture's
-off = 0 if nb >= nums[-1] + 1 and psnr(a[0][:w * h], b[nums[0]][:w * h]) > 30 else nums[0]
+# same B pictures) its first picture's: whichever matches better
+cands = [o for o in sorted({0, nums[0]}) if 0 <= nums[0] - o < nb]
+off = max(cands, key=lambda o: sum(psnr(a[i][:w * h], b[nums[i] - o][:w * h])
+                                   for i in range(min(5, len(nums))) if nums[i] - o < nb))
 res = []
 for i, n in enumerate(nums):
     k = n - off
