@@ -26,10 +26,10 @@ needed.
   PIP, which scales it), RGB in eight formats for WritePixelArray, 8-bit
   greys for an AGA screen (WriteChunkyPixels).
 
-The decoder is libmpeg2 0.5.1, its IDCT and motion compensation made
-faster for a 68k, its pictures the same bit for bit. A VCD picture
-(352 x 240) takes about 12.5 million 68020 cycles, a DVD's (720 x 576)
-about 89 million: under Amiberry's JIT, a DVD plays at its full rate.
+The decoder is libmpeg2 0.5.1, made faster for a 68k (its IDCT partly in
+68k assembler), its pictures the same bit for bit. A VCD picture
+(352 x 240) takes about 11.5 million 68020 cycles, a DVD's (720 x 576)
+about 79 million: under Amiberry's JIT, a DVD plays at its full rate.
 
 Version 2 is source-compatible with version 1: programs built for 1 run
 unchanged.

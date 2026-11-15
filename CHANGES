@@ -7,9 +7,14 @@ mpegv.library: changes
 - The decoder is libmpeg2 0.5.1, not pl_mpeg: MPEG-2 (main profile,
   4:2:0, as on a DVD: interlaced, field pictures, 3:2 pulldown) as well
   as MPEG-1. Its pictures are libmpeg2's own, bit for bit; its IDCT does
-  only what each block needs with 16-bit products, its motion
-  compensation works four pixels at a time, its bitstream is read a word
-  at a time (third_party/libmpeg2/CHANGES). MPEG-2 that is not 4:2:0 is
+  only what each block needs with 16-bit products (the column pass in
+  68k assembler, MPEG-2's mismatch row from tables), its motion
+  compensation works four pixels at a time (half-pel both ways reusing
+  each row's sums), its bitstream is read a word at a time, its
+  coefficients dequantised with 16-bit multiplies, its start codes
+  sought four bytes at a time (third_party/libmpeg2/CHANGES).
+- MpvToYUV422 and MpvToGrey are 68k loops (35% and 45% faster), MpvToRGB
+  works from tables (RGB565 56% faster); the same bytes as before. MPEG-2 that is not 4:2:0 is
   refused (MPVE_FORMAT).
 - The library's own Program Stream demultiplexer: MPEG-1 and MPEG-2 pack
   and PES headers, a DVD's VOB (private stream 1 with its substream,
@@ -30,8 +35,8 @@ mpegv.library: changes
 - GPL-3.0-or-later (libmpeg2 is GPL-2.0-or-later); the interface and the
   example stay MIT. The Aminet archive no longer carries the source: it
   is at https://github.com/luvwagn/mpegv.library.
-- A 68020's cycles a picture (vamos): a VCD's about 12.5 million, a PAL
-  DVD's about 89 million (README.md's Speed).
+- A 68020's cycles a picture (vamos): a VCD's about 11.5 million, a PAL
+  DVD's about 79 million (README.md's Speed).
 
 1.0 (14 November 2026)
 ----------------------

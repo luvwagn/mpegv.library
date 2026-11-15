@@ -26,9 +26,9 @@ mpegv.library/--background--                   mpegv.library/--background--
         and motion compensation), its pictures libmpeg2's own bit for
         bit. MPEG-2 main profile 4:2:0, as on a DVD: interlaced and
         progressive, frame and field pictures, 3:2 pulldown flags.
-        A VCD's picture (352 x 240) takes about 12.5 million 68020 cycles
-        (vamos's count), a DVD's (720 x 576) about 89 million; under
-        Amiberry's JIT that is about 4 ms and 30 ms. A real 68060 needs B
+        A VCD's picture (352 x 240) takes about 11.5 million 68020 cycles
+        (vamos's count), a DVD's (720 x 576) about 79 million; under
+        Amiberry's JIT that is about 4 ms and 26 ms. A real 68060 needs B
         pictures passed over (MpvControl's MPVC_SKIPB) for a VCD, and
         cannot keep up with a DVD.
 

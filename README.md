@@ -27,8 +27,10 @@ MPEG files and DVDs where there is no ZZ9000 card.
 
 The decoder is [libmpeg2](https://github.com/cisco-open-source/libmpeg2)
 0.5.1 (Aaron Holtzman, Michel Lespinasse and others), made faster for a
-68k: its IDCT does only what each block needs with 16-bit products, its
-motion compensation works four pixels at a time. Every picture is still
+68k: its IDCT's column pass is 68k assembler that does only what each
+block needs with 16-bit products, its motion compensation works four
+pixels at a time, its coefficients and start codes are read in fewer
+instructions, and the output conversions are 68k loops or tables. Every picture is still
 libmpeg2's own, bit for bit (`make test` checks), and the IDCT is within
 IEEE 1180. The changes are marked `mpegv:` in `third_party/libmpeg2` and
 listed in its `CHANGES`. The demultiplexer is the library's own.
@@ -125,33 +127,33 @@ MPEG-1 stream, 36 of each DVD one):
 
 | Stream | Size | Cycles a picture | IDCT | Motion comp. | Bitstream | Rest |
 |---|---|---|---|---|---|---|
-| weezer.mpg (a VCD) | 352 x 240, 29.97 | 12.5 M | 9.2 M | 1.0 M | 2.1 M | 0.2 M |
-| goodtime.mpg | 352 x 240, 29.97 | 10.6 M | 7.1 M | 0.9 M | 2.3 M | 0.2 M |
-| HaleBopp.mpg | 320 x 240, 24 | 5.6 M | 2.2 M | 2.4 M | 0.8 M | 0.2 M |
-| alien.vob (a PAL DVD's film) | 720 x 576, 25 interlaced, 16:9 | 88.6 M | 58.2 M | 17.3 M | 11.8 M | 1.2 M |
-| pal_int.vob | 720 x 576, 25 interlaced, 4:3 | 90.9 M | 63.9 M | 13.9 M | 11.8 M | 1.3 M |
-| pal_film.vob | 720 x 576, 25 progressive, 16:9 | 93.6 M | 65.1 M | 15.3 M | 12.1 M | 1.2 M |
-| ntsc_int.vob | 720 x 480, 29.97 interlaced | 81.1 M | 56.7 M | 13.3 M | 10.0 M | 1.0 M |
-| ntsc_film.vob | 720 x 480, 23.976 progressive | 83.0 M | 56.9 M | 13.9 M | 11.1 M | 1.1 M |
+| weezer.mpg (a VCD) | 352 x 240, 29.97 | 11.5 M | 8.5 M | 1.0 M | 2.0 M | 0.1 M |
+| goodtime.mpg | 352 x 240, 29.97 | 9.9 M | 6.7 M | 0.9 M | 2.2 M | 0.1 M |
+| HaleBopp.mpg | 320 x 240, 24 | 5.3 M | 2.0 M | 2.2 M | 0.7 M | 0.3 M |
+| alien.vob (a PAL DVD's film) | 720 x 576, 25 interlaced, 16:9 | 79.1 M | 52.1 M | 15.3 M | 11.0 M | 0.6 M |
+| pal_int.vob | 720 x 576, 25 interlaced, 4:3 | 82.2 M | 57.6 M | 12.6 M | 11.1 M | 0.8 M |
+| pal_film.vob | 720 x 576, 25 progressive, 16:9 | 84.2 M | 58.4 M | 13.7 M | 11.3 M | 0.8 M |
+| ntsc_int.vob | 720 x 480, 29.97 interlaced | 72.9 M | 50.8 M | 12.0 M | 9.4 M | 0.7 M |
+| ntsc_film.vob | 720 x 480, 23.976 progressive | 74.7 M | 51.3 M | 12.4 M | 10.3 M | 0.7 M |
 
 The DVD streams other than alien's are made like a DVD's (MP@ML, IBBP,
 GOP 12 or 15, 5-6 Mbit/s, AC-3). With B pictures passed over, each I or P
-picture shown costs 110 M (alien) to 114 M (pal_int): a third of the
-stream's pictures for 1.2 times the cycles of one picture each.
+picture shown costs 99 M (alien): a third of the stream's pictures for
+1.25 times the cycles of one picture each.
 
-Showing a DVD picture costs more besides: `MpvToYUV422` 12.9 M a picture,
-`MpvToGrey` 16.7 M, `MpvToRGB` (RGB565) 104 M.
+Showing a picture costs more besides: `MpvToYUV422` 8.5 M a DVD picture
+(1.8 M a VCD one), `MpvToGrey` 9.1 M, `MpvToRGB` (RGB565) 45 M.
 
 What that means, given how many of these cycles a second each machine
 manages (the assumption in each case):
 
 | Machine (assumed 68020-model cycles a second) | VCD (weezer) | DVD (alien), every picture | DVD, B pictures passed over |
 |---|---|---|---|
-| Amiberry, JIT (about 3.0 G: mpegv 1 measured there, 3.8 ms for 11.4 M) | about 240 a second | about 34 a second (29 with YUV for the overlay): 25 with time to spare | at ease |
-| PiStorm, Emu68 (1.5-5 G: not yet measured) | 120-400 | 17-56 | 25 shown, 8 of them new, at 1.5 G |
-| 68060 at 50 MHz (about 150 M) | about 12 | under 2 | under 2 new a second |
+| Amiberry, JIT (about 3.0 G: mpegv 1 measured there, 3.8 ms for 11.4 M) | about 260 a second | about 38 a second (34 with YUV for the overlay): 25 with time to spare | at ease |
+| PiStorm, Emu68 (1.5-5 G: not yet measured) | 130-430 | 19-63 | 25 shown, 8 of them new, at 1.5 G |
+| 68060 at 50 MHz (about 150 M) | about 13 | under 2 | under 2 new a second |
 
 So a DVD plays at its full rate under Amiberry's JIT and (very likely) on a
-PiStorm. A real 68060 decodes about 12 of a VCD's 30 pictures a second (B
+PiStorm. A real 68060 decodes about 13 of a VCD's 30 pictures a second (B
 pictures must be passed over), and a DVD not at all. Not yet measured on
 real hardware.
