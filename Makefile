@@ -98,7 +98,23 @@ build/68k/mpv_prof: $(PROFOBJ)
 	@$(CC) $(CPU) -noixemul -Wl,-Map=$@.map -o $@ $^
 	@python3 tests/syms.py $@.map $^ > $@.syms
 
-test: build/host/mpv_test build/host/mpv_plain build/68k/mpv_test $(FIX)
+# the IDCT against libmpeg2's C, block by block, and its IEEE 1180
+# accuracy (on the build machine), on both
+build/host/%_test: tests/%_test.c $(HDR) $(SRC)
+	@mkdir -p build/host
+	@echo "  CC    $@"
+	@$(HOSTCC) -O2 -w $(INC) -o $@ $< -lm
+build/68k/%_test: tests/%_test.c $(HDR) $(SRC)
+	@mkdir -p build/68k
+	@echo "  CC    $@"
+	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w -DNO_IEEE $(INC) -o $@ $<
+
+test: build/host/mpv_test build/host/mpv_plain build/68k/mpv_test $(FIX) build/host/idct_test \
+		build/68k/idct_test
+	@build/host/idct_test > build/host/idct.txt \
+		|| { cat build/host/idct.txt; exit 1; }; sed 's/^/  /' build/host/idct.txt
+	@cd build/68k && vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:idct_test 20000 \
+		2>/dev/null > idct.txt || { cat idct.txt; exit 1; }; sed 's/^/  (68020) /' idct.txt
 	@for f in $(FIX); do \
 		build/host/mpv_plain $$f > build/host/ref.txt; \
 		build/host/mpv_test $$f > build/host/lib.txt; \

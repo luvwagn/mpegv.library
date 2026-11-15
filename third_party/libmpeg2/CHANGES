@@ -26,3 +26,19 @@ Changes that alter no picture (14 November 2026)
 - include/mpeg2.h, libmpeg2/header.c: mpeg2_sequence_t keeps the
   sequence header's aspect ratio and frame rate codes as stored
   (aspect_code, rate_code), for mpegv's MpvGetInfo.
+
+The IDCT made quicker, the same to the bit (14 November 2026)
+-------------------------------------------------------------
+
+- libmpeg2/idct.c: mpegv_idct_copy and mpegv_idct_add, chosen by
+  mpeg2_idct_init in place of libmpeg2's C (which stays, and is what
+  MPEGV_PLAIN builds). The same rows, columns, sums and shifts; only what
+  a block needs is done: zero rows passed over, DC-only rows filled, rows
+  with only the four lower frequencies (or only MPEG-2's mismatch
+  coefficient) with fewer products; the columns from the rows used only
+  (row 0 alone, rows 0/1/4/5, those and row 7, or all), clipped straight
+  into the picture; a DC-only block as one value; the products MULS.W
+  (16 bits by 16) on a 68k, each butterfly as its four products.
+  tests/idct_test.c checks it against libmpeg2's C on random blocks of
+  every kind (and on a 68020 under vamos), and libmpeg2's IEEE 1180
+  accuracy.
