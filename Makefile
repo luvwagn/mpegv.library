@@ -43,7 +43,9 @@ FIX     = tests/fixtures/ps.mpg tests/fixtures/es.m1v tests/fixtures/pal.m2v \
 
 all: $(LIB) build/mpvplay
 
-build/libinit.o: src/libinit.c src/libinit.h
+# (the Makefile too: LIB_RT_VERSION is set here, and ramlib turns a library
+# away whose Resident is older than asked for, whatever its lib_Version)
+build/libinit.o: src/libinit.c src/libinit.h Makefile
 	@mkdir -p build
 	@echo "  CC    $<"
 	@$(LIBCC) -Wall -Isrc -DLIB_RT_VERSION=2 -c -o $@ $<
@@ -128,7 +130,10 @@ build/68k/mc_test: tests/mc_test.c $(HDR) $(SRC)
 	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $<
 
 test: build/host/mpv_test build/host/mpv_plain build/68k/mpv_test $(FIX) build/host/idct_test \
-		build/host/mc_test build/68k/idct_test build/68k/mc_test
+		build/host/mc_test build/68k/idct_test build/68k/mc_test $(LIB)
+	@python3 -c "import sys; d=open('$(LIB)','rb').read(); i=d.find(bytes([0x4a,0xfc])); \
+		sys.exit(0 if i >= 0 and d[i+11] >= 2 else 'its Resident says version %d, not 2' % d[i+11])" \
+		&& echo "  CHECK the library's Resident: version 2 (ramlib turns an older one away)"
 	@build/host/idct_test > build/host/idct.txt && build/host/mc_test >> build/host/idct.txt \
 		|| { cat build/host/idct.txt; exit 1; }; sed 's/^/  /' build/host/idct.txt
 	@cd build/68k && { vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:idct_test 20000 2>/dev/null \
