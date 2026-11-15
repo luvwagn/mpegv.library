@@ -66,8 +66,8 @@ make            build/mpegv.library, build/mpvplay
 make test       its pictures against pl_mpeg's own, bit for bit, on this
                 computer and on a 68020 under vamos (amitools)
 make prof MPG=file.mpg N=60
-                a 68020's cycles under vamos: pl_mpeg built in, and the
-                same through the library
+                a 68020's cycles under vamos for N pictures, and where
+                they go, by function
 make lha        build/mpegv.lha for Aminet
 ```
 
@@ -76,14 +76,19 @@ the build computer, ffmpeg-made fixtures (in `tests/fixtures`) and vamos.
 
 ## Speed
 
-60 pictures of a VCD (352 x 240), as vamos counts a 68020's cycles:
+A 68020's cycles a picture, as vamos counts them (no caches or wait states
+modelled), decoding every picture:
 
-| | cycles |
-|---|---|
-| pl_mpeg built into the program | 688,791,031 |
-| through mpegv.library | 688,914,798 (+0.02%) |
+| Stream | Size | Cycles a picture |
+|---|---|---|
+| weezer.mpg (a VCD) | 352 x 240, 29.97 fps | 11.4 million |
+| goodtime.mpg | 352 x 240, 29.97 fps | 10.5 million |
+| HaleBopp.mpg | 320 x 240, 24 fps | 8.0 million |
 
-About 11.5 million cycles a picture. An emulated 68060 decoded one in
-about 4 ms (a picture lasts 33 ms); a 68030 or 68020 needs B pictures passed
-over, and still shows fewer than there are. Not yet measured on real
-hardware.
+Where weezer's go: the IDCT 45%, reading the bits and their VLCs 38%,
+motion compensation 16%.
+
+Under Amiberry's JIT (a 68060), weezer's pictures decode in 3.8 ms each (a
+picture lasts 33 ms). A real 68030 or 68020 needs B pictures passed over
+(`MPVC_SKIPB`), and still shows fewer than there are. Not yet measured on
+real hardware.

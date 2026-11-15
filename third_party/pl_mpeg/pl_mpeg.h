@@ -144,6 +144,7 @@ See below for detailed the API documentation.
 #define PL_MPEG_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 
 #ifdef __cplusplus
