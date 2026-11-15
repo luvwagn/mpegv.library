@@ -63,3 +63,14 @@ The bitstream's 16 bits as one word (14 November 2026)
 - libmpeg2/vlc.h: GETWORD reads the next two bytes as one (big-endian)
   word on a 68020 or later (any address), not as two bytes shifted
   together. The same bits.
+
+The IDCT's columns written by hand for the 68k (15 November 2026)
+-----------------------------------------------------------------
+
+- libmpeg2/idct_68k.s (new), libmpeg2/idct.c: on a 68020 or later the
+  columns of mpegv's IDCT (mv_cols: rows 0/1/4/5, those and row 7, or
+  all; put or added into the picture) are hand-written 68k: the four even
+  results kept in a4-a6 and d2, the odd in data registers, one MULS.W a
+  product, no spills; the same sums and shifts as the C (which the build
+  machine still uses), so the same pixels. A hand-written row pass was
+  tried and gave nothing over gcc's, so the rows stay C.

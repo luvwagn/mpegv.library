@@ -373,6 +373,15 @@ static inline void mv_row_7 (int16_t * const b)
     b[7] = (2048 - b0) >> 12;
 }
 
+/* on a 68020 or later the columns are idct_68k.s's, written by hand (the
+ * same sums: mv_cols below is what they do) */
+#if defined (__mc68020__) && !defined (MPEGV_NO_ASM)
+#define MV_COLS68K
+typedef void mv_cols_fct (const int16_t * block, uint8_t * dest, int stride);
+extern mv_cols_fct mv_cols68k_copy_low, mv_cols68k_copy_low7, mv_cols68k_copy_all;
+extern mv_cols_fct mv_cols68k_add_low, mv_cols68k_add_low7, mv_cols68k_add_all;
+#endif
+
 #define MV_ROW0 0	/* the columns from: row 0 only */
 #define MV_LOW 1	/* rows 0, 1, 4, 5 */
 #define MV_LOW7 2	/* rows 0, 1, 4, 5, 7 */
@@ -527,12 +536,21 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	}
     } else if (!(used & ~0x01))
 	mv_cols (block, dest, stride, add, MV_ROW0);
+#ifdef MV_COLS68K
+    else if (!(used & ~0x33))
+	(add ? mv_cols68k_add_low : mv_cols68k_copy_low) (block, dest, stride);
+    else if (!(used & ~0xb3))
+	(add ? mv_cols68k_add_low7 : mv_cols68k_copy_low7) (block, dest, stride);
+    else
+	(add ? mv_cols68k_add_all : mv_cols68k_copy_all) (block, dest, stride);
+#else
     else if (!(used & ~0x33))
 	mv_cols (block, dest, stride, add, MV_LOW);
     else if (!(used & ~0xb3))
 	mv_cols (block, dest, stride, add, MV_LOW7);
     else
 	mv_cols (block, dest, stride, add, MV_ALL);
+#endif
 
     /* the rows used made zeros again */
     for (r = 0; r < 8; r++)

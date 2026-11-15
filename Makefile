@@ -32,7 +32,10 @@ HDR     = $(wildcard include/*/*.h) $(wildcard $(L2)/include/*.h) $(L2)/libmpeg2
 L2SRC   = $(addprefix $(L2)/libmpeg2/,alloc.c cpu_accel.c cpu_state.c decode.c header.c idct.c \
           motion_comp.c slice.c)
 SRC     = src/mpegv.c src/convert.c $(L2SRC)
-L2OBJ   = $(patsubst $(L2)/libmpeg2/%.c,build/l2/%.o,$(L2SRC))
+L2OBJ   = $(patsubst $(L2)/libmpeg2/%.c,build/l2/%.o,$(L2SRC)) build/l2/idct_68k.o
+# the 68k's own: the IDCT's columns written by hand (the host builds the C)
+L2ASM   = $(L2)/libmpeg2/idct_68k.s
+AS      = m68k-amigaos-as -m68020
 FIX     = tests/fixtures/ps.mpg tests/fixtures/es.m1v tests/fixtures/pal.m2v \
           tests/fixtures/ntsc.m2v tests/fixtures/dvd.vob
 
@@ -49,6 +52,11 @@ build/%.o: src/%.c $(HDR)
 	@mkdir -p build
 	@echo "  CC    $<"
 	@$(LIBCC) $(WARN) $(INC) -c -o $@ $<
+
+build/l2/%.o: $(L2)/libmpeg2/%.s
+	@mkdir -p build/l2
+	@echo "  AS    $<"
+	@$(AS) -o $@ $<
 
 build/l2/%.o: $(L2)/libmpeg2/%.c $(HDR)
 	@mkdir -p build/l2
@@ -83,7 +91,7 @@ build/68k/mpv_test: tests/mpv_test.c $(HDR) $(LIB)
 	@cp $(LIB) build/68k/Libs/
 # the decoder built into the program (for make prof), each source its own
 # object, so that their static functions can be placed (tests/syms.py)
-PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC)))
+PROFOBJ = $(patsubst %.c,build/68k/obj/%.o,$(notdir tests/mpv_test.c $(SRC))) build/l2/idct_68k.o
 build/68k/obj/%.o: tests/%.c $(HDR)
 	@mkdir -p build/68k/obj
 	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w -DMPV_STATIC $(INC) -c -o $@ $<
@@ -104,10 +112,14 @@ build/host/%_test: tests/%_test.c $(HDR) $(SRC)
 	@mkdir -p build/host
 	@echo "  CC    $@"
 	@$(HOSTCC) -O2 -w $(INC) -o $@ $< -lm
-build/68k/%_test: tests/%_test.c $(HDR) $(SRC)
+build/68k/idct_test: tests/idct_test.c $(HDR) $(SRC) build/l2/idct_68k.o
 	@mkdir -p build/68k
 	@echo "  CC    $@"
-	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w -DNO_IEEE $(INC) -o $@ $<
+	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w -DNO_IEEE $(INC) -o $@ $< build/l2/idct_68k.o
+build/68k/mc_test: tests/mc_test.c $(HDR) $(SRC)
+	@mkdir -p build/68k
+	@echo "  CC    $@"
+	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $<
 
 test: build/host/mpv_test build/host/mpv_plain build/68k/mpv_test $(FIX) build/host/idct_test \
 		build/host/mc_test build/68k/idct_test build/68k/mc_test
