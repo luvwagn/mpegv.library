@@ -91,7 +91,9 @@ struct MpvPicture {
     UWORD  mpic_Type;                       /* MPVT_ */
     ULONG  mpic_Number;                     /* in display order from 0 (B pictures passed over counted) */
     ULONG  mpic_Time;                       /* 90 kHz from the first picture's (by fields shown) */
-    ULONG  mpic_PTS;                        /* 90 kHz: its packet's time, or carried on from the last one */
+    ULONG  mpic_PTS;                        /* 90 kHz: its packet's time, or carried on from the last one
+                                             * (2.2: never from before a flush; an open GOP's first B
+                                             * pictures timed back from the picture after them) */
     ULONG  mpic_Flags;                      /* MPVPF_ */
     /* 2 */
     ULONG  mpic_Duration;                   /* how long it is shown, 90 kHz (3 fields for a repeated one) */

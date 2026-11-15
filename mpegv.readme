@@ -2,7 +2,7 @@ Short:        MPEG-1 and MPEG-2 video decoder library
 Author:       Brian King; libmpeg2 by Aaron Holtzman, Michel Lespinasse et al.
 Uploader:     Brian King
 Type:         util/libs
-Version:      2.1
+Version:      2.2
 Architecture: m68k-amigaos >= 3.0.0
 Distribution: Aminet
 Requires:     68020+
@@ -50,10 +50,13 @@ The includes, the sfd and the autodoc are MIT: any program may open the
 library.
 
 Source (this archive has none): https://github.com/luvwagn/mpegv.library
-The source of this version is the repository's history at "mpegv 2.1",
+The source of this version is the repository's history at "mpegv 2.2",
 with the example's and the tests'.
 
 History:
+2.2  Times after MPVC_FLUSH are the new stream's own: an open GOP's first
+     B pictures (a DVD's, after a jump) timed back from the I picture
+     after them, not carried on from before the flush.
 2.1  7-9% faster: the IDCT's columns Arai, Agui and Nakajima's in 68k
      assembler (within IEEE 1180, no longer libmpeg2's to the bit), the
      coefficients decoded in 68k assembler.

@@ -1,6 +1,21 @@
 mpegv.library: changes
 ======================
 
+2.2 (15 November 2026)
+----------------------
+
+- Times after MPVC_FLUSH: a picture's mpic_PTS was carried on from the
+  last picture before the flush until one with its own came. A DVD times
+  only its I pictures, so after a jump the new part's first B pictures
+  (an open GOP's, shown before its I picture) had the old part's time:
+  seconds off (Alien's language menu: 35.2 s for 0.08 s), and a player
+  timing by them waited that long. Now nothing is carried across a
+  flush, and a B picture shown before the first picture with a time
+  (after a flush or at the start) is timed back from the I or P picture
+  after it, by their temporal references: there, 0.080 and 0.120 s
+  before the I picture's 0.160. The same at a stream's start (its first
+  B pictures had no time at all).
+
 2.1 (14 November 2026)
 ----------------------
 

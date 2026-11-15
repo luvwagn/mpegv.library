@@ -66,7 +66,11 @@ mpegv.library/--background--                   mpegv.library/--background--
     TIMES
         All 90 kHz ticks, integers, as MPEG stores them. A picture's
         mpic_PTS is its own time stamp (its packet's, a Program Stream's),
-        or carried on from the last picture that had one; set it beside
+        or carried on from the last picture that had one; (V2.2) a B
+        picture shown before the first picture with a time (at the
+        start, or after MPVC_FLUSH: an open GOP's first B pictures, as a
+        DVD times only its I pictures) is timed back from the I or P
+        picture after it by their temporal references. Set it beside
         its sound's (struct MpvPacket's mp_PTS). mpic_Time counts from the
         first picture by the fields shown (3003 ticks a picture at 29.97;
         a picture with its first field repeated, 3:2 pulldown, 4504 or
@@ -130,7 +134,8 @@ mpegv.library/MpvControl                           mpegv.library/MpvControl
                         would need an earlier picture are passed over).
                         With a read hook, from its next bytes; without,
                         from what MpvWrite gives next. mpic_Number and
-                        mpic_Time carry on; mpic_PTS is the stream's.
+                        mpic_Time carry on; mpic_PTS is the stream's,
+                        (V2.2) none carried on from before the flush.
 
 mpegv.library/MpvDecode                             mpegv.library/MpvDecode
 

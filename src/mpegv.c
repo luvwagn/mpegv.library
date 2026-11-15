@@ -41,11 +41,11 @@ __asm__("\tmovel a6@(40:W),a4");             \
 __asm__("\tjsr _" #name)
 
 const char LibName[] = "mpegv.library";
-const char LibIdString[] = "mpegv 2.1 (14.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
+const char LibIdString[] = "mpegv 2.2 (15.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
 static const char __attribute__((used)) LibVerTag[] =
-    "$VER: mpegv.library 2.1 (14.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
+    "$VER: mpegv.library 2.2 (15.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
 const UWORD LibVersion = 2;
-const UWORD LibRevision = 1;
+const UWORD LibRevision = 2;
 
 struct ExecBase *SysBase;
 #endif
@@ -96,7 +96,7 @@ static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 }
 #endif
 
-static const char version[] = "mpegv 2.1, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
+static const char version[] = "mpegv 2.2, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
 
 #define FEED 65536                          /* the most a packet holds: what libmpeg2 is given at once */
 #define QHEAD 12                            /* a queued video packet's head: its length, flags, time */
@@ -133,6 +133,14 @@ struct Mpv {
     uint64_t fields;                        /* fields shown so far times the frame period (27 MHz) */
     ULONG first_pts;                        /* the first video packet's time */
     ULONG base_pts, base_time;              /* the last picture with a time: its time and mpic_Time */
+    /* the last I or P picture decoded with a time of its own, and its
+     * temporal reference: the B pictures shown before it, with none,
+     * timed back from it while no time is known (after the start or a
+     * flush: an open GOP's first B pictures, as a DVD times only its I
+     * pictures) */
+    BOOL ref_ok;
+    ULONG ref_pts;
+    UWORD ref_tr;
     struct MpvPicture pic;
 };
 
@@ -523,6 +531,11 @@ static void begin(struct Mpv *m)
 {
     const mpeg2_picture_t *cp = m->info->current_picture;
     int t = cp ? (int)(cp->flags & PIC_MASK_CODING_TYPE) : 0, skip = 0;
+    if ((t == PIC_FLAG_CODING_TYPE_I || t == PIC_FLAG_CODING_TYPE_P) && (cp->flags & PIC_FLAG_TAGS)) {
+        m->ref_ok = TRUE;
+        m->ref_pts = cp->tag;
+        m->ref_tr = (UWORD)cp->temporal_reference;
+    }
     if (t == PIC_FLAG_CODING_TYPE_I) {
         m->seen_i = TRUE;
         if (m->refs < 2)
@@ -559,6 +572,13 @@ static struct MpvPicture *shown(struct Mpv *m)
     m->number++;
     if (dp->flags & PIC_FLAG_TAGS) {
         m->base_pts = dp->tag;
+        m->base_time = time;
+        m->have_pts = TRUE;
+    } else if (!m->have_pts && m->ref_ok && dp->temporal_reference < m->ref_tr && s->frame_period) {
+        /* no time known yet (the start, or a flush): a B picture shown
+         * before the reference picture after it, timed back from that one
+         * by their temporal references */
+        m->base_pts = m->ref_pts - (ULONG)(m->ref_tr - dp->temporal_reference) * (s->frame_period / 300);
         m->base_time = time;
         m->have_pts = TRUE;
     }
@@ -802,6 +822,7 @@ API LONG MpvControl(APTR mpv, ULONG cmd, ULONG value)
         mpeg2_reset(m->dec, 0);
         m->seen_i = m->closed = FALSE;
         m->refs = 0;
+        m->have_pts = m->ref_ok = FALSE;    /* (no time from before it: the next part's own) */
         m->ended = m->pushed_end = m->fed_end = FALSE;
         if (!m->bad && !m->format && !m->failed && !m->nomem)
             m->done = FALSE;
