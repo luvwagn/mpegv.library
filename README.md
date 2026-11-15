@@ -27,13 +27,25 @@ MPEG files and DVDs where there is no ZZ9000 card.
 
 The decoder is [libmpeg2](https://github.com/cisco-open-source/libmpeg2)
 0.5.1 (Aaron Holtzman, Michel Lespinasse and others), made faster for a
-68k: its IDCT's column pass is 68k assembler that does only what each
-block needs with 16-bit products, its motion compensation works four
-pixels at a time, its coefficients and start codes are read in fewer
-instructions, and the output conversions are 68k loops or tables. Every picture is still
-libmpeg2's own, bit for bit (`make test` checks), and the IDCT is within
-IEEE 1180. The changes are marked `mpegv:` in `third_party/libmpeg2` and
-listed in its `CHANGES`. The demultiplexer is the library's own.
+68k: its IDCT does only what each block needs, its columns Arai, Agui and
+Nakajima's transform in 68k assembler (five multiplies to libmpeg2's
+eleven and two), its motion compensation works four pixels at a time,
+its coefficients and start codes are read in fewer instructions, and the
+output conversions are 68k loops or tables.
+
+What is exact and what is not: since 2.1 the IDCT is not libmpeg2's to
+the bit, but within IEEE 1180 (peak error 1, mean square error 0.015,
+mean error 0.0004; libmpeg2's own: 0.013 and 0.0003), and as close to an
+exact (floating-point) decoder as libmpeg2's: 66 dB of luma PSNR on
+average over a DVD's film or a whole VCD, against ffmpeg's floating-point
+IDCT. Everything else (the bitstream, motion compensation, the
+demultiplexer, times, the output conversions) is libmpeg2's, or
+mpegv's, to the bit: `make test` builds the library's C with 2.0's
+IDCT (`MPEGV_EXACT_IDCT`) and checks every picture against libmpeg2's
+own C as released, and checks the faster IDCT block by block (its 68k
+columns against its C) and for IEEE 1180's accuracy. The changes are
+marked `mpegv:` in `third_party/libmpeg2` and listed in its `CHANGES`.
+The demultiplexer is the library's own.
 
 ## Licence
 
@@ -89,11 +101,13 @@ renderers depend on its GPL-only decoder's tables and globals).
 ```
 make            build/mpegv.library, build/mpvplay
 make test       each picture against libmpeg2's own C (as released) on
-                this computer; the IDCT and motion compensation block by
-                block against libmpeg2's (and the IDCT's IEEE 1180
-                accuracy); times, flags, helpers, B-skipping, pushing and
-                flushing as expected, here and through the library on a
-                68020 under vamos (amitools)
+                this computer, built with 2.0's exact IDCT; the IDCT
+                block by block against the whole transform's C (its 68k
+                columns too), and its IEEE 1180 accuracy; motion
+                compensation block by block against libmpeg2's; times,
+                flags, helpers, B-skipping, pushing and flushing as
+                expected, here and through the library on a 68020 under
+                vamos (amitools)
 make psnr       each fixture against ffmpeg's decode (PSNR)
 make prof MPG=file N=60
                 a 68020's cycles under vamos for N pictures, by stage and

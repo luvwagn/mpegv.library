@@ -1,12 +1,15 @@
 /*
  * mpegv.library's tests: its IDCT (third_party/libmpeg2/libmpeg2/idct.c,
- * the "mpegv:" one) against libmpeg2's own C, picture for picture: blocks
- * of every kind it treats apart (zeros, the DC coefficient alone, rows of
+ * the "mpegv:" one) against its reference, picture for picture: blocks of
+ * every kind it treats apart (zeros, the DC coefficient alone, rows of
  * the lower frequencies, MPEG-2's mismatch coefficient, any), with
- * coefficients small, typical and as large as libmpeg2 lets them be,
- * put into a picture and added to one. Then the IEEE 1180-1990 accuracy
- * test of libmpeg2's (which mpegv's is to the bit): 10000 blocks for each
- * range and sign, its peak, mean square and mean errors against a
+ * coefficients small, typical and as large as libmpeg2 lets them be, put
+ * into a picture and added to one. Its reference: the whole transform,
+ * every row and every column, no shortcut (mpegv 2.1's, mv_aan_signed);
+ * with MPEGV_EXACT_IDCT, 2.0's, libmpeg2's own C. On a 68k its columns are
+ * the hand-written ones, so they are checked to the bit against the C.
+ * Then the IEEE 1180-1990 accuracy test of the transform: 10000 blocks for
+ * each range and sign, its peak, mean square and mean errors against a
  * double-precision IDCT (on the build machine only: NO_IEEE leaves it
  * out, for the 68k's build, which has no floating point).
  * GPL-3.0-or-later, (c) 2026 Brian King.
@@ -20,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MPEGV_IDCT_TEST
 #include "idct.c"
 
 uint8_t mpeg2_scan_norm[64], mpeg2_scan_alt[64];
@@ -45,7 +49,52 @@ static int rnd(int n)
     return (int)((seed >> 8) % (unsigned long)n);
 }
 
-/* ---- mpegv's against libmpeg2's: the same pixels, the block zeros after */
+/* ---- the reference: 2.0's libmpeg2's C; 2.1's the whole transform */
+#ifdef MPEGV_EXACT_IDCT
+#define ref_add mpeg2_idct_add_c
+#define ref_copy mpeg2_idct_copy_c
+static void transform(int16_t *blk, int *out)
+{
+    int i;
+    for (i = 0; i < 8; i++)
+        idct_row(blk + 8 * i);
+    for (i = 0; i < 8; i++)
+        idct_col(blk + i);
+    for (i = 0; i < 64; i++)
+        out[i] = blk[i];
+}
+#define REF_NAME "libmpeg2's C"
+#else
+static void transform(int16_t *blk, int *out)
+{
+    mv_aan_signed(blk, out);
+}
+static void ref_copy(int16_t *blk, uint8_t *dest, int stride)
+{
+    int o[64], r, c;
+    transform(blk, o);
+    for (r = 0; r < 8; r++)
+        for (c = 0; c < 8; c++)
+            dest[r * stride + c] = CLIP(o[8 * r + c]);
+    memset(blk, 0, 64 * sizeof(int16_t));
+}
+static void ref_add(int last, int16_t *blk, uint8_t *dest, int stride)
+{
+    int o[64], r, c;
+    if (last == 129 && (blk[0] & (7 << 4)) != (4 << 4)) {
+        mpeg2_idct_add_c(last, blk, dest, stride); /* libmpeg2's DC shortcut, kept */
+        return;
+    }
+    transform(blk, o);
+    for (r = 0; r < 8; r++)
+        for (c = 0; c < 8; c++)
+            dest[r * stride + c] = CLIP(o[8 * r + c] + dest[r * stride + c]);
+    memset(blk, 0, 64 * sizeof(int16_t));
+}
+#define REF_NAME "the whole transform's C"
+#endif
+
+/* ---- mpegv's against its reference: the same pixels, the block zeros after */
 static int same(int blocks)
 {
     static const int kinds[] = { 0x00, 0x01, 0x33, 0xb3, 0xff };
@@ -84,10 +133,10 @@ static int same(int blocks)
             for (i = 1; i < 63; i++)
                 if (a[i])
                     last = 63;
-            mpeg2_idct_add_c(last, a, pa, 16);
+            ref_add(last, a, pa, 16);
             (rnd(2) ? mpegv_idct_add : mpegv_idct_add_1)(last, b, pb, 16); /* MPEG-2's, MPEG-1's */
         } else {
-            mpeg2_idct_copy_c(a, pa, 16);
+            ref_copy(a, pa, 16);
             (rnd(2) ? mpegv_idct_copy : mpegv_idct_copy_1)(b, pb, 16);
         }
         if (memcmp(pa, pb, sizeof(pa)) || memcmp(b, z, sizeof(z)) || memcmp(a, z, sizeof(z))) {
@@ -95,13 +144,13 @@ static int same(int blocks)
                 printf("block %d (rows %02x, %s) differs\n", n, rows, add ? "add" : "copy");
         }
     }
-    printf("mpegv's IDCT against libmpeg2's C: %d blocks, %d differ\n", blocks, bad);
+    printf("mpegv's IDCT against %s: %d blocks, %d differ\n", REF_NAME, blocks, bad);
     return bad;
 }
 
 #ifndef NO_IEEE
-/* ---- IEEE 1180: libmpeg2's rows and columns, its coefficients 16 times
- * the standard's (as libmpeg2 dequantises them) */
+/* ---- IEEE 1180: the transform's rows and columns, its coefficients 16
+ * times the standard's (as libmpeg2 dequantises them) */
 static double c8[8][8];
 
 static void fdct(const double *in, double *out)
@@ -138,7 +187,7 @@ static int ieee(long l, long h, int sign, int blocks)
     for (n = 0; n < blocks; n++) {
         double x[64], f[64], r[64];
         int16_t blk[64] ATTR_ALIGN(8);
-        int coef[64];
+        int coef[64], outv[64];
         for (i = 0; i < 64; i++)
             x[i] = (double)(ieee_rand(l, h) * sign);
         fdct(x, f);
@@ -154,13 +203,10 @@ static int ieee(long l, long h, int sign, int blocks)
             int j = ((i & 0x36) >> 1) | ((i & 0x09) << 2);
             blk[j] = (int16_t)(coef[i] * 16);
         }
-        for (i = 0; i < 8; i++)
-            idct_row(blk + 8 * i);
-        for (i = 0; i < 8; i++)
-            idct_col(blk + i);
+        transform(blk, outv);
         for (i = 0; i < 64; i++) {
             double ref = floor(r[i] + 0.5);
-            int t = blk[i], e;
+            int t = outv[i], e;
             ref = ref < -256 ? -256 : ref > 255 ? 255 : ref;
             t = t < -256 ? -256 : t > 255 ? 255 : t;
             e = t - (int)ref;
@@ -204,12 +250,10 @@ int main(int argc, char **argv)
     {
         /* all zeros in, all zeros out */
         int16_t z[64] ATTR_ALIGN(8) = { 0 };
-        for (i = 0; i < 8; i++)
-            idct_row(z + 8 * i);
-        for (i = 0; i < 8; i++)
-            idct_col(z + i);
+        int zo[64];
+        transform(z, zo);
         for (i = 0; i < 64; i++)
-            bad += z[i] != 0;
+            bad += zo[i] != 0;
     }
 #else
     (void)j;

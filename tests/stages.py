@@ -18,7 +18,7 @@ import sys
 
 
 def stage(n):
-    if "idct" in n or n.startswith("mv_cols"):
+    if "idct" in n or n.startswith("mv_cols") or n.startswith("mv_aan"):
         return "IDCT"
     if n.startswith("MC_") or n.startswith("motion_") or n.startswith("mpeg2_mc") or n.startswith("mc_"):
         return "motion comp."

@@ -1,166 +1,166 @@
 file ps.mpg (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 160x112 rate 3 25/1 period 3600 aspect 1 shown 160 bitrate 0 kind 1
 examine flags 2 profile 0 level 0 chroma 1 aspect 10:7 display 160x112
-pic 0 I n0 t0 d3600 f2 --p- pts48600 c0b6ae7f y0=9c8769a9 y1=5383222c y2=60e821a9 y3=eb35ec19 r0=c46ca61c r1=26d597f5 r2=f142fd45 r3=379bb5c5 r4=d5f758c5 r5=5f366bbb r6=3a825546 r7=68ac62bb g=5a99842c g16=9836082b
-pic 1 B n1 t3600 d3600 f2 --p- pts52200 0e2fa3bc y0=36f22875 y1=756d643b y2=8c960175 y3=c151e4b1 r0=e4f545de r1=bda82dab r2=d07bb96f r3=be18f1c5 r4=de02d0c5 r5=78d192ad r6=6fb2bd0e r7=f4b8aa0d g=4615e50b g16=7f9e6142
-pic 2 B n2 t7200 d3600 f2 --p- pts55800 79474222 y0=1394b1fd y1=d6c0e0de y2=e9c2d0fd y3=f0c6f221 r0=48a0f500 r1=0efd7e84 r2=560d1440 r3=9e45acc5 r4=dc0a07c5 r5=c224f888 r6=99ef155f r7=b39b0448 g=5d6d47c4 g16=31d5b27a
-pic 3 P n3 t10800 d3600 f2 --p- pts59400 cf5c1e17 y0=fc5c4b25 y1=9e107c1c y2=8e536c25 y3=c5abd701 r0=b1eae5b0 r1=870b8347 r2=55933878 r3=f5e610c5 r4=38824fc5 r5=202e0342 r6=2103737e r7=207383e2 g=5aa9a8c0 g16=42e4677b
-pic 4 B n4 t14400 d3600 f2 --p- pts63000 1591ef4e
-pic 5 B n5 t18000 d3600 f2 --p- pts66600 97534ec8
-pic 6 P n6 t21600 d3600 f2 --p- pts70200 e0f101d0
-pic 7 B n7 t25200 d3600 f2 --p- pts73800 67f9f6b8
-pic 8 B n8 t28800 d3600 f2 --p- pts77400 f36e6637
-pic 9 P n9 t32400 d3600 f2 --p- pts81000 fe128daa
-pic 10 B n10 t36000 d3600 f2 --p- pts84600 bf042811
-pic 11 B n11 t39600 d3600 f2 --p- pts88200 9d49031c
-pic 12 I n12 t43200 d3600 f2 --p- pts91800 914847ff
-pic 13 B n13 t46800 d3600 f2 --p- pts95400 81785212
-pic 14 B n14 t50400 d3600 f2 --p- pts99000 f8a45efc
-pic 15 P n15 t54000 d3600 f2 --p- pts102600 e2b62a4f
-pic 16 B n16 t57600 d3600 f2 --p- pts106200 fd194ef7
-pic 17 B n17 t61200 d3600 f2 --p- pts109800 06a9a78b
-pic 18 P n18 t64800 d3600 f2 --p- pts113400 ec8440f6
-pic 19 B n19 t68400 d3600 f2 --p- pts117000 39b5a702
-pic 20 B n20 t72000 d3600 f2 --p- pts120600 d14ed4cd
-pic 21 P n21 t75600 d3600 f2 --p- pts124200 41d93414
-pic 22 B n22 t79200 d3600 f2 --p- pts127800 bdaa02b7
-pic 23 B n23 t82800 d3600 f2 --p- pts131400 89f9f691
-pic 24 I n24 t86400 d3600 f2 --p- pts135000 9f1c147c
-pic 25 B n25 t90000 d3600 f2 --p- pts138600 6581fa89
-pic 26 B n26 t93600 d3600 f2 --p- pts142200 d2088281
-pic 27 P n27 t97200 d3600 f2 --p- pts145800 5e069324
-pic 28 B n28 t100800 d3600 f2 --p- pts149400 772adb62
-pic 29 B n29 t104400 d3600 f2 --p- pts153000 81820f62
-pic 30 P n30 t108000 d3600 f2 --p- pts156600 54a12b61
-pic 31 B n31 t111600 d3600 f2 --p- pts160200 1d5b048d
-pic 32 B n32 t115200 d3600 f2 --p- pts163800 36459d07
-pic 33 P n33 t118800 d3600 f2 --p- pts167400 f5efcdbc
-pic 34 B n34 t122400 d3600 f2 --p- pts171000 08b2c5ba
-pic 35 B n35 t126000 d3600 f2 --p- pts174600 770b796c
-pic 36 I n36 t129600 d3600 f2 --p- pts178200 9e4dbdc9
-pic 37 B n37 t133200 d3600 f2 --p- pts181800 41934aab
-pic 38 B n38 t136800 d3600 f2 --p- pts185400 8f9bd5c5
-pic 39 P n39 t140400 d3600 f2 --p- pts189000 b46b4342
-pic 40 B n40 t144000 d3600 f2 --p- pts192600 09561266
-pic 41 B n41 t147600 d3600 f2 --p- pts196200 cd63959c
-pic 42 P n42 t151200 d3600 f2 --p- pts199800 c6e7903d
-pic 43 B n43 t154800 d3600 f2 --p- pts203400 caa581a1
-pic 44 B n44 t158400 d3600 f2 --p- pts207000 127d4485
-pic 45 P n45 t162000 d3600 f2 --p- pts210600 b8a4fd0d
-pic 46 B n46 t165600 d3600 f2 --p- pts214200 1a002427
-pic 47 B n47 t169200 d3600 f2 --p- pts217800 974dc82e
-pic 48 I n48 t172800 d3600 f2 --p- pts221400 0423ae24
-pic 49 P n49 t176400 d3600 f2 --p- pts225000 c4548b90
-read 50 pictures, 0 B passed over, hash 8a240229, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
-skipb 18 pictures, 32 B passed over, hash f954cb31, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
-pushed 50 pictures, 0 B passed over, hash 8a240229, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
-flushed 57 pictures, 0 B passed over, hash 57561ae1, end 1; 9 packets (18128 bytes, 9 timed, 0 AC-3, 0 navigation) not video
+pic 0 I n0 t0 d3600 f2 --p- pts48600 3c87be78 y0=6d3381cd y1=57d9818a y2=6b8e1bcd y3=a1f77009 r0=8b67056f r1=223fd113 r2=3e309512 r3=295522c5 r4=386eafc5 r5=2d4f3677 r6=f316ca16 r7=2bad2717 g=6d1c0c17 g16=4ececfb8
+pic 1 B n1 t3600 d3600 f2 --p- pts52200 1bca9aec y0=ce82529d y1=2282d620 y2=d7baba9d y3=84cd5a81 r0=b6cee7a4 r1=a1b8aa5f r2=0ce45992 r3=2af9f6c5 r4=9bfc95c5 r5=8106d66a r6=d060210b r7=0f7ad1ea g=b098d2c2 g16=c09b7631
+pic 2 B n2 t7200 d3600 f2 --p- pts55800 feb161a3 y0=febe8379 y1=c5339544 y2=0ce10e79 y3=02202f49 r0=1b5829a3 r1=4b5e363e r2=dce362af r3=1a482dc5 r4=d6dc2dc5 r5=3023fba0 r6=c801386f r7=a3c5fce0 g=8f433259 g16=b19e03bd
+pic 3 P n3 t10800 d3600 f2 --p- pts59400 6e979bb7 y0=fcb9a149 y1=ab0b56be y2=bb4daf49 y3=58d65a8d r0=65b9a69b r1=642206b4 r2=f47e752c r3=8b3b62c5 r4=e508f8c5 r5=b244fcc0 r6=4ee0e4d6 r7=f22d1380 g=146b6327 g16=29d8b047
+pic 4 B n4 t14400 d3600 f2 --p- pts63000 9fba76e7
+pic 5 B n5 t18000 d3600 f2 --p- pts66600 71578416
+pic 6 P n6 t21600 d3600 f2 --p- pts70200 ba8cd171
+pic 7 B n7 t25200 d3600 f2 --p- pts73800 1eff8e4e
+pic 8 B n8 t28800 d3600 f2 --p- pts77400 2b9874ed
+pic 9 P n9 t32400 d3600 f2 --p- pts81000 1f54281c
+pic 10 B n10 t36000 d3600 f2 --p- pts84600 b171320c
+pic 11 B n11 t39600 d3600 f2 --p- pts88200 800654fe
+pic 12 I n12 t43200 d3600 f2 --p- pts91800 1caef2f4
+pic 13 B n13 t46800 d3600 f2 --p- pts95400 d4b0418c
+pic 14 B n14 t50400 d3600 f2 --p- pts99000 e73a8b0a
+pic 15 P n15 t54000 d3600 f2 --p- pts102600 c3660d32
+pic 16 B n16 t57600 d3600 f2 --p- pts106200 216d452b
+pic 17 B n17 t61200 d3600 f2 --p- pts109800 c4c7aeaf
+pic 18 P n18 t64800 d3600 f2 --p- pts113400 74395723
+pic 19 B n19 t68400 d3600 f2 --p- pts117000 39847063
+pic 20 B n20 t72000 d3600 f2 --p- pts120600 7a69bb1a
+pic 21 P n21 t75600 d3600 f2 --p- pts124200 deef6bdb
+pic 22 B n22 t79200 d3600 f2 --p- pts127800 aa2fc44f
+pic 23 B n23 t82800 d3600 f2 --p- pts131400 ebddf24f
+pic 24 I n24 t86400 d3600 f2 --p- pts135000 56a37508
+pic 25 B n25 t90000 d3600 f2 --p- pts138600 28f886b7
+pic 26 B n26 t93600 d3600 f2 --p- pts142200 326d17c5
+pic 27 P n27 t97200 d3600 f2 --p- pts145800 582641c0
+pic 28 B n28 t100800 d3600 f2 --p- pts149400 dc46f8a6
+pic 29 B n29 t104400 d3600 f2 --p- pts153000 00dfd484
+pic 30 P n30 t108000 d3600 f2 --p- pts156600 54cdc95b
+pic 31 B n31 t111600 d3600 f2 --p- pts160200 8b13057a
+pic 32 B n32 t115200 d3600 f2 --p- pts163800 b4747275
+pic 33 P n33 t118800 d3600 f2 --p- pts167400 3340c7b9
+pic 34 B n34 t122400 d3600 f2 --p- pts171000 c8d64ec7
+pic 35 B n35 t126000 d3600 f2 --p- pts174600 d2f05054
+pic 36 I n36 t129600 d3600 f2 --p- pts178200 197884cc
+pic 37 B n37 t133200 d3600 f2 --p- pts181800 f3994e83
+pic 38 B n38 t136800 d3600 f2 --p- pts185400 3abf335a
+pic 39 P n39 t140400 d3600 f2 --p- pts189000 c2fb6b58
+pic 40 B n40 t144000 d3600 f2 --p- pts192600 c1949ece
+pic 41 B n41 t147600 d3600 f2 --p- pts196200 9aff9ec1
+pic 42 P n42 t151200 d3600 f2 --p- pts199800 554687b7
+pic 43 B n43 t154800 d3600 f2 --p- pts203400 61f763bd
+pic 44 B n44 t158400 d3600 f2 --p- pts207000 33bc7f7e
+pic 45 P n45 t162000 d3600 f2 --p- pts210600 94d0e631
+pic 46 B n46 t165600 d3600 f2 --p- pts214200 e90b275a
+pic 47 B n47 t169200 d3600 f2 --p- pts217800 80247081
+pic 48 I n48 t172800 d3600 f2 --p- pts221400 ec45af7d
+pic 49 P n49 t176400 d3600 f2 --p- pts225000 00d3cb3a
+read 50 pictures, 0 B passed over, hash 31254314, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+skipb 18 pictures, 32 B passed over, hash bda1c5d2, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+pushed 50 pictures, 0 B passed over, hash 31254314, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+flushed 57 pictures, 0 B passed over, hash 7a3503ec, end 1; 9 packets (18128 bytes, 9 timed, 0 AC-3, 0 navigation) not video
 file es.m1v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 176x144 rate 4 30000/1001 period 3003 aspect 8 shown 192 bitrate 0 kind 2
 examine flags 2 profile 0 level 0 chroma 1 aspect 4:3 display 176x144
-pic 0 I n0 t0 d3003 f2 --p- pts0- ba5ed728 y0=7a68a899 y1=abf17218 y2=fa15d199 y3=44169c79 r0=d1e346b6 r1=4da2153f r2=773910ce r3=3d6e9dc5 r4=9c137fc5 r5=4be0f82f r6=a4a68bc8 r7=bbacaa8f g=5007ccaa g16=30c7f8e6
-pic 1 B n1 t3003 d3003 f2 --p- pts3003- d6ac7cbc y0=7eb3cb51 y1=93e2cb68 y2=f2261d51 y3=2863f595 r0=e598ffb1 r1=103444b0 r2=44bad89b r3=2af734c5 r4=36124cc5 r5=5b638ae0 r6=cddf2b72 r7=36ba2e80 g=9daab591 g16=9ea488fb
-pic 2 B n2 t6006 d3003 f2 --p- pts6006- 43278b7e y0=a4beb901 y1=2f5dad46 y2=d4b78001 y3=6388ded9 r0=7b673481 r1=4c18377d r2=e18a072a r3=671b6dc5 r4=7cb051c5 r5=88139240 r6=e0a19812 r7=bf024100 g=1735f352 g16=9ea488fb
-pic 3 P n3 t9009 d3003 f2 --p- pts9009- 43278b7e y0=a4beb901 y1=2f5dad46 y2=d4b78001 y3=6388ded9 r0=7b673481 r1=4c18377d r2=e18a072a r3=671b6dc5 r4=7cb051c5 r5=88139240 r6=e0a19812 r7=bf024100 g=1735f352 g16=9ea488fb
-pic 4 B n4 t12012 d3003 f2 --p- pts12012- 61c62800
-pic 5 B n5 t15015 d3003 f2 --p- pts15015- 61c62800
-pic 6 P n6 t18018 d3003 f2 --p- pts18018- 61c62800
-pic 7 B n7 t21021 d3003 f2 --p- pts21021- 74daae14
-pic 8 B n8 t24024 d3003 f2 --p- pts24024- 74daae14
-pic 9 P n9 t27027 d3003 f2 --p- pts27027- 4a9a0fd4
-pic 10 B n10 t30030 d3003 f2 --p- pts30030- 74daae14
-pic 11 B n11 t33033 d3003 f2 --p- pts33033- 74daae14
-pic 12 P n12 t36036 d3003 f2 --p- pts36036- 4a9a0fd4
-pic 13 B n13 t39039 d3003 f2 --p- pts39039- 0c793052
-pic 14 B n14 t42042 d3003 f2 --p- pts42042- 0c793052
-pic 15 I n15 t45045 d3003 f2 --p- pts45045- a909c1f0
-pic 16 B n16 t48048 d3003 f2 --p- pts48048- 42f6baf5
-pic 17 B n17 t51051 d3003 f2 --p- pts51051- 42f6baf5
-pic 18 P n18 t54054 d3003 f2 --p- pts54054- 42f6baf5
-pic 19 B n19 t57057 d3003 f2 --p- pts57057- aee01b29
-pic 20 B n20 t60060 d3003 f2 --p- pts60060- aee01b29
-pic 21 P n21 t63063 d3003 f2 --p- pts63063- aee01b29
-pic 22 B n22 t66066 d3003 f2 --p- pts66066- 3109e1a5
-pic 23 B n23 t69069 d3003 f2 --p- pts69069- 3109e1a5
-pic 24 P n24 t72072 d3003 f2 --p- pts72072- 3109e1a5
-pic 25 B n25 t75075 d3003 f2 --p- pts75075- 3109e1a5
-pic 26 B n26 t78078 d3003 f2 --p- pts78078- 3109e1a5
-pic 27 P n27 t81081 d3003 f2 --p- pts81081- 3109e1a5
-pic 28 B n28 t84084 d3003 f2 --p- pts84084- 87e41811
-pic 29 B n29 t87087 d3003 f2 --p- pts87087- 87e41811
-pic 30 I n30 t90090 d3003 f2 --p- pts90090- a909c1f0
-pic 31 B n31 t93093 d3003 f2 --p- pts93093- 42f6baf5
-pic 32 B n32 t96096 d3003 f2 --p- pts96096- 42f6baf5
-pic 33 P n33 t99099 d3003 f2 --p- pts99099- 42f6baf5
-pic 34 B n34 t102102 d3003 f2 --p- pts102102- aee01b29
-pic 35 B n35 t105105 d3003 f2 --p- pts105105- aee01b29
-pic 36 P n36 t108108 d3003 f2 --p- pts108108- aee01b29
-pic 37 B n37 t111111 d3003 f2 --p- pts111111- 3109e1a5
-pic 38 B n38 t114114 d3003 f2 --p- pts114114- 3109e1a5
-pic 39 P n39 t117117 d3003 f2 --p- pts117117- 3109e1a5
-pic 40 B n40 t120120 d3003 f2 --p- pts120120- 3109e1a5
-pic 41 B n41 t123123 d3003 f2 --p- pts123123- 3109e1a5
-pic 42 P n42 t126126 d3003 f2 --p- pts126126- 3109e1a5
-pic 43 B n43 t129129 d3003 f2 --p- pts129129- 87e41811
-pic 44 I n44 t132132 d3003 f2 --p- pts132132- a909c1f0
-read 45 pictures, 0 B passed over, hash bbeefd70, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-skipb 16 pictures, 29 B passed over, hash 2b2ea5e3, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-pushed 45 pictures, 0 B passed over, hash bbeefd70, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-flushed 52 pictures, 0 B passed over, hash 2a00fd5a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pic 0 I n0 t0 d3003 f2 --p- pts0- e1194b90 y0=36b81869 y1=d82cef8c y2=5c136769 y3=9956aa85 r0=f6ed2fb3 r1=f8792482 r2=397a226d r3=cff9eec5 r4=fbe001c5 r5=be70e66f r6=256659c8 r7=bb3c3acf g=db60b48a g16=738cf8e6
+pic 1 B n1 t3003 d3003 f2 --p- pts3003- a277a85f y0=68f68035 y1=f17fd762 y2=63eea635 y3=f9e2a789 r0=98830399 r1=71e3e7a0 r2=2abeed02 r3=0c8961c5 r4=15b90cc5 r5=1804c538 r6=7f98f26a r7=5048fff8 g=24335111 g16=9ea488fb
+pic 2 B n2 t6006 d3003 f2 --p- pts6006- 8281c309 y0=0251fbf9 y1=c08227c8 y2=1aab44f9 y3=3c55d619 r0=eff3f421 r1=1df0c995 r2=21d8bedf r3=fc64e0c5 r4=5076cdc5 r5=c6c1ead8 r6=0370de4a r7=93d506b8 g=f47cb752 g16=9ea488fb
+pic 3 P n3 t9009 d3003 f2 --p- pts9009- 8281c309 y0=0251fbf9 y1=c08227c8 y2=1aab44f9 y3=3c55d619 r0=eff3f421 r1=1df0c995 r2=21d8bedf r3=fc64e0c5 r4=5076cdc5 r5=c6c1ead8 r6=0370de4a r7=93d506b8 g=f47cb752 g16=9ea488fb
+pic 4 B n4 t12012 d3003 f2 --p- pts12012- 88ccaeb3
+pic 5 B n5 t15015 d3003 f2 --p- pts15015- 88ccaeb3
+pic 6 P n6 t18018 d3003 f2 --p- pts18018- 88ccaeb3
+pic 7 B n7 t21021 d3003 f2 --p- pts21021- 535555db
+pic 8 B n8 t24024 d3003 f2 --p- pts24024- 535555db
+pic 9 P n9 t27027 d3003 f2 --p- pts27027- 55f3cb9b
+pic 10 B n10 t30030 d3003 f2 --p- pts30030- 535555db
+pic 11 B n11 t33033 d3003 f2 --p- pts33033- 535555db
+pic 12 P n12 t36036 d3003 f2 --p- pts36036- 55f3cb9b
+pic 13 B n13 t39039 d3003 f2 --p- pts39039- f6531a33
+pic 14 B n14 t42042 d3003 f2 --p- pts42042- f6531a33
+pic 15 I n15 t45045 d3003 f2 --p- pts45045- f8efa164
+pic 16 B n16 t48048 d3003 f2 --p- pts48048- 78b9bdcb
+pic 17 B n17 t51051 d3003 f2 --p- pts51051- 78b9bdcb
+pic 18 P n18 t54054 d3003 f2 --p- pts54054- 78b9bdcb
+pic 19 B n19 t57057 d3003 f2 --p- pts57057- c84959d9
+pic 20 B n20 t60060 d3003 f2 --p- pts60060- c84959d9
+pic 21 P n21 t63063 d3003 f2 --p- pts63063- c84959d9
+pic 22 B n22 t66066 d3003 f2 --p- pts66066- 54f1bc59
+pic 23 B n23 t69069 d3003 f2 --p- pts69069- 54f1bc59
+pic 24 P n24 t72072 d3003 f2 --p- pts72072- 54f1bc59
+pic 25 B n25 t75075 d3003 f2 --p- pts75075- 54f1bc59
+pic 26 B n26 t78078 d3003 f2 --p- pts78078- 54f1bc59
+pic 27 P n27 t81081 d3003 f2 --p- pts81081- 54f1bc59
+pic 28 B n28 t84084 d3003 f2 --p- pts84084- 09722a29
+pic 29 B n29 t87087 d3003 f2 --p- pts87087- 09722a29
+pic 30 I n30 t90090 d3003 f2 --p- pts90090- f8efa164
+pic 31 B n31 t93093 d3003 f2 --p- pts93093- 78b9bdcb
+pic 32 B n32 t96096 d3003 f2 --p- pts96096- 78b9bdcb
+pic 33 P n33 t99099 d3003 f2 --p- pts99099- 78b9bdcb
+pic 34 B n34 t102102 d3003 f2 --p- pts102102- c84959d9
+pic 35 B n35 t105105 d3003 f2 --p- pts105105- c84959d9
+pic 36 P n36 t108108 d3003 f2 --p- pts108108- c84959d9
+pic 37 B n37 t111111 d3003 f2 --p- pts111111- 54f1bc59
+pic 38 B n38 t114114 d3003 f2 --p- pts114114- 54f1bc59
+pic 39 P n39 t117117 d3003 f2 --p- pts117117- 54f1bc59
+pic 40 B n40 t120120 d3003 f2 --p- pts120120- 54f1bc59
+pic 41 B n41 t123123 d3003 f2 --p- pts123123- 54f1bc59
+pic 42 P n42 t126126 d3003 f2 --p- pts126126- 54f1bc59
+pic 43 B n43 t129129 d3003 f2 --p- pts129129- 09722a29
+pic 44 I n44 t132132 d3003 f2 --p- pts132132- f8efa164
+read 45 pictures, 0 B passed over, hash 70e5500a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 16 pictures, 29 B passed over, hash 5d5cf0e7, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 45 pictures, 0 B passed over, hash 70e5500a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 52 pictures, 0 B passed over, hash 39d4639a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 file pal.m2v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x576 rate 3 25/1 period 3600 aspect 2 shown 768 bitrate 8000000 kind 2
 examine flags 1 profile 4 level 8 chroma 1 aspect 4:3 display 720x576
-pic 0 I n0 t0 d3600 f2 t--- pts0- a9b7b56f y0=1c09543d y1=08cebcd1 y2=b482673d y3=6d326e39 r0=7c0e8be7 r1=a2da027a r2=89a2a85e r3=c28e70c5 r4=0b6adec5 r5=25bcfa06 r6=66e22916 r7=0e1e13e6 g=ca0d4d5c g16=ca83b31f
-pic 1 B n1 t3600 d3600 f2 t--- pts3600- a8998285 y0=ee406fdd y1=46e22c2a y2=568edbdd y3=853e6571 r0=a75f5929 r1=251b7ed8 r2=6547b9c3 r3=d3e945c5 r4=00c791c5 r5=933985c0 r6=d30a1893 r7=ac8dd2c0 g=24f1d429 g16=194a02dd
-pic 2 B n2 t7200 d3600 f2 t--- pts7200- 534094e4 y0=7d69ffb5 y1=16d29b68 y2=0f4745b5 y3=0652fa69 r0=c405f826 r1=29626068 r2=615381b8 r3=0891b0c5 r4=60f753c5 r5=4e0dacd0 r6=20bcb478 r7=26c7dd90 g=08b73bcc g16=0629f62f
-pic 3 P n3 t10800 d3600 f2 t--- pts10800- 213a7336 y0=eeb28be1 y1=8f058af6 y2=2f84ede1 y3=e59153f1 r0=84ce7f74 r1=80e24add r2=4325a16d r3=5db319c5 r4=49de8ac5 r5=4bf14125 r6=c5150378 r7=829d2885 g=19291d39 g16=5844cd82
-pic 4 B n4 t14400 d3600 f2 t--- pts14400- b508db57
-pic 5 B n5 t18000 d3600 f2 t--- pts18000- 9be6384a
-pic 6 P n6 t21600 d3600 f2 t--- pts21600- 01fa709e
-pic 7 B n7 t25200 d3600 f2 t--- pts25200- 4d5dd906
-pic 8 B n8 t28800 d3600 f2 t--- pts28800- 1810d442
-pic 9 P n9 t32400 d3600 f2 t--- pts32400- bb39dfbd
-pic 10 B n10 t36000 d3600 f2 t--- pts36000- f0ba94a6
-pic 11 P n11 t39600 d3600 f2 t--- pts39600- d8a21b50
-read 12 pictures, 0 B passed over, hash 7c8daca5, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-skipb 5 pictures, 7 B passed over, hash 8c6859d7, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-pushed 12 pictures, 0 B passed over, hash 7c8daca5, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-flushed 19 pictures, 0 B passed over, hash 73391b98, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pic 0 I n0 t0 d3600 f2 t--- pts0- 06e90413 y0=44c38169 y1=e374c5de y2=1b9a2569 y3=245b7625 r0=c758c14e r1=fe6c81e0 r2=7e86345f r3=fb3bfdc5 r4=b89db2c5 r5=3c3c1f95 r6=67d2b624 r7=beb05395 g=12d231f4 g16=efd934a7
+pic 1 B n1 t3600 d3600 f2 t--- pts3600- 834bab37 y0=974a45a5 y1=2612a833 y2=0d67e7a5 y3=47ae776d r0=72a4a3eb r1=39f32864 r2=53c66d0a r3=2d1f8ac5 r4=9a212cc5 r5=5c5067e7 r6=5dfb8002 r7=fab730c7 g=31bd31f2 g16=59d05830
+pic 2 B n2 t7200 d3600 f2 t--- pts7200- b1493ed7 y0=2dc27af9 y1=0ee8062b y2=6ae9aef9 y3=a966a4e5 r0=575d07c4 r1=d72a53a4 r2=763a0051 r3=fd2473c5 r4=181591c5 r5=7ed9fbcd r6=16dcb266 r7=c147e74d g=e3c3c404 g16=25020153
+pic 3 P n3 t10800 d3600 f2 t--- pts10800- c47de031 y0=e0481239 y1=f02ee92c y2=c09a7c39 y3=0112df2d r0=b31109ae r1=c24c4209 r2=65969237 r3=6c0e23c5 r4=6a1293c5 r5=d04a3ae9 r6=27677d3b r7=c94b6449 g=93cf3a9e g16=c835216e
+pic 4 B n4 t14400 d3600 f2 t--- pts14400- a9ab3fb7
+pic 5 B n5 t18000 d3600 f2 t--- pts18000- 308da982
+pic 6 P n6 t21600 d3600 f2 t--- pts21600- d880d273
+pic 7 B n7 t25200 d3600 f2 t--- pts25200- dbdcff3c
+pic 8 B n8 t28800 d3600 f2 t--- pts28800- 276a3def
+pic 9 P n9 t32400 d3600 f2 t--- pts32400- 31285839
+pic 10 B n10 t36000 d3600 f2 t--- pts36000- cbf0a5a4
+pic 11 P n11 t39600 d3600 f2 t--- pts39600- 5336404b
+read 12 pictures, 0 B passed over, hash b2b53750, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 5 pictures, 7 B passed over, hash 35f2a8da, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 12 pictures, 0 B passed over, hash b2b53750, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 19 pictures, 0 B passed over, hash 8ac1f716, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 file ntsc.m2v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x480 rate 4 30000/1001 period 3003 aspect 3 shown 853 bitrate 8000000 kind 2
 examine flags 1 profile 4 level 8 chroma 1 aspect 16:9 display 720x480
-pic 0 I n0 t0 d4504 f3 trp- pts0- 54fdcffb y0=4c6b3b65 y1=1e4176d1 y2=86f43465 y3=14288825 r0=086a6fb4 r1=bbea0298 r2=29a49d51 r3=fc3645c5 r4=075c95c5 r5=832cb7d3 r6=7ad48584 r7=11f085f3 g=5b11a301 g16=89bba0be
-pic 1 B n1 t4504 d3003 f2 --p- pts4504- 35d34422 y0=8183e589 y1=55d2c156 y2=a5347789 y3=a5481b71 r0=54fd1f41 r1=81d3b504 r2=7a5caf54 r3=952060c5 r4=7199e4c5 r5=a4035928 r6=d3fb7e93 r7=2b801d08 g=2b9b26ff g16=f3fa7856
-pic 2 B n2 t7507 d4505 f3 -rp- pts7507- 32125178 y0=0bc18cbd y1=d9afadaf y2=a58bf0bd y3=b230828d r0=c22a98cb r1=413f7d30 r2=cb9ce359 r3=ccb013c5 r4=660951c5 r5=860e8a34 r6=17d28015 r7=14e17eb4 g=58b9824d g16=c11636be
-pic 3 P n3 t12012 d3003 f2 t-p- pts12012- df46c17c y0=0f1b41f5 y1=643676f3 y2=c14f1df5 y3=bfb3ddd5 r0=e0169d01 r1=99251787 r2=7892a6b3 r3=7f5a13c5 r4=7811b9c5 r5=57dc54e8 r6=e1f65764 r7=a760cae8 g=ffda505a g16=00e18181
-pic 4 B n4 t15015 d4504 f3 trp- pts15015- 86fe733c
-pic 5 B n5 t19519 d3003 f2 --p- pts19519- 29b0fa83
-pic 6 P n6 t22522 d4505 f3 -rp- pts22522- 0fe4aaf3
-pic 7 B n7 t27027 d3003 f2 t-p- pts27027- 08ff96cf
-pic 8 B n8 t30030 d4504 f3 trp- pts30030- 6d9e0208
-pic 9 P n9 t34534 d3003 f2 --p- pts34534- f171e557
-pic 10 B n10 t37537 d4505 f3 -rp- pts37537- 19307aa1
-pic 11 P n11 t42042 d3003 f2 t-p- pts42042- 11eb1714
-read 12 pictures, 0 B passed over, hash ca07053f, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-skipb 5 pictures, 7 B passed over, hash 7cce71e8, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-pushed 12 pictures, 0 B passed over, hash ca07053f, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-flushed 19 pictures, 0 B passed over, hash 5a961114, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pic 0 I n0 t0 d4504 f3 trp- pts0- eadeccfe y0=d9d2a96d y1=0cc6f3ed y2=6750bf6d y3=6944152d r0=1b16b710 r1=7cb9bd9f r2=51051dfb r3=ef57bfc5 r4=0ec96cc5 r5=73f9c191 r6=e78c43c0 r7=40e923d1 g=cf9e58a6 g16=6d45f684
+pic 1 B n1 t4504 d3003 f2 --p- pts4504- 19b34790 y0=617f4e5d y1=4c2d4fc8 y2=1f18005d y3=9b062595 r0=03da6fc2 r1=41e98fee r2=80bd32c9 r3=f72811c5 r4=265a9cc5 r5=2e089425 r6=4e68ab47 r7=c3322fc5 g=bc871f0f g16=febc49d7
+pic 2 B n2 t7507 d4505 f3 -rp- pts7507- 00816613 y0=6ba8fc89 y1=7e7031a6 y2=1bb25a89 y3=9b0efb7d r0=75179bc0 r1=ffa10427 r2=1ab7bcd7 r3=14273dc5 r4=92a0c4c5 r5=9dd3d6f1 r6=0a07074e r7=6f21d611 g=030a794a g16=5a51c55c
+pic 3 P n3 t12012 d3003 f2 t-p- pts12012- 61152d24 y0=8e035ec9 y1=063380c8 y2=c37ab9c9 y3=8745a869 r0=a5c41f2f r1=dc8cac03 r2=759bb76a r3=e588d0c5 r4=8e4361c5 r5=b556d7a0 r6=bba3d3dd r7=67f7ef80 g=35a6fb7d g16=480a9035
+pic 4 B n4 t15015 d4504 f3 trp- pts15015- 93dda7ab
+pic 5 B n5 t19519 d3003 f2 --p- pts19519- 834d2feb
+pic 6 P n6 t22522 d4505 f3 -rp- pts22522- f1aeab61
+pic 7 B n7 t27027 d3003 f2 t-p- pts27027- 066d4098
+pic 8 B n8 t30030 d4504 f3 trp- pts30030- d37aee6d
+pic 9 P n9 t34534 d3003 f2 --p- pts34534- 9301e075
+pic 10 B n10 t37537 d4505 f3 -rp- pts37537- 9b941f72
+pic 11 P n11 t42042 d3003 f2 t-p- pts42042- e1185ce1
+read 12 pictures, 0 B passed over, hash f9c8f06c, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 5 pictures, 7 B passed over, hash c6defe14, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 12 pictures, 0 B passed over, hash f9c8f06c, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 19 pictures, 0 B passed over, hash 8fe651f8, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 file dvd.vob (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x576 rate 3 25/1 period 3600 aspect 3 shown 1024 bitrate 8000000 kind 1
 examine flags b profile 4 level 8 chroma 1 aspect 16:9 display 720x576
-pic 0 I n0 t0 d3600 f2 --p- pts48600 6eaa59dd y0=72033a6d y1=c313f6a8 y2=24e9486d y3=b001a121 r0=3ed237b2 r1=c986d66a r2=9780298b r3=7a4fa7c5 r4=2f237bc5 r5=414e3860 r6=1f256c7d r7=cafa50e0 g=bc8c6b47 g16=09b1fd2a
-pic 1 B n1 t3600 d3600 f2 --p- pts52200 6ccd89bf y0=baa7786d y1=a4b0838d y2=0b7bd36d y3=fb5de09d r0=2c68f90f r1=411c5c6e r2=c6f6b520 r3=cbc4f2c5 r4=7193a6c5 r5=6f13f460 r6=e53effe5 r7=88827180 g=142130d5 g16=2c3b70d9
-pic 2 B n2 t7200 d3600 f2 --p- pts55800 d7cc05a7 y0=ead9bf45 y1=57dc3d82 y2=c1ddaa45 y3=75f17369 r0=43c12a94 r1=55b67fdf r2=1a44edbd r3=d31121c5 r4=cb399ac5 r5=0394a93c r6=f5171c80 r7=07e23c5c g=57635e49 g16=8b6686b6
-pic 3 P n3 t10800 d3600 f2 --p- pts59400 834b2ca4 y0=c9f57831 y1=2f4e50e9 y2=b2e0d631 y3=87a10529 r0=d1efc43d r1=14127cfc r2=f532c312 r3=773858c5 r4=800facc5 r5=80ce9dc2 r6=26cccfa2 r7=95be3862 g=5a552228 g16=12f12a3e
-pic 4 B n4 t14400 d3600 f2 --p- pts63000 29555638
-pic 5 B n5 t18000 d3600 f2 --p- pts66600 abf924ce
-pic 6 P n6 t21600 d3600 f2 --p- pts70200 22e246ca
-pic 7 B n7 t25200 d3600 f2 --p- pts73800 b7c1a166
-pic 8 B n8 t28800 d3600 f2 --p- pts77400 24227ae9
-pic 9 P n9 t32400 d3600 f2 --p- pts81000 90531120
-pic 10 B n10 t36000 d3600 f2 --p- pts84600 48bd91a7
-pic 11 P n11 t39600 d3600 f2 --p- pts88200 bab1be18
-read 12 pictures, 0 B passed over, hash e8347d62, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
-skipb 5 pictures, 7 B passed over, hash ecab57b2, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
-pushed 12 pictures, 0 B passed over, hash e8347d62, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
-flushed 19 pictures, 0 B passed over, hash 93996b71, end 1; 12 packets (19575 bytes, 8 timed, 8 AC-3, 4 navigation) not video
+pic 0 I n0 t0 d3600 f2 --p- pts48600 fb82af1a y0=d439ddad y1=80986c00 y2=8fac32ad y3=73f8ab99 r0=000d33fe r1=24ef0d3f r2=5345441a r3=7ac546c5 r4=6dd1fbc5 r5=61f18cbf r6=7b1cc8eb r7=99336a9f g=dce1cd43 g16=7aff12ce
+pic 1 B n1 t3600 d3600 f2 --p- pts52200 38d4b74a y0=a3eeb325 y1=8d1fcb00 y2=adc07425 y3=3724b5c1 r0=50e52734 r1=aaab056a r2=119efd23 r3=5eefd1c5 r4=e97c92c5 r5=07e12198 r6=50c533b2 r7=c63e2c38 g=3819f6f0 g16=796161a6
+pic 2 B n2 t7200 d3600 f2 --p- pts55800 6571d782 y0=f26debc9 y1=f07756ee y2=e4fd4cc9 y3=38315435 r0=270cbeac r1=17fc1d91 r2=60119036 r3=ec3b66c5 r4=3f8986c5 r5=11ba99d6 r6=f5386ab7 r7=3eda9656 g=46533512 g16=403af649
+pic 3 P n3 t10800 d3600 f2 --p- pts59400 1e745f6a y0=de223899 y1=c79a9a34 y2=648a6099 y3=1f1f1f75 r0=c1dab639 r1=6cfc473d r2=df404a66 r3=ce1d54c5 r4=0cb686c5 r5=6c9efe24 r6=a576384b r7=f3d83ce4 g=93b420bf g16=446e3f56
+pic 4 B n4 t14400 d3600 f2 --p- pts63000 7a2a43f4
+pic 5 B n5 t18000 d3600 f2 --p- pts66600 fba7fa20
+pic 6 P n6 t21600 d3600 f2 --p- pts70200 9e1ada9a
+pic 7 B n7 t25200 d3600 f2 --p- pts73800 4793b683
+pic 8 B n8 t28800 d3600 f2 --p- pts77400 e7c88b3f
+pic 9 P n9 t32400 d3600 f2 --p- pts81000 ccc8bd97
+pic 10 B n10 t36000 d3600 f2 --p- pts84600 fc27d22e
+pic 11 P n11 t39600 d3600 f2 --p- pts88200 4ffdbca1
+read 12 pictures, 0 B passed over, hash 471902fd, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+skipb 5 pictures, 7 B passed over, hash 35a4cc3d, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+pushed 12 pictures, 0 B passed over, hash 471902fd, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+flushed 19 pictures, 0 B passed over, hash deaf2be9, end 1; 12 packets (19575 bytes, 8 timed, 8 AC-3, 4 navigation) not video

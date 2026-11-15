@@ -122,3 +122,18 @@ Positions times strides as 16-bit products (15 November 2026)
 - libmpeg2/slice.c: in the 4:2:0 motion macros (frame, field, dual
   prime, zero), a row position times the stride as MULS.W (both 16
   bits), where gcc used MULS.L. The same addresses.
+
+A faster IDCT, within IEEE 1180 (mpegv 2.1, 15 November 2026)
+-------------------------------------------------------------
+
+- libmpeg2/idct.c, libmpeg2/idct_aan_68k.s (new): the rows are
+  libmpeg2's, each with its constants times the AAN prescale of the
+  column frequency it holds (f5 and f6 kept at twice, f7 at four times,
+  so their rounding costs no more than the others'); the columns are
+  Arai, Agui and Nakajima's transform, five multiplies, in 32 bits (the
+  values times 1024, the pixel the high word). Each row's code is
+  inlined for it, its constants immediates. No longer libmpeg2's to the
+  bit: within IEEE 1180 (tests/idct_test.c: peak 1, mean square 0.015,
+  mean 0.0004). MPEGV_EXACT_IDCT builds 2.0's IDCT, libmpeg2's to the
+  bit, which make test uses to check everything else against libmpeg2's
+  own C.
