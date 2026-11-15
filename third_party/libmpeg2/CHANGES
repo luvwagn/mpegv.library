@@ -1,0 +1,28 @@
+libmpeg2 0.5.1 as mpegv.library builds it
+==========================================
+
+This directory is libmpeg2 0.5.1 (GPL-2.0-or-later; COPYING, AUTHORS),
+from https://github.com/cisco-open-source/libmpeg2: its C decoder only
+(libmpeg2/*.c and their headers; not the MMX, AltiVec, Alpha, VIS or ARM
+files, nor libmpeg2convert, libvo or the programs). It was added to
+mpegv.library unchanged (git: "third_party/libmpeg2: libmpeg2 0.5.1,
+unchanged"); these are mpegv.library's changes since, each marked
+"mpegv:" where it is made. They are GPL-3.0-or-later, (c) 2026 Brian
+King, as mpegv.library is (its LICENSE).
+
+The build has no configure script: mpegv.library's src/config.h says what
+the 68k (and the build machine, for the tests) is.
+
+Changes that alter no picture (14 November 2026)
+-------------------------------------------------
+
+- libmpeg2/alloc.c: its memory from mpegv.library's mpv_malloc and
+  mpv_free (exec's AllocVec on the Amiga), not the C library's.
+
+- libmpeg2/decode.c: the chunk buffer 256 KB, not 1194 KB. It holds one
+  slice (or header) at a time; a DVD's largest whole picture (MP@ML's
+  buffer) is 229 KB. A megabyte less a decoder.
+
+- include/mpeg2.h, libmpeg2/header.c: mpeg2_sequence_t keeps the
+  sequence header's aspect ratio and frame rate codes as stored
+  (aspect_code, rate_code), for mpegv's MpvGetInfo.

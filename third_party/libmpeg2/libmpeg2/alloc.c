@@ -26,6 +26,16 @@
 
 #include "mpeg2.h"
 
+/* mpegv: on the Amiga, exec's memory (mpegv.c's mpv_malloc and mpv_free,
+ * as the rest of the library's), not the C library's malloc */
+#include "config.h"
+#ifdef MPEGV
+extern void * mpv_malloc (unsigned long size);
+extern void mpv_free (void * buf);
+#define malloc(n) mpv_malloc (n)
+#define free(p) mpv_free (p)
+#endif
+
 static void * (* malloc_hook) (unsigned size, mpeg2_alloc_t reason) = NULL;
 static int (* free_hook) (void * buf) = NULL;
 

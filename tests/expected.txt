@@ -1,104 +1,166 @@
-file ps.mpg (mpegv 1.0, pl_mpeg (MPEG-1 video))
+file ps.mpg (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 160x112 rate 3 25/1 period 3600 aspect 1 shown 160 bitrate 0 kind 1
-pic 0 I n0 t0 pts48600 0d85132f y0=e29a1439 y1=958c3545 y2=5ece3139 y3=5d4c97ad r0=3eeb0aa6 r1=22026678 r2=a33470d3 r3=2f34a5c5 r4=f4b55bc5 r5=fcbb9c79 r6=b4d7802a r7=b5bb7839 g=c244c76e g16=06637fa5
-pic 1 B n1 t3600 pts52200 fd57549c y0=65fc7681 y1=b7030cb8 y2=4e741081 y3=27a93b7d r0=57d9a704 r1=b25f123f r2=473c663b r3=53a515c5 r4=9c548bc5 r5=f432526a r6=9e44fbe8 r7=75787fca g=e848afa8 g16=8ee90b05
-pic 2 B n2 t7200 pts55800 5c3040fe y0=8e349c71 y1=71f536ae y2=4e4e0271 y3=bead6bad r0=399aff24 r1=01c81ce7 r2=5a652b43 r3=f46465c5 r4=0791cdc5 r5=3fbb211a r6=76d5d3cf r7=0d2bb41a g=07347b34 g16=4e18c3b7
-pic 3 P n3 t10800 pts59400 5533968f y0=327199d5 y1=59c6cc75 y2=5ef21cd5 y3=a91dd0b1 r0=7863b18f r1=0919484b r2=e557fd6d r3=2a7f0dc5 r4=bd0fbec5 r5=9f9821c5 r6=7653da9a r7=ac16ae25 g=68c3d7af g16=decf3d44
-pic 4 B n4 t14400 pts63000 7f5168c3 y0=65a9271d y1=28bf0be6 y2=1eec361d y3=019c5c3d r0=14fc2804 r1=b143fd9b r2=24b2ebc6 r3=d7c97ac5 r4=73a104c5 r5=9391b308 r6=99803cda r7=62e59b28 g=b931c468 g16=ee50269a
-pic 5 B n5 t18000 pts66600 22cacc77 y0=590ae001 y1=6c7b39a4 y2=a5234601 y3=a1c8e211 r0=bf8d862a r1=d043867a r2=62528646 r3=21f274c5 r4=7ef3b6c5 r5=35b3039c r6=0fa028a7 r7=77d9e35c g=0d24eb2d g16=d3031d96
-pic 6 P n6 t21600 pts70200 79baca0a y0=cf9e184d y1=d23b3378 y2=00bb9b4d y3=8e1eb3a9 r0=405ad896 r1=b9fc4867 r2=b860d47b r3=80fbc3c5 r4=9b8551c5 r5=b86cb699 r6=ca995d36 r7=d0a92c39 g=c3b53744 g16=e4854916
-pic 7 B n7 t25200 pts73800 2d044714 y0=9fbae335 y1=a7b1a577 y2=f6279735 y3=ad4d9881 r0=15bfbc53 r1=a9f1ad31 r2=81009b39 r3=6e29bbc5 r4=932d5fc5 r5=3b3bdf63 r6=7ccde822 r7=442378e3 g=c12892bc g16=1e70e8db
-pic 8 B n8 t28800 pts77400 517584db y0=172bed45 y1=785182ca y2=97cf7445 y3=df63de3d r0=fcae98a9 r1=506fe564 r2=134108da r3=221eeec5 r4=ebc14bc5 r5=b93ca791 r6=6caecd9d r7=6590a531 g=ae1600af g16=68b401ef
-pic 9 P n9 t32400 pts81000 21609b29 y0=c3e0c9d9 y1=a6a809d8 y2=975011d9 y3=d408d21d r0=82f05ef7 r1=33f00fe3 r2=afa48786 r3=7be6b0c5 r4=d9fe37c5 r5=94322d6a r6=53c5c039 r7=68acd18a g=d1311295 g16=420a09e1
-pic 10 B n10 t36000 pts84600 4547bbbe y0=56235abd y1=55a6337a y2=7b4b0ebd y3=647d1ed9 r0=5ce6ea0d r1=8ed2c18d r2=1daabff0 r3=c6dbfcc5 r4=fbbce4c5 r5=6d6e95f2 r6=38840c35 r7=bd402f52 g=34e61df0 g16=5fd45874
-pic 11 B n11 t39600 pts88200 73273278 y0=6670f4c5 y1=b2e2aae3 y2=a95267c5 y3=d7fdf061 r0=d4eb7c94 r1=7f38b9d3 r2=dbf218c2 r3=87f57ec5 r4=97c219c5 r5=5bc5088f r6=0eb23d27 r7=bc4f17cf g=195769aa g16=eaf5169c
-pic 12 I n12 t43200 pts91800 e7add530 y0=ce20a19d y1=8a108c74 y2=dae7079d y3=6230af79 r0=3c82821b r1=d5436c50 r2=f3e7c3b8 r3=5f622cc5 r4=495652c5 r5=8f3d2397 r6=6d77e6d2 r7=2e982d37 g=3d810d7e g16=a3124e8a
-pic 13 B n13 t46800 pts95400 ddea952e y0=5c984581 y1=2d1256f3 y2=99f5a781 y3=b7948ae9 r0=853ad323 r1=5a6c1a67 r2=b7561792 r3=561ec6c5 r4=aae024c5 r5=9e9c14d6 r6=e6f928bd r7=ddf5d4b6 g=c344dcb5 g16=449c9798
-pic 14 B n14 t50400 pts99000 fac27801 y0=6d1d7e59 y1=16c555a2 y2=99a72d59 y3=6583f8c9 r0=e3465849 r1=b1678515 r2=57d6968a r3=ce09a4c5 r4=3d1aa7c5 r5=b80b6308 r6=68bc1f6f r7=b050c6a8 g=98789ebd g16=a24fa2c9
-pic 15 P n15 t54000 pts102600 5a7eba30 y0=b521d551 y1=abedaf6d y2=78ab5451 y3=27a2786d r0=46fce141 r1=daa33080 r2=fbdf691a r3=d5fe8cc5 r4=c404a6c5 r5=7998e1e3 r6=3f3a0d50 r7=d90e4c03 g=e96a1fda g16=045d791e
-pic 16 B n16 t57600 pts106200 e8a4bb6b y0=a43c3cb9 y1=80ff40c3 y2=aba294b9 y3=d7a60fcd r0=b7c77090 r1=04168d1b r2=c83e50df r3=0cd0fbc5 r4=1d48a6c5 r5=5bcd8263 r6=f2a664ff r7=74417be3 g=784504a9 g16=ba7678f1
-pic 17 B n17 t61200 pts109800 98b05bec y0=50f4c889 y1=608e0149 y2=fe7e0e89 y3=ea8debed r0=7771c13d r1=24a16fb0 r2=3f763e34 r3=cd52a4c5 r4=878e5dc5 r5=a0b24fec r6=a941aae3 r7=f47cf80c g=e6e1a5cc g16=7fdbd843
-pic 18 P n18 t64800 pts113400 03632435 y0=a6f1a2f1 y1=84620cce y2=8eaa96f1 y3=322cec75 r0=75b8e0dc r1=eb0588f6 r2=14396231 r3=d6f695c5 r4=24ec24c5 r5=77a74162 r6=b8d271bc r7=aea6e9e2 g=5c507709 g16=22575014
-pic 19 B n19 t68400 pts117000 2e5d2faa y0=3569cd8d y1=3c575812 y2=bd5d408d y3=ea97dec1 r0=b25ce376 r1=7cb709c9 r2=c84ab108 r3=e8e418c5 r4=642ebcc5 r5=dbb4b265 r6=b7d137c0 r7=ed6e15c5 g=0644dc1e g16=d76581ca
-pic 20 B n20 t72000 pts120600 08e89174 y0=26ab8c15 y1=9dccabf8 y2=282e2415 y3=e7818ca1 r0=7bcca36d r1=4a4dd610 r2=bfdb3279 r3=25880bc5 r4=53cd60c5 r5=9f4cb8da r6=c5680855 r7=6e79547a g=418286cd g16=71da1bdd
-pic 21 P n21 t75600 pts124200 4177afd1 y0=6c495bb1 y1=f03fca29 y2=cbb48cb1 y3=7cff9835 r0=829d6d84 r1=da3b8c47 r2=1ae908d2 r3=c04804c5 r4=514a60c5 r5=e7311607 r6=edad1bf6 r7=1e5114c7 g=144494b1 g16=c15dc525
-pic 22 B n22 t79200 pts127800 e56036f1 y0=e75b92f9 y1=1770fe9b y2=aa3e04f9 y3=797e9f1d r0=1a482368 r1=98c4dc80 r2=8dcca193 r3=cf34e9c5 r4=f2c6d5c5 r5=daa3c2a2 r6=08bcef85 r7=d9ff8c42 g=492e7e7b g16=140a4579
-pic 23 B n23 t82800 pts131400 7080361d y0=4d4d3cc1 y1=1f5676c1 y2=7cdc91c1 y3=4111050d r0=fa19adf4 r1=6e29aac0 r2=c6cc9ceb r3=120fe5c5 r4=8cd7bbc5 r5=1d4302f8 r6=403d4905 r7=e43fb338 g=8b58b03a g16=31dfe4aa
-pic 24 I n24 t86400 pts135000 bcefb03f y0=b03c517d y1=94927c32 y2=00a6277d y3=75869b71 r0=961aab65 r1=6bf95016 r2=55e2fc72 r3=059b7ec5 r4=195b61c5 r5=18a2ee19 r6=a2db82d6 r7=ae57bcd9 g=45beb1df g16=02d1dc55
-pic 25 B n25 t90000 pts138600 2b7f85b0 y0=0c931f39 y1=00b3631e y2=3d5a8639 y3=d34f8dc9 r0=7a98ba18 r1=b3992dca r2=a7ba9c34 r3=09a38ac5 r4=a1e01fc5 r5=7236c0e7 r6=27a021a5 r7=1111ba27 g=902e02d4 g16=9d4a9d6c
-pic 26 B n26 t93600 pts142200 aab9c820 y0=d7e97b3d y1=febe3889 y2=da7cb83d y3=c4022191 r0=92d59253 r1=8a9f44e0 r2=cfe27059 r3=acf349c5 r4=191365c5 r5=9bb03497 r6=d4dda445 r7=78240517 g=487f2086 g16=2f4358f4
-pic 27 P n27 t97200 pts145800 da3b3038 y0=e28c37d5 y1=e9f9a4f8 y2=b34305d5 y3=a4cfdfe5 r0=6c6953f8 r1=7e1ca916 r2=4d97f518 r3=725aa4c5 r4=03e332c5 r5=6b8beaf7 r6=55a2a320 r7=7a902cf7 g=57c58a12 g16=2a812720
-pic 28 B n28 t100800 pts149400 14423096 y0=1387b815 y1=42cc3794 y2=9f092915 y3=132c529d r0=be58b233 r1=9e0b92ce r2=82ae5ba1 r3=175d0bc5 r4=30d2b9c5 r5=84477161 r6=88eec197 r7=ff358361 g=464f7fe4 g16=58cb94db
-pic 29 B n29 t104400 pts153000 8b4a11d8 y0=1c0b854d y1=fb34c8b3 y2=5cd2ce4d y3=05d84bc5 r0=c43eaa9e r1=7d40ce88 r2=c0b467dd r3=5e9133c5 r4=7a2338c5 r5=7268797a r6=50aba097 r7=2331acfa g=478c9e22 g16=11fff89a
-pic 30 P n30 t108000 pts156600 588bce24 y0=a9fc2b41 y1=030980a0 y2=99325341 y3=c5378a21 r0=9ce1031d r1=b099c2de r2=747f9011 r3=56f419c5 r4=844261c5 r5=2ddde04b r6=3a332ec9 r7=df47e92b g=ef040b56 g16=8f50c8cc
-pic 31 B n31 t111600 pts160200 499de83e y0=99c261ed y1=627b03d4 y2=e82067ed y3=d085f4b9 r0=7fc3276d r1=0d21c5f8 r2=34538402 r3=15d7ecc5 r4=dd9868c5 r5=e3e19197 r6=1535bd08 r7=724df6b7 g=b9e09f57 g16=3231485a
-pic 32 B n32 t115200 pts163800 1f12095e y0=075b442d y1=630bdb19 y2=ece7602d y3=d5c8aadd r0=c2a7e7ff r1=3ab07412 r2=f07b7459 r3=eca25bc5 r4=2f3180c5 r5=3c13725a r6=0e2c70b2 r7=3423c01a g=db1cd331 g16=903631fb
-pic 33 P n33 t118800 pts167400 1de37fd9 y0=297d1a9d y1=e8c59a1a y2=a0af069d y3=9e234249 r0=b53e1ebf r1=30be2e7c r2=2b453879 r3=087defc5 r4=3a9cf6c5 r5=b8fa73fb r6=0c8543db r7=bc6f211b g=3f44c4b1 g16=06018bc9
-pic 34 B n34 t122400 pts171000 6ef5535d y0=db767b69 y1=700915e8 y2=7b2fdc69 y3=7a4c67fd r0=59f87642 r1=9c6ca874 r2=c3fe4838 r3=28cdd4c5 r4=a8896cc5 r5=eb16300c r6=b9706152 r7=325c348c g=33fbc228 g16=ed782259
-pic 35 B n35 t126000 pts174600 08032d09 y0=a538d139 y1=33f5c77a y2=daece939 y3=9a879745 r0=bd43f315 r1=5962ddc6 r2=44a3199a r3=1f248cc5 r4=fc9b9bc5 r5=7286d887 r6=c23af5cf r7=bff90707 g=c3e97063 g16=04488070
-pic 36 I n36 t129600 pts178200 54ae2b9c y0=7b105a0d y1=dc116fcd y2=b0fee20d y3=6bc6b469 r0=777ff8d6 r1=bdae3036 r2=af4376a7 r3=4c2a49c5 r4=248f89c5 r5=8c3b3a56 r6=723f11a9 r7=ee7f4096 g=c35e89e3 g16=d439a181
-pic 37 B n37 t133200 pts181800 f8b3d01b y0=40f921b9 y1=aeadad14 y2=aa6f32b9 y3=9e5266e9 r0=39b79102 r1=f5d5cb7d r2=a0e57384 r3=99c430c5 r4=6332e4c5 r5=12996c18 r6=085d456b r7=36dda318 g=727269dc g16=7025763b
-pic 38 B n38 t136800 pts185400 dab9af43 y0=92c86865 y1=266b182f y2=fe6bdf65 y3=b64ab705 r0=78d1ae3c r1=c56791e6 r2=43a28acb r3=da8ba5c5 r4=1eb0cac5 r5=56d58ad1 r6=0a5d45a6 r7=93606c11 g=29774cf9 g16=67fbad1d
-pic 39 P n39 t140400 pts189000 4ce76d28 y0=77ba0b4d y1=2da445ee y2=6593634d y3=8ad058d5 r0=e5365d9b r1=374a50d5 r2=7a909230 r3=67d320c5 r4=f3bbd7c5 r5=37ef0c80 r6=d509189e r7=21271760 g=a9de0dfb g16=ae7b0010
-pic 40 B n40 t144000 pts192600 e657fe63 y0=7278fac1 y1=c959bc93 y2=b3596dc1 y3=d57c806d r0=634b02b1 r1=1200cf88 r2=29b263f2 r3=c3a112c5 r4=6303a8c5 r5=a056d4ee r6=2204b111 r7=c680f46e g=c4045856 g16=6fde2860
-pic 41 B n41 t147600 pts196200 31fc9984 y0=b0fbc1d9 y1=0b7b93dc y2=aee2bfd9 y3=0f35a7a1 r0=02d76571 r1=753c510a r2=24e0cd71 r3=280331c5 r4=49af8ac5 r5=e0de2ff0 r6=5e4a3558 r7=c714f010 g=e3fae0ed g16=c3b5ca11
-pic 42 P n42 t151200 pts199800 89ee8c4a y0=b30f71a1 y1=5ab53d34 y2=9516cea1 y3=2834f969 r0=2035f024 r1=dc30bdfb r2=284fec90 r3=d2fbd4c5 r4=fffd0cc5 r5=93376a7e r6=3b4a7712 r7=7f19edfe g=4343c05b g16=3878c231
-pic 43 B n43 t154800 pts203400 a508a13a y0=f05ba481 y1=3ca468d8 y2=22558881 y3=2848623d r0=ae650e87 r1=16e912f3 r2=7a74c1ac r3=e14212c5 r4=9453a7c5 r5=7d26d922 r6=af16b212 r7=2d0040c2 g=720d7e93 g16=c3a04a9f
-pic 44 B n44 t158400 pts207000 1a7e3fa1 y0=196f866d y1=10fc13fa y2=b5859a6d y3=c69885d1 r0=56b38d26 r1=0c1eccc2 r2=0ad10dec r3=8aed78c5 r4=f35dd3c5 r5=3a57a03d r6=3c5ffd28 r7=bcbd959d g=adfc73ad g16=4c8fc5c1
-pic 45 P n45 t162000 pts210600 c49ba17b y0=7fdef3c1 y1=81aa31de y2=5a9e9bc1 y3=477dc8b1 r0=9787090f r1=c00e8d07 r2=0c613368 r3=182394c5 r4=3efaecc5 r5=9faca72a r6=b32b539f r7=05ed9b4a g=ee98b3a7 g16=295396ed
-pic 46 B n46 t165600 pts214200 6dfe8f09 y0=3a7a07d9 y1=94625baf y2=7c9484d9 y3=f7995275 r0=82efc253 r1=f4a28fe8 r2=2af4f730 r3=7e53d0c5 r4=35e7f4c5 r5=90d6b23a r6=6da157de r7=61df893a g=261e506c g16=fd907eb9
-pic 47 B n47 t169200 pts217800 bbb3495f y0=2a87f879 y1=9d367743 y2=7d183079 y3=220af029 r0=7985f11d r1=75db2775 r2=45959f59 r3=633909c5 r4=f89836c5 r5=39889e2e r6=43257e33 r7=9578116e g=19257a90 g16=3775504e
-pic 48 I n48 t172800 pts221400 808bf9bb y0=add4f2c5 y1=96ab4c5c y2=0dd5eec5 y3=d0faadad r0=14767363 r1=3f6ed37c r2=c849ae6e r3=2b9368c5 r4=7961cbc5 r5=768f3ed4 r6=b5f76a71 r7=ba10f074 g=e5073a42 g16=95e16064
-pic 49 P n49 t176400 pts225000 6d417ace y0=cbf70485 y1=29a2959c y2=62a28385 y3=14044a35 r0=cc7fa85a r1=e5429a71 r2=b55f229b r3=326b01c5 r4=0f4952c5 r5=2f64666f r6=2662270d r7=3cc1f78f g=12bcc11d g16=13c4bcd1
-read 50 pictures, 0 B passed over, hash a5ad4589, end 1; 8 packets (16091 bytes, 8 timed) not video
-skipb 18 pictures, 32 B passed over, hash ca248082, end 1; 8 packets (16091 bytes, 8 timed) not video
-pushed 50 pictures, 0 B passed over, hash a5ad4589, end 1; 8 packets (16091 bytes, 8 timed) not video
-file es.m1v (mpegv 1.0, pl_mpeg (MPEG-1 video))
+examine flags 2 profile 0 level 0 chroma 1 aspect 10:7 display 160x112
+pic 0 I n0 t0 d3600 f2 --p- pts48600 c0b6ae7f y0=9c8769a9 y1=5383222c y2=60e821a9 y3=eb35ec19 r0=c46ca61c r1=26d597f5 r2=f142fd45 r3=379bb5c5 r4=d5f758c5 r5=5f366bbb r6=3a825546 r7=68ac62bb g=5a99842c g16=9836082b
+pic 1 B n1 t3600 d3600 f2 --p- pts52200 0e2fa3bc y0=36f22875 y1=756d643b y2=8c960175 y3=c151e4b1 r0=e4f545de r1=bda82dab r2=d07bb96f r3=be18f1c5 r4=de02d0c5 r5=78d192ad r6=6fb2bd0e r7=f4b8aa0d g=4615e50b g16=7f9e6142
+pic 2 B n2 t7200 d3600 f2 --p- pts55800 79474222 y0=1394b1fd y1=d6c0e0de y2=e9c2d0fd y3=f0c6f221 r0=48a0f500 r1=0efd7e84 r2=560d1440 r3=9e45acc5 r4=dc0a07c5 r5=c224f888 r6=99ef155f r7=b39b0448 g=5d6d47c4 g16=31d5b27a
+pic 3 P n3 t10800 d3600 f2 --p- pts59400 cf5c1e17 y0=fc5c4b25 y1=9e107c1c y2=8e536c25 y3=c5abd701 r0=b1eae5b0 r1=870b8347 r2=55933878 r3=f5e610c5 r4=38824fc5 r5=202e0342 r6=2103737e r7=207383e2 g=5aa9a8c0 g16=42e4677b
+pic 4 B n4 t14400 d3600 f2 --p- pts63000 1591ef4e
+pic 5 B n5 t18000 d3600 f2 --p- pts66600 97534ec8
+pic 6 P n6 t21600 d3600 f2 --p- pts70200 e0f101d0
+pic 7 B n7 t25200 d3600 f2 --p- pts73800 67f9f6b8
+pic 8 B n8 t28800 d3600 f2 --p- pts77400 f36e6637
+pic 9 P n9 t32400 d3600 f2 --p- pts81000 fe128daa
+pic 10 B n10 t36000 d3600 f2 --p- pts84600 bf042811
+pic 11 B n11 t39600 d3600 f2 --p- pts88200 9d49031c
+pic 12 I n12 t43200 d3600 f2 --p- pts91800 914847ff
+pic 13 B n13 t46800 d3600 f2 --p- pts95400 81785212
+pic 14 B n14 t50400 d3600 f2 --p- pts99000 f8a45efc
+pic 15 P n15 t54000 d3600 f2 --p- pts102600 e2b62a4f
+pic 16 B n16 t57600 d3600 f2 --p- pts106200 fd194ef7
+pic 17 B n17 t61200 d3600 f2 --p- pts109800 06a9a78b
+pic 18 P n18 t64800 d3600 f2 --p- pts113400 ec8440f6
+pic 19 B n19 t68400 d3600 f2 --p- pts117000 39b5a702
+pic 20 B n20 t72000 d3600 f2 --p- pts120600 d14ed4cd
+pic 21 P n21 t75600 d3600 f2 --p- pts124200 41d93414
+pic 22 B n22 t79200 d3600 f2 --p- pts127800 bdaa02b7
+pic 23 B n23 t82800 d3600 f2 --p- pts131400 89f9f691
+pic 24 I n24 t86400 d3600 f2 --p- pts135000 9f1c147c
+pic 25 B n25 t90000 d3600 f2 --p- pts138600 6581fa89
+pic 26 B n26 t93600 d3600 f2 --p- pts142200 d2088281
+pic 27 P n27 t97200 d3600 f2 --p- pts145800 5e069324
+pic 28 B n28 t100800 d3600 f2 --p- pts149400 772adb62
+pic 29 B n29 t104400 d3600 f2 --p- pts153000 81820f62
+pic 30 P n30 t108000 d3600 f2 --p- pts156600 54a12b61
+pic 31 B n31 t111600 d3600 f2 --p- pts160200 1d5b048d
+pic 32 B n32 t115200 d3600 f2 --p- pts163800 36459d07
+pic 33 P n33 t118800 d3600 f2 --p- pts167400 f5efcdbc
+pic 34 B n34 t122400 d3600 f2 --p- pts171000 08b2c5ba
+pic 35 B n35 t126000 d3600 f2 --p- pts174600 770b796c
+pic 36 I n36 t129600 d3600 f2 --p- pts178200 9e4dbdc9
+pic 37 B n37 t133200 d3600 f2 --p- pts181800 41934aab
+pic 38 B n38 t136800 d3600 f2 --p- pts185400 8f9bd5c5
+pic 39 P n39 t140400 d3600 f2 --p- pts189000 b46b4342
+pic 40 B n40 t144000 d3600 f2 --p- pts192600 09561266
+pic 41 B n41 t147600 d3600 f2 --p- pts196200 cd63959c
+pic 42 P n42 t151200 d3600 f2 --p- pts199800 c6e7903d
+pic 43 B n43 t154800 d3600 f2 --p- pts203400 caa581a1
+pic 44 B n44 t158400 d3600 f2 --p- pts207000 127d4485
+pic 45 P n45 t162000 d3600 f2 --p- pts210600 b8a4fd0d
+pic 46 B n46 t165600 d3600 f2 --p- pts214200 1a002427
+pic 47 B n47 t169200 d3600 f2 --p- pts217800 974dc82e
+pic 48 I n48 t172800 d3600 f2 --p- pts221400 0423ae24
+pic 49 P n49 t176400 d3600 f2 --p- pts225000 c4548b90
+read 50 pictures, 0 B passed over, hash 8a240229, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+skipb 18 pictures, 32 B passed over, hash f954cb31, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+pushed 50 pictures, 0 B passed over, hash 8a240229, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
+flushed 57 pictures, 0 B passed over, hash 57561ae1, end 1; 9 packets (18128 bytes, 9 timed, 0 AC-3, 0 navigation) not video
+file es.m1v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 176x144 rate 4 30000/1001 period 3003 aspect 8 shown 192 bitrate 0 kind 2
-pic 0 I n0 t0 pts0- 72744ccb y0=23ed136d y1=bc823386 y2=224f2a6d y3=5b927901 r0=8d4ac92a r1=1af9fef4 r2=6fdd97da r3=b04b69c5 r4=c02182c5 r5=ea024336 r6=ed241a8f r7=b83f56f6 g=056a4ebc g16=21628efa
-pic 1 B n1 t3003 pts3003- f1c5bd4e y0=42a69b3d y1=dccbdcf4 y2=8072693d y3=64144d79 r0=255ed16c r1=abb23f97 r2=9dbca260 r3=25a797c5 r4=09842bc5 r5=420b5b6b r6=0598b64a r7=7c156d8b g=1b06117f g16=20fab633
-pic 2 B n2 t6006 pts6006- 46b6703a y0=2c1edba5 y1=b2b4e988 y2=411844a5 y3=00983c21 r0=2ca882f1 r1=12f6f75e r2=f0a6c184 r3=d78e69c5 r4=9f526ec5 r5=8c9647cb r6=ec018a4a r7=bbf35eab g=780e7413 g16=20fab633
-pic 3 P n3 t9009 pts9009- 46b6703a y0=2c1edba5 y1=b2b4e988 y2=411844a5 y3=00983c21 r0=2ca882f1 r1=12f6f75e r2=f0a6c184 r3=d78e69c5 r4=9f526ec5 r5=8c9647cb r6=ec018a4a r7=bbf35eab g=780e7413 g16=20fab633
-pic 4 B n4 t12012 pts12012- fe43e9e4 y0=b3d80935 y1=f58095f8 y2=17cd5635 y3=153492b1 r0=f90307fd r1=0f4a3612 r2=22dbbc34 r3=164fe5c5 r4=bc248ac5 r5=5862b146 r6=01a2182b r7=7388e7e6 g=df391163 g16=ec24b633
-pic 5 B n5 t15015 pts15015- fe43e9e4 y0=b3d80935 y1=f58095f8 y2=17cd5635 y3=153492b1 r0=f90307fd r1=0f4a3612 r2=22dbbc34 r3=164fe5c5 r4=bc248ac5 r5=5862b146 r6=01a2182b r7=7388e7e6 g=df391163 g16=ec24b633
-pic 6 P n6 t18018 pts18018- fe43e9e4 y0=b3d80935 y1=f58095f8 y2=17cd5635 y3=153492b1 r0=f90307fd r1=0f4a3612 r2=22dbbc34 r3=164fe5c5 r4=bc248ac5 r5=5862b146 r6=01a2182b r7=7388e7e6 g=df391163 g16=ec24b633
-pic 7 B n7 t21021 pts21021- c21649ce y0=ba562935 y1=95c5f178 y2=e8aa6e35 y3=798ba9a9 r0=a4fbbae8 r1=dbc329c3 r2=88ad9f48 r3=14f20fc5 r4=4da202c5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=fddcd563 g16=ec24b633
-pic 8 B n8 t24024 pts24024- c21649ce y0=ba562935 y1=95c5f178 y2=e8aa6e35 y3=798ba9a9 r0=a4fbbae8 r1=dbc329c3 r2=88ad9f48 r3=14f20fc5 r4=4da202c5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=fddcd563 g16=ec24b633
-pic 9 P n9 t27027 pts27027- b1f8ac0e y0=fd9e0935 y1=578095f8 y2=4f0f5635 y3=e313e5a9 r0=aa419f68 r1=64c90bc3 r2=37b88588 r3=b309ffc5 r4=9eea8ac5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=df391163 g16=ec24b633
-pic 10 B n10 t30030 pts30030- c21649ce y0=ba562935 y1=95c5f178 y2=e8aa6e35 y3=798ba9a9 r0=a4fbbae8 r1=dbc329c3 r2=88ad9f48 r3=14f20fc5 r4=4da202c5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=fddcd563 g16=ec24b633
-pic 11 B n11 t33033 pts33033- c21649ce y0=ba562935 y1=95c5f178 y2=e8aa6e35 y3=798ba9a9 r0=a4fbbae8 r1=dbc329c3 r2=88ad9f48 r3=14f20fc5 r4=4da202c5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=fddcd563 g16=ec24b633
-pic 12 P n12 t36036 pts36036- b1f8ac0e y0=fd9e0935 y1=578095f8 y2=4f0f5635 y3=e313e5a9 r0=aa419f68 r1=64c90bc3 r2=37b88588 r3=b309ffc5 r4=9eea8ac5 r5=d9e326d8 r6=45514e2b r7=c6286cb8 g=df391163 g16=ec24b633
-pic 13 B n13 t39039 pts39039- fc2602c3 y0=b3ef1abd y1=620a220b y2=f4c58abd y3=d64da401 r0=494809e0 r1=fc3dc0d8 r2=37be01a1 r3=96bbaac5 r4=d35357c5 r5=5e801a6c r6=da243255 r7=793e764c g=9ab77f77 g16=668973b0
-pic 14 B n14 t42042 pts42042- fc2602c3 y0=b3ef1abd y1=620a220b y2=f4c58abd y3=d64da401 r0=494809e0 r1=fc3dc0d8 r2=37be01a1 r3=96bbaac5 r4=d35357c5 r5=5e801a6c r6=da243255 r7=793e764c g=9ab77f77 g16=668973b0
-pic 15 I n15 t45045 pts45045- 9911d45b y0=c1061fa1 y1=9de1956d y2=2f3e31a1 y3=acbb20e5 r0=39e0f8b1 r1=53f99ccb r2=7c953a0d r3=01ed72c5 r4=fec617c5 r5=2ad21d59 r6=b056f82b r7=e53cd879 g=771ebe54 g16=2e065a47
-pic 16 B n16 t48048 pts48048- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 17 B n17 t51051 pts51051- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 18 P n18 t54054 pts54054- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 19 B n19 t57057 pts57057- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 20 B n20 t60060 pts60060- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 21 P n21 t63063 pts63063- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 22 B n22 t66066 pts66066- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 23 B n23 t69069 pts69069- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 24 P n24 t72072 pts72072- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 25 B n25 t75075 pts75075- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 26 B n26 t78078 pts78078- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 27 P n27 t81081 pts81081- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 28 B n28 t84084 pts84084- b981c835 y0=f4c03bf5 y1=0c31ed40 y2=f2f659f5 y3=e5d2cf25 r0=b48387a0 r1=f87fdfcd r2=38a083fb r3=840e46c5 r4=54eaadc5 r5=10aaeef7 r6=71f8b3fc r7=3ae92ad7 g=8627e958 g16=b2842b91
-pic 29 B n29 t87087 pts87087- b981c835 y0=f4c03bf5 y1=0c31ed40 y2=f2f659f5 y3=e5d2cf25 r0=b48387a0 r1=f87fdfcd r2=38a083fb r3=840e46c5 r4=54eaadc5 r5=10aaeef7 r6=71f8b3fc r7=3ae92ad7 g=8627e958 g16=b2842b91
-pic 30 I n30 t90090 pts90090- 9911d45b y0=c1061fa1 y1=9de1956d y2=2f3e31a1 y3=acbb20e5 r0=39e0f8b1 r1=53f99ccb r2=7c953a0d r3=01ed72c5 r4=fec617c5 r5=2ad21d59 r6=b056f82b r7=e53cd879 g=771ebe54 g16=2e065a47
-pic 31 B n31 t93093 pts93093- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 32 B n32 t96096 pts96096- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 33 P n33 t99099 pts99099- 342f38ae y0=a198a1d9 y1=0bdded7e y2=56a3bfd9 y3=ada40d61 r0=3bd2c28d r1=5aed601a r2=e3d0e204 r3=563bbdc5 r4=6ffe8ec5 r5=3afc4de7 r6=84c43263 r7=1e3fbb27 g=cc887a89 g16=4b37e304
-pic 34 B n34 t102102 pts102102- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 35 B n35 t105105 pts105105- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 36 P n36 t108108 pts108108- 7af68c52 y0=ded51dd1 y1=4cf71340 y2=dda995d1 y3=ddee0b3d r0=90600ab2 r1=6e7b54a4 r2=e1554bbc r3=8acf6bc5 r4=609bb5c5 r5=2440e416 r6=f0f7bcec r7=c33334f6 g=8627e958 g16=b2842b91
-pic 37 B n37 t111111 pts111111- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 38 B n38 t114114 pts114114- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 39 P n39 t117117 pts117117- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 40 B n40 t120120 pts120120- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 41 B n41 t123123 pts123123- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 42 P n42 t126126 pts126126- 2b4db00e y0=4b031dd1 y1=fef71340 y2=0cc595d1 y3=eb894c2d r0=c3b720b4 r1=29816bde r2=4c89c7a7 r3=a93adac5 r4=22c0b5c5 r5=43a58096 r6=a94fb0ec r7=6c52caf6 g=8627e958 g16=b2842b91
-pic 43 B n43 t129129 pts129129- b981c835 y0=f4c03bf5 y1=0c31ed40 y2=f2f659f5 y3=e5d2cf25 r0=b48387a0 r1=f87fdfcd r2=38a083fb r3=840e46c5 r4=54eaadc5 r5=10aaeef7 r6=71f8b3fc r7=3ae92ad7 g=8627e958 g16=b2842b91
-read 44 pictures, 0 B passed over, hash 17a033e9, end 1; 0 packets (0 bytes, 0 timed) not video
-skipb 15 pictures, 29 B passed over, hash c3aaacee, end 1; 0 packets (0 bytes, 0 timed) not video
-pushed 44 pictures, 0 B passed over, hash 17a033e9, end 1; 0 packets (0 bytes, 0 timed) not video
+examine flags 2 profile 0 level 0 chroma 1 aspect 4:3 display 176x144
+pic 0 I n0 t0 d3003 f2 --p- pts0- ba5ed728 y0=7a68a899 y1=abf17218 y2=fa15d199 y3=44169c79 r0=d1e346b6 r1=4da2153f r2=773910ce r3=3d6e9dc5 r4=9c137fc5 r5=4be0f82f r6=a4a68bc8 r7=bbacaa8f g=5007ccaa g16=30c7f8e6
+pic 1 B n1 t3003 d3003 f2 --p- pts3003- d6ac7cbc y0=7eb3cb51 y1=93e2cb68 y2=f2261d51 y3=2863f595 r0=e598ffb1 r1=103444b0 r2=44bad89b r3=2af734c5 r4=36124cc5 r5=5b638ae0 r6=cddf2b72 r7=36ba2e80 g=9daab591 g16=9ea488fb
+pic 2 B n2 t6006 d3003 f2 --p- pts6006- 43278b7e y0=a4beb901 y1=2f5dad46 y2=d4b78001 y3=6388ded9 r0=7b673481 r1=4c18377d r2=e18a072a r3=671b6dc5 r4=7cb051c5 r5=88139240 r6=e0a19812 r7=bf024100 g=1735f352 g16=9ea488fb
+pic 3 P n3 t9009 d3003 f2 --p- pts9009- 43278b7e y0=a4beb901 y1=2f5dad46 y2=d4b78001 y3=6388ded9 r0=7b673481 r1=4c18377d r2=e18a072a r3=671b6dc5 r4=7cb051c5 r5=88139240 r6=e0a19812 r7=bf024100 g=1735f352 g16=9ea488fb
+pic 4 B n4 t12012 d3003 f2 --p- pts12012- 61c62800
+pic 5 B n5 t15015 d3003 f2 --p- pts15015- 61c62800
+pic 6 P n6 t18018 d3003 f2 --p- pts18018- 61c62800
+pic 7 B n7 t21021 d3003 f2 --p- pts21021- 74daae14
+pic 8 B n8 t24024 d3003 f2 --p- pts24024- 74daae14
+pic 9 P n9 t27027 d3003 f2 --p- pts27027- 4a9a0fd4
+pic 10 B n10 t30030 d3003 f2 --p- pts30030- 74daae14
+pic 11 B n11 t33033 d3003 f2 --p- pts33033- 74daae14
+pic 12 P n12 t36036 d3003 f2 --p- pts36036- 4a9a0fd4
+pic 13 B n13 t39039 d3003 f2 --p- pts39039- 0c793052
+pic 14 B n14 t42042 d3003 f2 --p- pts42042- 0c793052
+pic 15 I n15 t45045 d3003 f2 --p- pts45045- a909c1f0
+pic 16 B n16 t48048 d3003 f2 --p- pts48048- 42f6baf5
+pic 17 B n17 t51051 d3003 f2 --p- pts51051- 42f6baf5
+pic 18 P n18 t54054 d3003 f2 --p- pts54054- 42f6baf5
+pic 19 B n19 t57057 d3003 f2 --p- pts57057- aee01b29
+pic 20 B n20 t60060 d3003 f2 --p- pts60060- aee01b29
+pic 21 P n21 t63063 d3003 f2 --p- pts63063- aee01b29
+pic 22 B n22 t66066 d3003 f2 --p- pts66066- 3109e1a5
+pic 23 B n23 t69069 d3003 f2 --p- pts69069- 3109e1a5
+pic 24 P n24 t72072 d3003 f2 --p- pts72072- 3109e1a5
+pic 25 B n25 t75075 d3003 f2 --p- pts75075- 3109e1a5
+pic 26 B n26 t78078 d3003 f2 --p- pts78078- 3109e1a5
+pic 27 P n27 t81081 d3003 f2 --p- pts81081- 3109e1a5
+pic 28 B n28 t84084 d3003 f2 --p- pts84084- 87e41811
+pic 29 B n29 t87087 d3003 f2 --p- pts87087- 87e41811
+pic 30 I n30 t90090 d3003 f2 --p- pts90090- a909c1f0
+pic 31 B n31 t93093 d3003 f2 --p- pts93093- 42f6baf5
+pic 32 B n32 t96096 d3003 f2 --p- pts96096- 42f6baf5
+pic 33 P n33 t99099 d3003 f2 --p- pts99099- 42f6baf5
+pic 34 B n34 t102102 d3003 f2 --p- pts102102- aee01b29
+pic 35 B n35 t105105 d3003 f2 --p- pts105105- aee01b29
+pic 36 P n36 t108108 d3003 f2 --p- pts108108- aee01b29
+pic 37 B n37 t111111 d3003 f2 --p- pts111111- 3109e1a5
+pic 38 B n38 t114114 d3003 f2 --p- pts114114- 3109e1a5
+pic 39 P n39 t117117 d3003 f2 --p- pts117117- 3109e1a5
+pic 40 B n40 t120120 d3003 f2 --p- pts120120- 3109e1a5
+pic 41 B n41 t123123 d3003 f2 --p- pts123123- 3109e1a5
+pic 42 P n42 t126126 d3003 f2 --p- pts126126- 3109e1a5
+pic 43 B n43 t129129 d3003 f2 --p- pts129129- 87e41811
+pic 44 I n44 t132132 d3003 f2 --p- pts132132- a909c1f0
+read 45 pictures, 0 B passed over, hash bbeefd70, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 16 pictures, 29 B passed over, hash 2b2ea5e3, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 45 pictures, 0 B passed over, hash bbeefd70, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 52 pictures, 0 B passed over, hash 2a00fd5a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+file pal.m2v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+info 720x576 rate 3 25/1 period 3600 aspect 2 shown 768 bitrate 8000000 kind 2
+examine flags 1 profile 4 level 8 chroma 1 aspect 4:3 display 720x576
+pic 0 I n0 t0 d3600 f2 t--- pts0- a9b7b56f y0=1c09543d y1=08cebcd1 y2=b482673d y3=6d326e39 r0=7c0e8be7 r1=a2da027a r2=89a2a85e r3=c28e70c5 r4=0b6adec5 r5=25bcfa06 r6=66e22916 r7=0e1e13e6 g=ca0d4d5c g16=ca83b31f
+pic 1 B n1 t3600 d3600 f2 t--- pts3600- a8998285 y0=ee406fdd y1=46e22c2a y2=568edbdd y3=853e6571 r0=a75f5929 r1=251b7ed8 r2=6547b9c3 r3=d3e945c5 r4=00c791c5 r5=933985c0 r6=d30a1893 r7=ac8dd2c0 g=24f1d429 g16=194a02dd
+pic 2 B n2 t7200 d3600 f2 t--- pts7200- 534094e4 y0=7d69ffb5 y1=16d29b68 y2=0f4745b5 y3=0652fa69 r0=c405f826 r1=29626068 r2=615381b8 r3=0891b0c5 r4=60f753c5 r5=4e0dacd0 r6=20bcb478 r7=26c7dd90 g=08b73bcc g16=0629f62f
+pic 3 P n3 t10800 d3600 f2 t--- pts10800- 213a7336 y0=eeb28be1 y1=8f058af6 y2=2f84ede1 y3=e59153f1 r0=84ce7f74 r1=80e24add r2=4325a16d r3=5db319c5 r4=49de8ac5 r5=4bf14125 r6=c5150378 r7=829d2885 g=19291d39 g16=5844cd82
+pic 4 B n4 t14400 d3600 f2 t--- pts14400- b508db57
+pic 5 B n5 t18000 d3600 f2 t--- pts18000- 9be6384a
+pic 6 P n6 t21600 d3600 f2 t--- pts21600- 01fa709e
+pic 7 B n7 t25200 d3600 f2 t--- pts25200- 4d5dd906
+pic 8 B n8 t28800 d3600 f2 t--- pts28800- 1810d442
+pic 9 P n9 t32400 d3600 f2 t--- pts32400- bb39dfbd
+pic 10 B n10 t36000 d3600 f2 t--- pts36000- f0ba94a6
+pic 11 P n11 t39600 d3600 f2 t--- pts39600- d8a21b50
+read 12 pictures, 0 B passed over, hash 7c8daca5, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 5 pictures, 7 B passed over, hash 8c6859d7, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 12 pictures, 0 B passed over, hash 7c8daca5, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 19 pictures, 0 B passed over, hash 73391b98, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+file ntsc.m2v (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+info 720x480 rate 4 30000/1001 period 3003 aspect 3 shown 853 bitrate 8000000 kind 2
+examine flags 1 profile 4 level 8 chroma 1 aspect 16:9 display 720x480
+pic 0 I n0 t0 d4504 f3 trp- pts0- 54fdcffb y0=4c6b3b65 y1=1e4176d1 y2=86f43465 y3=14288825 r0=086a6fb4 r1=bbea0298 r2=29a49d51 r3=fc3645c5 r4=075c95c5 r5=832cb7d3 r6=7ad48584 r7=11f085f3 g=5b11a301 g16=89bba0be
+pic 1 B n1 t4504 d3003 f2 --p- pts4504- 35d34422 y0=8183e589 y1=55d2c156 y2=a5347789 y3=a5481b71 r0=54fd1f41 r1=81d3b504 r2=7a5caf54 r3=952060c5 r4=7199e4c5 r5=a4035928 r6=d3fb7e93 r7=2b801d08 g=2b9b26ff g16=f3fa7856
+pic 2 B n2 t7507 d4505 f3 -rp- pts7507- 32125178 y0=0bc18cbd y1=d9afadaf y2=a58bf0bd y3=b230828d r0=c22a98cb r1=413f7d30 r2=cb9ce359 r3=ccb013c5 r4=660951c5 r5=860e8a34 r6=17d28015 r7=14e17eb4 g=58b9824d g16=c11636be
+pic 3 P n3 t12012 d3003 f2 t-p- pts12012- df46c17c y0=0f1b41f5 y1=643676f3 y2=c14f1df5 y3=bfb3ddd5 r0=e0169d01 r1=99251787 r2=7892a6b3 r3=7f5a13c5 r4=7811b9c5 r5=57dc54e8 r6=e1f65764 r7=a760cae8 g=ffda505a g16=00e18181
+pic 4 B n4 t15015 d4504 f3 trp- pts15015- 86fe733c
+pic 5 B n5 t19519 d3003 f2 --p- pts19519- 29b0fa83
+pic 6 P n6 t22522 d4505 f3 -rp- pts22522- 0fe4aaf3
+pic 7 B n7 t27027 d3003 f2 t-p- pts27027- 08ff96cf
+pic 8 B n8 t30030 d4504 f3 trp- pts30030- 6d9e0208
+pic 9 P n9 t34534 d3003 f2 --p- pts34534- f171e557
+pic 10 B n10 t37537 d4505 f3 -rp- pts37537- 19307aa1
+pic 11 P n11 t42042 d3003 f2 t-p- pts42042- 11eb1714
+read 12 pictures, 0 B passed over, hash ca07053f, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+skipb 5 pictures, 7 B passed over, hash 7cce71e8, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+pushed 12 pictures, 0 B passed over, hash ca07053f, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+flushed 19 pictures, 0 B passed over, hash 5a961114, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
+file dvd.vob (mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+info 720x576 rate 3 25/1 period 3600 aspect 3 shown 1024 bitrate 8000000 kind 1
+examine flags b profile 4 level 8 chroma 1 aspect 16:9 display 720x576
+pic 0 I n0 t0 d3600 f2 --p- pts48600 6eaa59dd y0=72033a6d y1=c313f6a8 y2=24e9486d y3=b001a121 r0=3ed237b2 r1=c986d66a r2=9780298b r3=7a4fa7c5 r4=2f237bc5 r5=414e3860 r6=1f256c7d r7=cafa50e0 g=bc8c6b47 g16=09b1fd2a
+pic 1 B n1 t3600 d3600 f2 --p- pts52200 6ccd89bf y0=baa7786d y1=a4b0838d y2=0b7bd36d y3=fb5de09d r0=2c68f90f r1=411c5c6e r2=c6f6b520 r3=cbc4f2c5 r4=7193a6c5 r5=6f13f460 r6=e53effe5 r7=88827180 g=142130d5 g16=2c3b70d9
+pic 2 B n2 t7200 d3600 f2 --p- pts55800 d7cc05a7 y0=ead9bf45 y1=57dc3d82 y2=c1ddaa45 y3=75f17369 r0=43c12a94 r1=55b67fdf r2=1a44edbd r3=d31121c5 r4=cb399ac5 r5=0394a93c r6=f5171c80 r7=07e23c5c g=57635e49 g16=8b6686b6
+pic 3 P n3 t10800 d3600 f2 --p- pts59400 834b2ca4 y0=c9f57831 y1=2f4e50e9 y2=b2e0d631 y3=87a10529 r0=d1efc43d r1=14127cfc r2=f532c312 r3=773858c5 r4=800facc5 r5=80ce9dc2 r6=26cccfa2 r7=95be3862 g=5a552228 g16=12f12a3e
+pic 4 B n4 t14400 d3600 f2 --p- pts63000 29555638
+pic 5 B n5 t18000 d3600 f2 --p- pts66600 abf924ce
+pic 6 P n6 t21600 d3600 f2 --p- pts70200 22e246ca
+pic 7 B n7 t25200 d3600 f2 --p- pts73800 b7c1a166
+pic 8 B n8 t28800 d3600 f2 --p- pts77400 24227ae9
+pic 9 P n9 t32400 d3600 f2 --p- pts81000 90531120
+pic 10 B n10 t36000 d3600 f2 --p- pts84600 48bd91a7
+pic 11 P n11 t39600 d3600 f2 --p- pts88200 bab1be18
+read 12 pictures, 0 B passed over, hash e8347d62, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+skipb 5 pictures, 7 B passed over, hash ecab57b2, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+pushed 12 pictures, 0 B passed over, hash e8347d62, end 1; 8 packets (13542 bytes, 6 timed, 6 AC-3, 2 navigation) not video
+flushed 19 pictures, 0 B passed over, hash 93996b71, end 1; 12 packets (19575 bytes, 8 timed, 8 AC-3, 4 navigation) not video

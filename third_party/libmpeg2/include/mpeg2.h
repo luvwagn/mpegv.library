@@ -57,6 +57,10 @@ typedef struct mpeg2_sequence_s {
     uint8_t colour_primaries;
     uint8_t transfer_characteristics;
     uint8_t matrix_coefficients;
+
+    /* mpegv: the sequence header's codes as stored (its aspect ratio or
+     * pixel shape, 1-15, and its frame rate, 1-15) */
+    uint8_t aspect_code, rate_code;
 } mpeg2_sequence_t;
 
 #define GOP_FLAG_DROP_FRAME 1

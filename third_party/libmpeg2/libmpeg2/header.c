@@ -160,6 +160,8 @@ int mpeg2_header_sequence (mpeg2dec_t * mpeg2dec)
 
     sequence->pixel_width = buffer[3] >> 4;	/* aspect ratio */
     sequence->frame_period = frame_period[buffer[3] & 15];
+    sequence->aspect_code = buffer[3] >> 4;	/* mpegv: kept as stored */
+    sequence->rate_code = buffer[3] & 15;
 
     sequence->byte_rate = (buffer[4]<<10) | (buffer[5]<<2) | (buffer[6]>>6);
 

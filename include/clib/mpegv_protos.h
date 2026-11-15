@@ -23,6 +23,8 @@ VOID MpvToYUV422(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG order);
 VOID MpvToRGB(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG format);
 VOID MpvToGrey(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG levels);
 CONST_STRPTR MpvVersion(void);
+/* V2 */
+LONG MpvExamine(APTR mpv, struct MpvInfo *info, ULONG size);
 
 #ifdef __cplusplus
 }

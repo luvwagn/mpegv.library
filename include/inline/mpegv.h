@@ -69,4 +69,8 @@ typedef ULONG _sfdc_vararg;
       LP0(0x5a, CONST_STRPTR, MpvVersion ,\
       , MPEGV_BASE_NAME)
 
+#define MpvExamine(___mpv, ___info, ___size) \
+      LP3(0x60, LONG, MpvExamine , APTR, ___mpv, a0, struct MpvInfo *, ___info, a1, ULONG, ___size, d0,\
+      , MPEGV_BASE_NAME)
+
 #endif /* !_INLINE_MPEGV_H */

@@ -5,7 +5,7 @@
 #
 #   cycles.py -- [vamos arguments] program [its arguments]
 #
-# MIT licence, (c) 2026 Brian King.
+# GPL-3.0-or-later, (c) 2026 Brian King.
 import atexit
 import sys
 

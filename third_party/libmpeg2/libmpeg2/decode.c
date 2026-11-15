@@ -33,7 +33,15 @@
 
 static int mpeg2_accels = 0;
 
+/* mpegv: 256 KB, not 1194 KB: the buffer holds one slice (or header) at a
+ * time, and the largest of a DVD's (MP@ML, its whole picture at most
+ * 229 KB) or a VCD's fits many times over: a megabyte less a decoder on
+ * an Amiga */
+#ifdef MPEGV
+#define BUFFER_SIZE (256 * 1024)
+#else
 #define BUFFER_SIZE (1194 * 1024)
+#endif
 
 const mpeg2_info_t * mpeg2_info (mpeg2dec_t * mpeg2dec)
 {

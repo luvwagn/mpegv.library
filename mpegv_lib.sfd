@@ -1,7 +1,8 @@
-==id $Id: mpegv_lib.sfd,v 1.0 2026/11/14 $
-* mpegv.library: MPEG-1 video decoded by the CPU (pl_mpeg inside).
-* The structures and constants are in <libraries/mpegv.h>. MIT licence,
-* (c) 2026 Brian King.
+==id $Id: mpegv_lib.sfd,v 2.0 2026/11/14 $
+* mpegv.library: MPEG-1 and MPEG-2 video decoded by the CPU (libmpeg2
+* inside). The structures and constants are in <libraries/mpegv.h>.
+* This interface file is MIT-licensed, (c) 2026 Brian King; the library
+* is GPL-3.0-or-later.
 ==base _MpegvBase
 ==basetype struct Library *
 ==libname mpegv.library
@@ -24,4 +25,6 @@ VOID MpvToYUV422(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG order
 VOID MpvToRGB(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG format) (a0,a1,d0,d1)
 VOID MpvToGrey(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG levels) (a0,a1,d0,d1)
 CONST_STRPTR MpvVersion() ()
+==version 2
+LONG MpvExamine(APTR mpv, struct MpvInfo * info, ULONG size) (a0,a1,d0)
 ==end

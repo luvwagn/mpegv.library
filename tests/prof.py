@@ -2,13 +2,14 @@
 # mpegv.library's tests: where a 68k program's time goes, under vamos (68020
 # cycle counts, from Musashi): its PC sampled every SLICE cycles, each sample
 # given to the function it falls in by the program's symbols (nm).
-# Copyright (c) 2026 Brian King, MIT licence
+# GPL-3.0-or-later, (c) 2026 Brian King.
 #
 #   m68k-amigaos-nm program > program.syms
 #   prof.py program.syms -- [vamos arguments] program [its arguments]
 #
-# The program writes "code at <address of main>" into plm_ref.base in
-# its current directory (tests/plm_ref.c), which places the symbols.
+# The program writes "code at <address of main>" into prof.base in its
+# current directory (tests/mpv_test.c built with MPV_STATIC), which places
+# the symbols.
 # Run with amitools' Python.
 import atexit
 import bisect
@@ -65,7 +66,7 @@ base = [None]
 
 def report():
     try:
-        m = re.search(r"code at ([0-9a-fA-F]+)", open("plm_ref.base").read())
+        m = re.search(r"code at ([0-9a-fA-F]+)", open("prof.base").read())
         if m and main_off is not None:
             base[0] = int(m.group(1), 16) - main_off
     except OSError:
@@ -82,7 +83,7 @@ def report():
     t = total[0] or 1
     out = sys.__stdout__
     print("total %d cycles" % total[0], file=out)
-    for name, c in per.most_common(30):
+    for name, c in per.most_common(40):
         print("%6.2f%% %12d  %s" % (100.0 * c / t, c, name), file=out)
     if PCS:
         print("busiest places:", file=out)

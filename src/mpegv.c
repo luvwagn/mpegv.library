@@ -1,77 +1,66 @@
 /*
- * mpegv.library: MPEG-1 video decoded by the CPU, for any program.
+ * mpegv.library: MPEG-1 and MPEG-2 video decoded by the CPU, for any
+ * program.
  *
- * The decoder is pl_mpeg (third_party/pl_mpeg, MIT, Dominic Szablewski),
- * made faster for a 68020 without an FPU (each change marked "AmigaMCE:"
- * or "mpegv:" in pl_mpeg.h), built in here with the library's own memory
- * and no stdio. Its demuxer reads a Program Stream as the read hook gives
- * it (or MpvWrite), the video packets go to the video decoder, the others
- * to the packet hook; a bare video stream goes to the decoder as it is.
- * A picture is the decoder's own planes, not copied; the helpers make
- * them what a screen wants.
+ * The decoder is libmpeg2 0.5.1 (third_party/libmpeg2, GPL-2.0-or-later,
+ * Aaron Holtzman and Michel Lespinasse), made faster for a 68k (each
+ * change marked "mpegv:" there, and listed in its CHANGES), built in here
+ * with the library's own memory. The demultiplexer is this file's own: it
+ * reads a Program Stream (MPEG-1's packs, or MPEG-2's: a DVD's VOB) as the
+ * read hook gives it (or MpvWrite), queues its video's packets for the
+ * decoder, each with its time, and hands the others to the packet hook; a
+ * bare video stream goes to the decoder as it is. A picture is the
+ * decoder's own planes, not copied; the helpers (src/convert.c) make them
+ * what a screen wants.
  *
  * Built for the Amiga as a library (src/libinit.c: libnix's, public
  * domain), and for the build machine as plain functions (the tests).
  *
- * (c) 2026 Brian King. MIT licence (LICENSE).
+ * (c) 2026 Brian King. GPL-3.0-or-later (LICENSE).
  */
 #include <exec/types.h>
 #include <exec/memory.h>
 #include <utility/tagitem.h>
 #include <utility/hooks.h>
 #include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <libraries/mpegv.h>
+#include "mpeg2.h"
 
 #ifdef __amigaos__
 #include <exec/libraries.h>
 #include <proto/exec.h>
+#ifndef MPV_STATIC
 #include "stabs.h"
 /* stabs' stubs call their function with a BSR (16 bits): the stubs come
- * first and pl_mpeg is more than 32 KB, so the call is a JSR (32 bits) */
+ * first and the library is more than 32 KB, so the call is a JSR */
 #undef _ADDTABL_CALL
 #define _ADDTABL_CALL(name)                 \
 __asm__("\tmovel a6@(40:W),a4");             \
 __asm__("\tjsr _" #name)
 
 const char LibName[] = "mpegv.library";
-const char LibIdString[] = "mpegv 1.0 (14.11.2026) pl_mpeg, MPEG-1 video";
+const char LibIdString[] = "mpegv 2.0 (14.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
 static const char __attribute__((used)) LibVerTag[] =
-    "$VER: mpegv.library 1.0 (14.11.2026) pl_mpeg, MPEG-1 video (68020+)";
-const UWORD LibVersion = 1;
+    "$VER: mpegv.library 2.0 (14.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
+const UWORD LibVersion = 2;
 const UWORD LibRevision = 0;
 
 struct ExecBase *SysBase;
+#endif
 #define API
 
-/* pl_mpeg's memory: exec's, each block's size before it (for realloc) */
-static void *mpv_malloc(size_t n)
+/* the library's memory (and libmpeg2's: its alloc.c): exec's */
+void *mpv_malloc(unsigned long n)
 {
-    ULONG *b = AllocVec(n + 8, MEMF_ANY);
-    if (!b)
-        return NULL;
-    b[0] = n;
-    return b + 2;
+    return AllocVec(n, MEMF_ANY);
 }
 
-static void mpv_free(void *p)
+void mpv_free(void *p)
 {
     if (p)
-        FreeVec((ULONG *)p - 2);
-}
-
-static void *mpv_realloc(void *p, size_t n)
-{
-    void *q;
-    size_t had;
-    if (!p)
-        return mpv_malloc(n);
-    had = ((ULONG *)p)[-2];
-    if (!(q = mpv_malloc(n)))
-        return NULL;
-    memcpy(q, p, had < n ? had : n);
-    mpv_free(p);
-    return q;
+        FreeVec(p);
 }
 
 /* a hook called as the Amiga calls them: A0 the hook, A2 the object, A1
@@ -91,151 +80,334 @@ static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 #else
 #include <stdlib.h>
 #define API                                 /* on the host: plain functions (tests) */
-#define mpv_malloc malloc
-#define mpv_free free
-#define mpv_realloc realloc
+void *mpv_malloc(unsigned long n)
+{
+    return malloc(n);
+}
+
+void mpv_free(void *p)
+{
+    free(p);
+}
+
 static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 {
     return (LONG)((ULONG(*)(struct Hook *, APTR, APTR))h->h_Entry)(h, obj, msg);
 }
 #endif
 
-#define PLM_MALLOC(sz) mpv_malloc(sz)
-#define PLM_FREE(p) mpv_free(p)
-#define PLM_REALLOC(p, sz) mpv_realloc(p, sz)
-#define PLM_NO_STDIO
-#define PL_MPEG_IMPLEMENTATION
-#include "pl_mpeg.h"
+static const char version[] = "mpegv 2.0, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
 
-static const char version[] = "mpegv 1.0, pl_mpeg (MPEG-1 video)";
+#define FEED 65536                          /* the most a packet holds: what libmpeg2 is given at once */
+#define QHEAD 12                            /* a queued video packet's head: its length, flags, time */
 
 struct Mpv {
     struct Hook *read, *packet;
     ULONG readsize;
-    UBYTE *in;                              /* the read hook's buffer */
     ULONG kind;                             /* MPVS_PROGRAM or MPVS_VIDEO; MPVS_AUTO: not yet known */
-    plm_buffer_t *fbuf, *vbuf;              /* the stream as read; its video */
-    plm_demux_t *demux;
-    plm_video_t *vd;
-    BOOL ended;                             /* the stream's end reached (or MPVC_END) */
+    ULONG want_vid, vid;                    /* the video's stream id: asked for (0 any); found */
+    UBYTE *in;                              /* the stream's bytes, read (or written) not yet used */
+    ULONG cap, rd, wr;
+    UBYTE *vq;                              /* the video's packets, demultiplexed not yet decoded */
+    ULONG vqcap, vqrd, vqwr;
+    UBYTE *feed;                            /* the packet libmpeg2 is reading (FEED bytes) */
+    mpeg2dec_t *dec;
+    const mpeg2_info_t *info;
+    BOOL ended;                             /* no more bytes: the read hook's end (or MPVC_END) */
     BOOL failed;                            /* the read hook could not read */
     BOOL pushed_end;
-    BOOL skipb;
+    BOOL fed_end;                           /* the decoder given a sequence end, to show its last picture */
+    BOOL done;                              /* no more pictures */
     BOOL bad;                               /* not a stream it decodes */
-    int64_t first_pts;                      /* the first video packet's time, -1 none */
+    BOOL format;                            /* MPEG-2 not 4:2:0 */
+    BOOL nomem;
+    BOOL got_seq;
+    BOOL packs2;                            /* MPEG-2 packs seen */
+    BOOL skipb;
+    BOOL seen_i;                            /* an I picture since the start (or MPVC_FLUSH) */
+    BOOL closed;                            /* the last GOP closed: its first B pictures need no earlier one */
+    BOOL have_first, have_pts;
+    UWORD refs;                             /* I and P pictures since the start (2 at most) */
+    ULONG skipped;                          /* B pictures passed over (MPVC_SKIPB) */
+    ULONG number;                           /* pictures in display order so far */
+    uint64_t fields;                        /* fields shown so far times the frame period (27 MHz) */
+    ULONG first_pts;                        /* the first video packet's time */
+    ULONG base_pts, base_time;              /* the last picture with a time: its time and mpic_Time */
     struct MpvPicture pic;
 };
 
-/* ---- the stream's bytes to where they go: the first say what it is */
-static void feed(struct Mpv *m, UBYTE *b, ULONG n)
+/* ---- the stream's bytes */
+
+/* At least need bytes held (reading them with a read hook): FALSE if
+ * there are not, at the stream's end or (without a read hook) until more
+ * are written. */
+static BOOL more(struct Mpv *m, ULONG need)
 {
-    if (m->kind == MPVS_AUTO) {
-        ULONG i = 0;
+    while (m->wr - m->rd < need) {
+        struct MpvRead r;
+        LONG n;
+        if (!m->read || m->ended || m->failed) {
+            if (m->pushed_end)
+                m->ended = TRUE;
+            return FALSE;
+        }
+        if (m->cap - m->wr < m->readsize) {
+            memmove(m->in, m->in + m->rd, m->wr - m->rd);
+            m->wr -= m->rd;
+            m->rd = 0;
+        }
+        r.mr_Buffer = m->in + m->wr;
+        r.mr_Length = (LONG)m->readsize;
+        n = call_hook(m->read, m, &r);
+        if (n <= 0) {
+            if (n < 0)
+                m->failed = TRUE;
+            m->ended = TRUE;
+            return FALSE;
+        }
+        if ((ULONG)n > m->readsize)
+            n = (LONG)m->readsize;
+        m->wr += (ULONG)n;
+    }
+    return TRUE;
+}
+
+/* what the bytes are, from the first of them (a pack header, or a
+ * sequence header): FALSE until known */
+static BOOL detect(struct Mpv *m)
+{
+    while (m->kind == MPVS_AUTO) {
+        const UBYTE *b = m->in + m->rd;
+        ULONG n = m->wr - m->rd, i = 0;
         while (i < n && !b[i])
             i++;
-        if (i >= 2 && i < n && b[i] == 1 && i + 1 < n) {
-            m->kind = b[i + 1] == 0xBA ? MPVS_PROGRAM : b[i + 1] == 0xB3 ? MPVS_VIDEO : MPVS_AUTO;
+        if (i + 2 > n && n < 4096) {
+            if (!more(m, n + 1)) {
+                if (m->ended) {
+                    m->bad = TRUE;
+                    m->done = TRUE;
+                }
+                return FALSE;
+            }
+            continue;
         }
-        if (m->kind == MPVS_AUTO) {
+        if (i >= 2 && i + 2 <= n && b[i] == 1 && (b[i + 1] == 0xBA || b[i + 1] == 0xB3))
+            m->kind = b[i + 1] == 0xBA ? MPVS_PROGRAM : MPVS_VIDEO;
+        else {
             m->bad = TRUE;                  /* (neither a pack nor a sequence header first) */
-            m->kind = MPVS_PROGRAM;
+            m->done = TRUE;
+            return FALSE;
         }
     }
-    if (m->kind == MPVS_PROGRAM) {
-        if (!m->fbuf) {
-            m->fbuf = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
-            if (!m->fbuf)
+    return TRUE;
+}
+
+/* ---- the Program Stream's packets */
+
+static ULONG pts_of(const UBYTE *p)
+{
+    return ((ULONG)(p[0] & 0x0E) << 29) | ((ULONG)p[1] << 22) | ((ULONG)(p[2] & 0xFE) << 14) |
+           ((ULONG)p[3] << 7) | (ULONG)(p[4] >> 1);
+}
+
+static void put_long(UBYTE *b, ULONG v)
+{
+    b[0] = (UBYTE)(v >> 24);
+    b[1] = (UBYTE)(v >> 16);
+    b[2] = (UBYTE)(v >> 8);
+    b[3] = (UBYTE)v;
+}
+
+static ULONG get_long(const UBYTE *b)
+{
+    return ((ULONG)b[0] << 24) | ((ULONG)b[1] << 16) | ((ULONG)b[2] << 8) | b[3];
+}
+
+/* a video packet queued for the decoder */
+static void queue(struct Mpv *m, const UBYTE *p, ULONG n, BOOL timed, ULONG pts)
+{
+    if (m->vqcap - m->vqwr < n + QHEAD) {
+        if (m->vqrd) {
+            memmove(m->vq, m->vq + m->vqrd, m->vqwr - m->vqrd);
+            m->vqwr -= m->vqrd;
+            m->vqrd = 0;
+        }
+        if (m->vqcap - m->vqwr < n + QHEAD) {
+            ULONG c = m->vqcap ? m->vqcap * 2 : 65536;
+            UBYTE *q;
+            while (c - m->vqwr < n + QHEAD)
+                c *= 2;
+            if (!(q = mpv_malloc(c))) {
+                m->nomem = TRUE;
+                return;
+            }
+            if (m->vq) {
+                memcpy(q, m->vq, m->vqwr);
+                mpv_free(m->vq);
+            }
+            m->vq = q;
+            m->vqcap = c;
+        }
+    }
+    put_long(m->vq + m->vqwr, n);
+    put_long(m->vq + m->vqwr + 4, timed);
+    put_long(m->vq + m->vqwr + 8, pts);
+    memcpy(m->vq + m->vqwr + QHEAD, p, n);
+    m->vqwr += n + QHEAD;
+}
+
+/* a packet: b its start code, its payload n bytes from b + 6 */
+static void packet(struct Mpv *m, const UBYTE *b, ULONG n)
+{
+    ULONG id = b[3], pts = 0;
+    const UBYTE *p = b + 6, *e = b + 6 + n;
+    BOOL timed = FALSE;
+    if (id == 0xBB || id == 0xBC || id == 0xBE || id >= 0xF0)
+        return;                             /* system header, stream map, padding, the rest */
+    if (id != 0xBF) {
+        /* its PES header */
+        if (e - p >= 3 && (p[0] & 0xC0) == 0x80) {
+            ULONG hl = p[2];                /* MPEG-2's: flags, its length */
+            if (3 + hl > (ULONG)(e - p))
+                return;
+            if ((p[1] & 0x80) && hl >= 5) {
+                pts = pts_of(p + 3);
+                timed = TRUE;
+            }
+            p += 3 + hl;
+        } else {
+            int k = 0;                      /* MPEG-1's: stuffing, buffer size, times */
+            while (p < e && *p == 0xFF && k++ < 16)
+                p++;
+            if (e - p >= 2 && (p[0] & 0xC0) == 0x40)
+                p += 2;
+            if (e - p >= 5 && (p[0] & 0xF0) == 0x20) {
+                pts = pts_of(p);
+                timed = TRUE;
+                p += 5;
+            } else if (e - p >= 10 && (p[0] & 0xF0) == 0x30) {
+                pts = pts_of(p);
+                timed = TRUE;
+                p += 10;
+            } else if (e - p >= 1 && p[0] == 0x0F)
+                p++;
+            else
                 return;
         }
-        plm_buffer_write(m->fbuf, b, n);
-        if (!m->demux)
-            m->demux = plm_demux_create(m->fbuf, FALSE);
-    } else
-        plm_buffer_write(m->vbuf, b, n);
-}
-
-/* The read hook's next bytes fed: FALSE at the end (or an error). */
-static BOOL read_more(struct Mpv *m)
-{
-    struct MpvRead r;
-    LONG n;
-    if (!m->read || m->ended)
-        return FALSE;
-    r.mr_Buffer = m->in;
-    r.mr_Length = (LONG)m->readsize;
-    n = call_hook(m->read, m, &r);
-    if (n <= 0) {
-        if (n < 0)
-            m->failed = TRUE;
-        return FALSE;
     }
-    feed(m, m->in, (ULONG)n);
-    return TRUE;
-}
-
-/* the demuxer wants more of the stream */
-static void fload(plm_buffer_t *b, void *user)
-{
-    struct Mpv *m = user;
-    if (!read_more(m))
-        plm_buffer_signal_end(b);
-}
-
-/* One packet from the Program Stream: video to the decoder, the rest to
- * the packet hook. FALSE at its end (or, without a read hook, when more
- * bytes are wanted). */
-static BOOL pump(struct Mpv *m)
-{
-    plm_packet_t *p;
-    if (m->ended || !m->demux)
-        return FALSE;
-    if (!(p = plm_demux_decode(m->demux))) {
-        if (m->read || m->pushed_end) {
-            m->ended = TRUE;
-            plm_buffer_signal_end(m->vbuf);
+    if (id >= 0xE0 && id <= 0xEF) {
+        if (!m->vid && (!m->want_vid || id == m->want_vid))
+            m->vid = id;
+        if (id == m->vid) {
+            if (timed && !m->have_first) {
+                m->first_pts = pts;
+                m->have_first = TRUE;
+            }
+            queue(m, p, (ULONG)(e - p), timed, pts);
+            return;
         }
-        return FALSE;
     }
-    if (p->type == (int)PLM_DEMUX_PACKET_VIDEO_1) {
-        if (m->first_pts < 0 && p->pts90 >= 0)
-            m->first_pts = p->pts90;
-        plm_buffer_write(m->vbuf, p->data, p->length);
-    } else if (m->packet) {
+    if (m->packet) {
         struct MpvPacket pk;
-        pk.mp_Stream = (ULONG)p->type;
-        pk.mp_Flags = p->pts90 >= 0 ? MPVPF_PTS : 0;
-        pk.mp_PTS = p->pts90 >= 0 ? (ULONG)p->pts90 : 0;
-        pk.mp_Data = p->data;
-        pk.mp_Length = (ULONG)p->length;
+        pk.mp_Stream = id;
+        pk.mp_Flags = timed ? MPVPF_PTS : 0;
+        pk.mp_PTS = pts;
+        pk.mp_Data = (UBYTE *)p;
+        pk.mp_Length = (ULONG)(e - p);
+        pk.mp_SubStream = id == 0xBD && p < e ? *p : 0;
         call_hook(m->packet, m, &pk);
     }
-    return TRUE;
 }
 
-/* the video decoder wants more: packets until a video one (a bare
- * stream: the stream itself) */
-static void vload(plm_buffer_t *b, void *user)
+/* One thing from the Program Stream: a pack header, a packet (video
+ * queued, the rest to the packet hook), an end code, or bytes passed over
+ * to the next start code. FALSE when more bytes are wanted (or at the
+ * end). */
+static BOOL step(struct Mpv *m)
 {
-    struct Mpv *m = user;
-    size_t had;
-    if (m->kind == MPVS_AUTO && !read_more(m)) {
-        if (m->read || m->pushed_end)
-            plm_buffer_signal_end(b);
-        return;
+    for (;;) {
+        const UBYTE *b = m->in + m->rd;
+        ULONG n = m->wr - m->rd, need;
+        if (n < 6) {
+            if (!more(m, 6))
+                return FALSE;
+            continue;
+        }
+        if (b[0] || b[1] || b[2] != 1) {
+            ULONG i = 1;                    /* not at a start code: to the next one */
+            while (i + 3 <= n && (b[i] || b[i + 1] || b[i + 2] != 1))
+                i++;
+            m->rd += i;
+            continue;
+        }
+        if (b[3] == 0xBA) {
+            if ((b[4] & 0xC0) == 0x40) {
+                if (n < 14) {
+                    if (!more(m, 14))
+                        return FALSE;
+                    continue;
+                }
+                need = 14 + (b[13] & 7);    /* MPEG-2's, and its stuffing */
+                m->packs2 = TRUE;
+            } else if ((b[4] & 0xF0) == 0x20)
+                need = 12;                  /* MPEG-1's */
+            else
+                need = 4;
+        } else if (b[3] == 0xB9)
+            need = 4;                       /* the program's end: another may follow */
+        else if (b[3] < 0xBB)
+            need = 3;                       /* not a pack's: passed over */
+        else {
+            need = 6 + (((ULONG)b[4] << 8) | b[5]);
+            if (n < need) {
+                if (!more(m, need))
+                    return FALSE;
+                continue;
+            }
+            packet(m, b, need - 6);
+        }
+        if (n < need) {
+            if (!more(m, need))
+                return FALSE;
+            continue;
+        }
+        m->rd += need;
+        return TRUE;
     }
+}
+
+/* The decoder's next bytes: a video packet (with its time), or a bare
+ * stream's next bytes. 1 given; 0 none yet (more to be written, or the
+ * read hook failed); -1 the stream's end. */
+static int give(struct Mpv *m)
+{
+    ULONG n;
+    if (!detect(m))
+        return m->done ? -1 : 0;
     if (m->kind == MPVS_VIDEO) {
-        if (m->read && !read_more(m)) {
-            m->ended = TRUE;
-            plm_buffer_signal_end(b);
-        } else if (!m->read && m->pushed_end)
-            plm_buffer_signal_end(b);
-        return;
+        if (m->wr == m->rd && !more(m, 1))
+            return m->ended && !m->failed ? -1 : 0;
+        n = m->wr - m->rd;
+        if (n > FEED)
+            n = FEED;
+        memcpy(m->feed, m->in + m->rd, n);
+        m->rd += n;
+        mpeg2_buffer(m->dec, m->feed, m->feed + n);
+        return 1;
     }
-    if (m->demux && m->fbuf && m->read)
-        plm_buffer_set_load_callback(m->fbuf, fload, m);
-    had = plm_buffer_get_remaining(b);
-    while (plm_buffer_get_remaining(b) == had && pump(m))
-        ;
+    while (m->vqwr == m->vqrd) {
+        if (m->nomem)
+            return 0;
+        if (!step(m))
+            return m->ended && !m->failed ? -1 : 0;
+    }
+    n = get_long(m->vq + m->vqrd);
+    memcpy(m->feed, m->vq + m->vqrd + QHEAD, n);
+    if (get_long(m->vq + m->vqrd + 4))
+        mpeg2_tag_picture(m->dec, get_long(m->vq + m->vqrd + 8), 1);
+    m->vqrd += n + QHEAD;
+    mpeg2_buffer(m->dec, m->feed, m->feed + n);
+    return 1;
 }
 
 static unsigned long tag_data(struct TagItem *t, ULONG tag, unsigned long def)
@@ -274,25 +446,19 @@ API APTR MpvOpen(struct TagItem *tags)
     m->kind = (ULONG)tag_data(tags, MPVA_Stream, MPVS_AUTO);
     m->readsize = (ULONG)tag_data(tags, MPVA_ReadSize, 16384);
     m->skipb = tag_data(tags, MPVA_SkipB, FALSE) != 0;
-    m->first_pts = -1;
+    m->want_vid = (ULONG)tag_data(tags, MPVA_VideoStream, 0);
+    if (m->want_vid < 0xE0 || m->want_vid > 0xEF)
+        m->want_vid = 0;
     if (m->kind > MPVS_VIDEO)
         m->kind = MPVS_AUTO;
     if (m->readsize < 2048)
         m->readsize = 2048;
-    if ((m->read && !(m->in = mpv_malloc(m->readsize))) ||
-        !(m->vbuf = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE)))
+    if (m->readsize > 1024 * 1024)
+        m->readsize = 1024 * 1024;
+    m->cap = m->readsize + FEED + 64;       /* a whole packet, and a read after it */
+    if (!(m->in = mpv_malloc(m->cap)) || !(m->feed = mpv_malloc(FEED)) || !(m->dec = mpeg2_init()))
         goto fail;
-    plm_buffer_set_load_callback(m->vbuf, vload, m);
-    if (m->kind == MPVS_PROGRAM) {
-        if (!(m->fbuf = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE)) ||
-            !(m->demux = plm_demux_create(m->fbuf, FALSE)))
-            goto fail;
-        if (m->read)
-            plm_buffer_set_load_callback(m->fbuf, fload, m);
-    }
-    if (!(m->vd = plm_video_create_with_buffer(m->vbuf, FALSE)))
-        goto fail;
-    plm_video_set_skip_b(m->vd, m->skipb);
+    m->info = mpeg2_info(m->dec);
     return m;
 fail:
     MpvClose(m);
@@ -304,102 +470,210 @@ API VOID MpvClose(APTR mpv)
     struct Mpv *m = mpv;
     if (!m)
         return;
-    if (m->vd)
-        plm_video_destroy(m->vd);
-    if (m->demux)
-        plm_demux_destroy(m->demux);
-    if (m->fbuf)
-        plm_buffer_destroy(m->fbuf);
-    if (m->vbuf)
-        plm_buffer_destroy(m->vbuf);
-    if (m->in)
-        mpv_free(m->in);
+    if (m->dec)
+        mpeg2_close(m->dec);
+    mpv_free(m->feed);
+    mpv_free(m->vq);
+    mpv_free(m->in);
     mpv_free(m);
 }
 
 API LONG MpvWrite(APTR mpv, CONST UBYTE *buf, LONG len)
 {
     struct Mpv *m = mpv;
-    if (!m || !buf || len <= 0 || m->pushed_end)
+    ULONG n = (ULONG)len;
+    if (!m || !buf || len <= 0 || m->pushed_end || m->read)
         return 0;
-    feed(m, (UBYTE *)buf, (ULONG)len);
+    if (m->cap - m->wr < n) {
+        memmove(m->in, m->in + m->rd, m->wr - m->rd);
+        m->wr -= m->rd;
+        m->rd = 0;
+        if (m->cap - m->wr < n) {
+            ULONG c = m->cap * 2;
+            UBYTE *b;
+            while (c - m->wr < n)
+                c *= 2;
+            if (!(b = mpv_malloc(c)))
+                return 0;
+            memcpy(b, m->in, m->wr);
+            mpv_free(m->in);
+            m->in = b;
+            m->cap = c;
+        }
+    }
+    memcpy(m->in + m->wr, buf, n);
+    m->wr += n;
     return len;
 }
 
 API LONG MpvPump(APTR mpv)
 {
     struct Mpv *m = mpv;
-    if (!m)
+    if (!m || !detect(m) || m->kind != MPVS_PROGRAM)
         return FALSE;
-    if (m->kind == MPVS_AUTO)
-        read_more(m);
-    if (m->kind != MPVS_PROGRAM)
-        return FALSE;
-    if (m->fbuf && m->read)
-        plm_buffer_set_load_callback(m->fbuf, fload, m);
-    return pump(m);
+    return step(m);
 }
 
-/* pictures a second as num / den, from the rate's code */
-static void rate_of(int code, ULONG *num, ULONG *den)
+/* ---- the decoder */
+
+/* a picture's place in the stream as it begins: B pictures that need a
+ * picture not there (after the start, or a flush), and everything before
+ * the first I picture, are passed over; B pictures too with MPVC_SKIPB */
+static void begin(struct Mpv *m)
 {
-    static const UWORD n[9] = { 30, 24000, 24, 25, 30000, 30, 50, 60000, 60 };
-    static const UWORD d[9] = { 1, 1001, 1, 1, 1001, 1, 1, 1001, 1 };
-    if (code < 1 || code > 8)
-        code = 0;
-    *num = n[code];
-    *den = d[code];
+    const mpeg2_picture_t *cp = m->info->current_picture;
+    int t = cp ? (int)(cp->flags & PIC_MASK_CODING_TYPE) : 0, skip = 0;
+    if (t == PIC_FLAG_CODING_TYPE_I) {
+        m->seen_i = TRUE;
+        if (m->refs < 2)
+            m->refs++;
+    } else if (!m->seen_i)
+        skip = 1;
+    else if (t == PIC_FLAG_CODING_TYPE_P) {
+        if (m->refs < 2)
+            m->refs++;
+    } else if (t == PIC_FLAG_CODING_TYPE_B) {
+        if (m->refs < 2 && !m->closed)
+            skip = 1;
+        else if (m->skipb) {
+            skip = 1;
+            m->skipped++;
+        }
+    }
+    mpeg2_skip(m->dec, skip);
+}
+
+/* the picture to be shown next, as the caller's: NULL if it was passed
+ * over (its time still counted) */
+static struct MpvPicture *shown(struct Mpv *m)
+{
+    const mpeg2_info_t *in = m->info;
+    const mpeg2_picture_t *dp = in->display_picture;
+    const mpeg2_sequence_t *s = in->sequence;
+    const mpeg2_fbuf_t *f = in->display_fbuf;
+    struct MpvPicture *p = &m->pic;
+    ULONG fields = dp->nb_fields < 2 ? 2 : dp->nb_fields, time, end;
+    time = (ULONG)(m->fields / 600);
+    m->fields += (uint64_t)fields * s->frame_period;
+    end = (ULONG)(m->fields / 600);
+    m->number++;
+    if (dp->flags & PIC_FLAG_TAGS) {
+        m->base_pts = dp->tag;
+        m->base_time = time;
+        m->have_pts = TRUE;
+    }
+    if (dp->flags & PIC_FLAG_SKIP)
+        return NULL;
+    p->mpic_Y = f->buf[0];
+    p->mpic_Cb = f->buf[1];
+    p->mpic_Cr = f->buf[2];
+    p->mpic_Width = (UWORD)s->picture_width;
+    p->mpic_Height = (UWORD)s->picture_height;
+    p->mpic_YModulo = (UWORD)s->width;
+    p->mpic_CModulo = (UWORD)s->chroma_width;
+    p->mpic_YRows = (UWORD)s->height;
+    p->mpic_Type = (UWORD)(dp->flags & PIC_MASK_CODING_TYPE);
+    p->mpic_Number = m->number - 1;
+    p->mpic_Time = time;
+    p->mpic_Duration = end - time;
+    p->mpic_Fields = (UWORD)fields;
+    p->mpic_Flags = (m->have_pts ? MPVPF_PTS : 0) |
+                    (dp->flags & PIC_FLAG_TOP_FIELD_FIRST ? MPVPF_TOPFIRST : 0) |
+                    (fields > 2 ? MPVPF_REPEAT : 0) |
+                    (dp->flags & PIC_FLAG_PROGRESSIVE_FRAME ? MPVPF_PROGRESSIVE : 0) |
+                    (dp->nb_fields == 1 ? MPVPF_FIELDS : 0);
+    p->mpic_PTS = m->have_pts ? m->base_pts + (time - m->base_time) : time;
+    return p;
+}
+
+/* the decoder run to its next picture (or, with seq, to its sequence
+ * header): NULL with *e if there is none (yet) */
+static struct MpvPicture *run(struct Mpv *m, BOOL seq, LONG *e)
+{
+    static UBYTE seq_end[4] = { 0, 0, 1, 0xB7 };
+    *e = MPVE_OK;
+    for (;;) {
+        mpeg2_state_t st;
+        if (m->done || m->nomem) {
+            *e = m->nomem ? MPVE_NOMEM : m->failed ? MPVE_READ : m->format ? MPVE_FORMAT
+                 : (m->bad || !m->got_seq) ? MPVE_STREAM : MPVE_END;
+            return NULL;
+        }
+        st = mpeg2_parse(m->dec);
+        switch (st) {
+        case STATE_BUFFER: {
+            int r = give(m);
+            if (r > 0)
+                break;
+            if (r == 0) {
+                if (m->failed)
+                    m->done = TRUE;
+                else if (!m->nomem) {
+                    *e = MPVE_MORE;
+                    return NULL;
+                }
+                break;
+            }
+            if (!m->fed_end) {
+                m->fed_end = TRUE;          /* its last picture shown */
+                mpeg2_buffer(m->dec, seq_end, seq_end + 4);
+            } else
+                m->done = TRUE;
+            break;
+        }
+        case STATE_SEQUENCE:
+        case STATE_SEQUENCE_MODIFIED: {
+            const mpeg2_sequence_t *s = m->info->sequence;
+            if (s->chroma_width * 2 != s->width || s->chroma_height * 2 != s->height) {
+                m->format = TRUE;
+                m->done = TRUE;
+                break;
+            }
+            m->got_seq = TRUE;
+            if (seq)
+                return NULL;
+            break;
+        }
+        case STATE_GOP:
+            m->closed = (m->info->gop->flags & (GOP_FLAG_CLOSED_GOP | GOP_FLAG_BROKEN_LINK)) ==
+                        GOP_FLAG_CLOSED_GOP;
+            break;
+        case STATE_PICTURE:
+            begin(m);
+            break;
+        case STATE_SLICE:
+        case STATE_END:
+        case STATE_INVALID_END:
+            if (m->info->display_fbuf && m->info->display_picture) {
+                struct MpvPicture *p = shown(m);
+                if (p)
+                    return p;
+            }
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 API struct MpvPicture *MpvDecode(APTR mpv, LONG *error)
 {
     struct Mpv *m = mpv;
-    plm_frame_t *f;
-    LONG e = MPVE_OK;
+    struct MpvPicture *p;
+    LONG e;
     if (!m) {
         if (error)
             *error = MPVE_STREAM;
         return NULL;
     }
-    f = plm_video_decode(m->vd);
-    if (!f) {
-        if (m->failed)
-            e = MPVE_READ;
-        else if (plm_video_has_ended(m->vd) || m->ended)
-            e = MPVE_END;
-        else if (m->bad && !plm_video_has_header(m->vd))
-            e = MPVE_STREAM;
-        else
-            e = MPVE_MORE;
-        if (error)
-            *error = e;
-        return NULL;
-    }
-    {
-        struct MpvPicture *p = &m->pic;
-        ULONG num, den;
-        rate_of(m->vd->rate_code, &num, &den);
-        p->mpic_Y = f->y.data;
-        p->mpic_Cb = f->cb.data;
-        p->mpic_Cr = f->cr.data;
-        p->mpic_Width = (UWORD)f->width;
-        p->mpic_Height = (UWORD)f->height;
-        p->mpic_YModulo = (UWORD)f->y.width;
-        p->mpic_CModulo = (UWORD)f->cb.width;
-        p->mpic_YRows = (UWORD)f->y.height;
-        p->mpic_Type = (UWORD)f->type;
-        p->mpic_Number = f->index;
-        p->mpic_Time = (ULONG)((uint64_t)f->index * 90000u * den / num);
-        p->mpic_Flags = m->first_pts >= 0 ? MPVPF_PTS : 0;
-        p->mpic_PTS = (ULONG)(m->first_pts >= 0 ? m->first_pts : 0) + p->mpic_Time;
-    }
+    p = run(m, FALSE, &e);
     if (error)
-        *error = MPVE_OK;
-    return &m->pic;
+        *error = p ? MPVE_OK : e;
+    return p;
 }
 
-/* a picture's width for its height, as it is meant to be seen (its pixel
- * shape's code, MPEG-1's) */
+/* a picture's width for its height, as it is meant to be seen: MPEG-1's
+ * pixel shape's code */
 static ULONG shown_w(ULONG w, ULONG h, int a)
 {
     static const UWORD pel[15] = { 0, 10000, 6735, 7031, 7615, 8055, 8437, 8935,
@@ -413,24 +687,87 @@ static ULONG shown_w(ULONG w, ULONG h, int a)
     return w;
 }
 
+static ULONG gcd(ULONG a, ULONG b)
+{
+    while (b) {
+        ULONG t = a % b;
+        a = b;
+        b = t;
+    }
+    return a ? a : 1;
+}
+
+static LONG examine(struct Mpv *m, struct MpvInfo *info, ULONG size)
+{
+    struct MpvInfo i;
+    const mpeg2_sequence_t *s;
+    ULONG an, ad, g;
+    LONG e;
+    if (!m || !info)
+        return FALSE;
+    if (!m->got_seq)
+        run(m, TRUE, &e);
+    if (!m->got_seq || !(s = m->info->sequence))
+        return FALSE;
+    memset(&i, 0, sizeof(i));
+    i.mi_Width = (UWORD)s->picture_width;
+    i.mi_Height = (UWORD)s->picture_height;
+    i.mi_RateCode = s->rate_code;
+    i.mi_AspectCode = s->aspect_code;
+    if (s->frame_period) {
+        g = gcd(27000000UL, s->frame_period);
+        i.mi_RateNum = 27000000UL / g;
+        i.mi_RateDen = s->frame_period / g;
+        i.mi_Period = s->frame_period / 300;
+    }
+    i.mi_BitRate = s->byte_rate * 8;
+    i.mi_Kind = m->kind == MPVS_VIDEO ? MPVS_VIDEO : MPVS_PROGRAM;
+    i.mi_Flags = (s->flags & SEQ_FLAG_MPEG2 ? MPVIF_MPEG2 : 0) |
+                 (s->flags & SEQ_FLAG_PROGRESSIVE_SEQUENCE ? MPVIF_PROGRESSIVE : 0) |
+                 (s->flags & SEQ_FLAG_LOW_DELAY ? MPVIF_LOWDELAY : 0) | (m->packs2 ? MPVIF_PACKS2 : 0);
+    i.mi_Chroma = MPVCF_420;
+    i.mi_DisplayWidth = (UWORD)s->display_width;
+    i.mi_DisplayHeight = (UWORD)s->display_height;
+    if (s->flags & SEQ_FLAG_MPEG2) {
+        if (!(s->profile_level_id & 0x80)) {
+            i.mi_Profile = (UWORD)((s->profile_level_id >> 4) & 7);
+            i.mi_Level = (UWORD)(s->profile_level_id & 15);
+        }
+        /* the picture's shape (its displayed part's, as the standard has it) */
+        switch (s->aspect_code) {
+        case 2:
+            an = 4, ad = 3;
+            break;
+        case 3:
+            an = 16, ad = 9;
+            break;
+        case 4:
+            an = 221, ad = 100;
+            break;
+        default:
+            an = s->display_width, ad = s->display_height;
+            break;
+        }
+        i.mi_ShownWidth = ad ? (s->picture_height * an + ad / 2) / ad : s->picture_width;
+    } else {
+        i.mi_ShownWidth = shown_w(s->picture_width, s->picture_height, s->aspect_code);
+        an = i.mi_ShownWidth, ad = s->picture_height;
+    }
+    g = gcd(an, ad);
+    i.mi_AspectNum = (UWORD)(an / g);
+    i.mi_AspectDen = (UWORD)(ad / g);
+    memcpy(info, &i, size < sizeof(i) ? size : sizeof(i));
+    return TRUE;
+}
+
 API LONG MpvGetInfo(APTR mpv, struct MpvInfo *info)
 {
-    struct Mpv *m = mpv;
-    plm_video_t *v;
-    if (!m || !info || !plm_video_has_header(m->vd))
-        return FALSE;
-    v = m->vd;
-    memset(info, 0, sizeof(*info));
-    info->mi_Width = (UWORD)v->width;
-    info->mi_Height = (UWORD)v->height;
-    info->mi_RateCode = (UWORD)v->rate_code;
-    info->mi_AspectCode = (UWORD)v->aspect_code;
-    rate_of(v->rate_code, &info->mi_RateNum, &info->mi_RateDen);
-    info->mi_Period = 90000UL * info->mi_RateDen / info->mi_RateNum;
-    info->mi_ShownWidth = shown_w((ULONG)v->width, (ULONG)v->height, v->aspect_code);
-    info->mi_BitRate = v->bit_rate == 0x3FFFF ? 0 : (ULONG)v->bit_rate * 400;
-    info->mi_Kind = m->kind == MPVS_VIDEO ? MPVS_VIDEO : MPVS_PROGRAM;
-    return TRUE;
+    return examine(mpv, info, offsetof(struct MpvInfo, mi_Flags));
+}
+
+API LONG MpvExamine(APTR mpv, struct MpvInfo *info, ULONG size)
+{
+    return examine(mpv, info, size);
 }
 
 API LONG MpvControl(APTR mpv, ULONG cmd, ULONG value)
@@ -443,209 +780,34 @@ API LONG MpvControl(APTR mpv, ULONG cmd, ULONG value)
     case MPVC_SKIPB:
         r = m->skipb;
         m->skipb = value != 0;
-        plm_video_set_skip_b(m->vd, m->skipb);
         break;
     case MPVC_SKIPPEDB:
-        r = (LONG)plm_video_get_skipped_b(m->vd);
+        r = (LONG)m->skipped;
         break;
     case MPVC_ENDED:
-        r = m->ended || plm_video_has_ended(m->vd);
+        r = m->ended || m->done;
         break;
     case MPVC_FIRSTPTS:
-        r = m->first_pts >= 0 ? (LONG)(ULONG)m->first_pts : -1;
+        r = m->have_first ? (LONG)m->first_pts : -1;
         break;
     case MPVC_END:
         m->pushed_end = TRUE;
-        if (m->fbuf)
-            plm_buffer_signal_end(m->fbuf);
-        if (m->kind != MPVS_PROGRAM)
-            plm_buffer_signal_end(m->vbuf);
         break;
     case MPVC_HELD:
-        r = (LONG)((m->fbuf ? plm_buffer_get_remaining(m->fbuf) : 0) +
-                   plm_buffer_get_remaining(m->vbuf));
+        r = (LONG)(m->wr - m->rd + m->vqwr - m->vqrd + (ULONG)mpeg2_getpos(m->dec));
+        break;
+    case MPVC_FLUSH:
+        m->rd = m->wr = 0;
+        m->vqrd = m->vqwr = 0;
+        mpeg2_reset(m->dec, 0);
+        m->seen_i = m->closed = FALSE;
+        m->refs = 0;
+        m->ended = m->pushed_end = m->fed_end = FALSE;
+        if (!m->bad && !m->format && !m->failed && !m->nomem)
+            m->done = FALSE;
         break;
     }
     return r;
-}
-
-/* ---- the helpers: a picture made what a screen wants */
-
-/* (the 68k's order in memory: big-endian; the tests on this computer
- * store the same bytes a byte at a time) */
-#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define MPV_BIG 0
-static inline void put32(ULONG *d, ULONG v)
-{
-    UBYTE *b = (UBYTE *)d;
-    b[0] = (UBYTE)(v >> 24);
-    b[1] = (UBYTE)(v >> 16);
-    b[2] = (UBYTE)(v >> 8);
-    b[3] = (UBYTE)v;
-}
-static inline void put16(UBYTE *b, UWORD v)
-{
-    b[0] = (UBYTE)(v >> 8);
-    b[1] = (UBYTE)v;
-}
-#else
-#define MPV_BIG 1
-#define put32(d, v) (*(d) = (v))
-#define put16(b, v) (*(UWORD *)(b) = (v))
-#endif
-
-/* pl_mpeg's frame for a picture (its conversions take one) */
-static void as_frame(const struct MpvPicture *p, plm_frame_t *f)
-{
-    memset(f, 0, sizeof(*f));
-    f->width = p->mpic_Width;
-    f->height = p->mpic_Height;
-    f->y.width = p->mpic_YModulo;
-    f->y.height = p->mpic_YRows;
-    f->y.data = p->mpic_Y;
-    f->cb.width = f->cr.width = p->mpic_CModulo;
-    f->cb.height = f->cr.height = p->mpic_YRows / 2;
-    f->cb.data = p->mpic_Cb;
-    f->cr.data = p->mpic_Cr;
-}
-
-API VOID MpvToYUV422(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG order)
-{
-    ULONG r, x, n;
-    if (!pic || !dst)
-        return;
-    n = pic->mpic_Width / 2;
-    if (order == MPVY_Y0UY1V) {
-        /* a longword at a time (a graphics card's memory, across the bus) */
-        for (r = 0; r < pic->mpic_Height; r++) {
-            const UWORD *y = (const UWORD *)(pic->mpic_Y + r * pic->mpic_YModulo);
-            const UBYTE *cb = pic->mpic_Cb + (r >> 1) * pic->mpic_CModulo;
-            const UBYTE *cr = pic->mpic_Cr + (r >> 1) * pic->mpic_CModulo;
-            ULONG *d = (ULONG *)(dst + r * modulo);
-            for (x = 0; x < n; x++) {
-#if MPV_BIG
-                ULONG yy = *y++;
-                *d++ = ((yy & 0xFF00) << 16) | ((ULONG)*cb++ << 16) | ((yy & 0xFF) << 8) | *cr++;
-#else
-                const UBYTE *yb = (const UBYTE *)y++;
-                put32(d++, ((ULONG)yb[0] << 24) | ((ULONG)*cb++ << 16) | ((ULONG)yb[1] << 8) | *cr++);
-#endif
-            }
-        }
-        return;
-    }
-    {
-        /* the others: each byte's place (from the top) */
-        static const UBYTE at[4][4] = { /* y0, cb, y1, cr */
-            { 24, 16, 8, 0 }, { 16, 24, 0, 8 }, { 8, 16, 24, 0 }, { 24, 0, 8, 16 } };
-        const UBYTE *s = at[order & 3];
-        for (r = 0; r < pic->mpic_Height; r++) {
-            const UBYTE *y = pic->mpic_Y + r * pic->mpic_YModulo;
-            const UBYTE *cb = pic->mpic_Cb + (r >> 1) * pic->mpic_CModulo;
-            const UBYTE *cr = pic->mpic_Cr + (r >> 1) * pic->mpic_CModulo;
-            ULONG *d = (ULONG *)(dst + r * modulo);
-            for (x = 0; x < n; x++, y += 2)
-                put32(d++, ((ULONG)y[0] << s[0]) | ((ULONG)*cb++ << s[1]) | ((ULONG)y[1] << s[2]) |
-                               ((ULONG)*cr++ << s[3]));
-        }
-    }
-}
-
-/* 16 bits a pixel, packed from pl_mpeg's own conversion's sums */
-#define MPV_PUT16(Y_OFFSET, DEST_OFFSET) \
-    y = ((frame->y.data[y_index + Y_OFFSET] - 16) * 76309) >> 16; \
-    rr = plm_clamp(y + r); \
-    gg = plm_clamp(y - g); \
-    bb = plm_clamp(y + b); \
-    v = fmt == MPVR_RGB555 ? (UWORD)(((rr & 0xF8) << 7) | ((gg & 0xF8) << 2) | (bb >> 3)) \
-                           : (UWORD)(((rr & 0xF8) << 8) | ((gg & 0xFC) << 3) | (bb >> 3)); \
-    if (fmt == MPVR_RGB565PC) \
-        v = (UWORD)((v << 8) | (v >> 8)); \
-    put16(dest + d_index + DEST_OFFSET, v);
-
-static void to16(plm_frame_t *frame, UBYTE *dest, int stride, ULONG fmt)
-{
-    int cols = frame->width >> 1, rows = frame->height >> 1;
-    int yw = frame->y.width, cw = frame->cb.width, row, col;
-    for (row = 0; row < rows; row++) {
-        int c_index = row * cw, y_index = row * 2 * yw, d_index = row * 2 * stride;
-        for (col = 0; col < cols; col++) {
-            int y, rr, gg, bb;
-            UWORD v;
-            int cr = frame->cr.data[c_index] - 128;
-            int cb = frame->cb.data[c_index] - 128;
-            int r = (cr * 104597) >> 16;
-            int g = (cb * 25674 + cr * 53278) >> 16;
-            int b = (cb * 132201) >> 16;
-            MPV_PUT16(0, 0);
-            MPV_PUT16(1, 2);
-            MPV_PUT16(yw, stride);
-            MPV_PUT16(yw + 1, stride + 2);
-            c_index += 1;
-            y_index += 2;
-            d_index += 4;
-        }
-    }
-}
-
-API VOID MpvToRGB(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG format)
-{
-    plm_frame_t f;
-    if (!pic || !dst)
-        return;
-    as_frame(pic, &f);
-    switch (format) {
-    case MPVR_RGB24:
-        plm_frame_to_rgb(&f, dst, (int)modulo);
-        break;
-    case MPVR_BGR24:
-        plm_frame_to_bgr(&f, dst, (int)modulo);
-        break;
-    case MPVR_ARGB32:
-    case MPVR_RGBA32:
-    case MPVR_BGRA32: {
-        /* pl_mpeg's leave the alpha byte as it was: 0xFF first */
-        ULONG r, x;
-        for (r = 0; r < pic->mpic_Height; r++) {
-            ULONG *d = (ULONG *)(dst + r * modulo);
-            for (x = 0; x < pic->mpic_Width; x++)
-                put32(d + x, format == MPVR_ARGB32 ? 0xFF000000UL : 0x000000FFUL);
-        }
-        if (format == MPVR_ARGB32)
-            plm_frame_to_argb(&f, dst, (int)modulo);
-        else if (format == MPVR_RGBA32)
-            plm_frame_to_rgba(&f, dst, (int)modulo);
-        else
-            plm_frame_to_bgra(&f, dst, (int)modulo);
-        break;
-    }
-    case MPVR_RGB565:
-    case MPVR_RGB565PC:
-    case MPVR_RGB555:
-        to16(&f, dst, (int)modulo, format);
-        break;
-    }
-}
-
-API VOID MpvToGrey(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG levels)
-{
-    UBYTE lut[256];
-    ULONG i, r, x;
-    if (!pic || !dst)
-        return;
-    if (!levels || levels > 256)
-        levels = 256;
-    for (i = 0; i < 256; i++) {
-        LONG v = ((LONG)i - 16) * 255 / 219;    /* studio range made full */
-        v = v < 0 ? 0 : v > 255 ? 255 : v;
-        lut[i] = (UBYTE)((ULONG)v * levels / 256);
-    }
-    for (r = 0; r < pic->mpic_Height; r++) {
-        const UBYTE *y = pic->mpic_Y + r * pic->mpic_YModulo;
-        UBYTE *d = dst + r * modulo;
-        for (x = 0; x < pic->mpic_Width; x++)
-            d[x] = lut[y[x]];
-    }
 }
 
 API CONST_STRPTR MpvVersion(void)
@@ -653,15 +815,20 @@ API CONST_STRPTR MpvVersion(void)
     return (CONST_STRPTR)version;
 }
 
-#ifdef __amigaos__
+/* the helpers: src/convert.c */
+API VOID MpvToYUV422(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG order);
+API VOID MpvToRGB(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG format);
+API VOID MpvToGrey(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG levels);
+
+#if defined(__amigaos__) && !defined(MPV_STATIC)
 /* ---- the library */
-/* No maths libraries: pl_mpeg's times, frame rate and aspect are kept as
- * stored (90 kHz, its codes), its MP2 decoder and player left out, so
- * there is no floating point in it at all */
+/* No maths libraries: libmpeg2 is integers throughout, and times are kept
+ * as MPEG stores them (90 kHz); its tables are made once, here */
 int __UserLibInit(struct Library *lib)
 {
     (void)lib;
     SysBase = *(struct ExecBase *volatile *)4L;
+    mpeg2_accel(0);
     return 0;
 }
 
@@ -681,5 +848,13 @@ ADDTABL_4(MpvToYUV422, a0, a1, d0, d1);
 ADDTABL_4(MpvToRGB, a0, a1, d0, d1);
 ADDTABL_4(MpvToGrey, a0, a1, d0, d1);
 ADDTABL_0(MpvVersion);
+ADDTABL_3(MpvExamine, a0, a1, d0);
 ADDTABL_END();
+#else
+/* built into a program (the tests): libmpeg2's tables made before the
+ * first decoder */
+__attribute__((constructor)) static void mpv_init(void)
+{
+    mpeg2_accel(0);
+}
 #endif
