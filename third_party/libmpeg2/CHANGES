@@ -74,3 +74,14 @@ The IDCT's columns written by hand for the 68k (15 November 2026)
   product, no spills; the same sums and shifts as the C (which the build
   machine still uses), so the same pixels. A hand-written row pass was
   tried and gave nothing over gcc's, so the rows stay C.
+
+MPEG-2's mismatch row done once (15 November 2026)
+--------------------------------------------------
+
+- libmpeg2/idct.c, libmpeg2/idct_68k.s: when a block's last row is only
+  MPEG-2's mismatch coefficient (+16 or -16 at position 63, as in almost
+  every MPEG-2 block), that row's transform and its two products in each
+  column come from tables made in mpeg2_idct_init (mv_row_7's results):
+  with rows 0, 1, 4, 5 otherwise, the products go into rows 2 and 3 for
+  the new MV_LOW7M columns (mv_cols68k_<copy|add>_low7m), else the row
+  is copied in whole. The same sums, so the same pixels.

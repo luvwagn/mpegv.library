@@ -11,8 +11,10 @@
 | MULS.L (their operand can exceed 16 bits).
 |
 | Which rows can be other than zero chooses the routine (idct.c's MV_LOW,
-| MV_LOW7, MV_ALL): rows 0, 1, 4, 5; those and row 7 (MPEG-2's mismatch
-| coefficient); or all eight.
+| MV_LOW7, MV_ALL, MV_LOW7M): rows 0, 1, 4, 5; those and row 7 (MPEG-2's
+| mismatch coefficient); or all eight; or rows 0, 1, 4, 5 with row 7 the
+| mismatch coefficient alone, its products per column already in rows 2
+| and 3.
 |
 |   void mv_cols68k_<copy|add>_<low|low7|all> (const int16_t * block,
 |                                              uint8_t * dest, int stride)
@@ -105,7 +107,16 @@ _\name:
 	move.w	d0,d3
 	muls.w	#W1,d3			| p0 = W1 x4 (+ W7 x7)
 	muls.w	#W7,d0			| p1 = W7 x4 (- W1 x7)
-	.if \o7
+	.if \o7 == 2
+	| row 7 MPEG-2's mismatch coefficient alone: its products per
+	| column made once, in rows 2 (W7 x7) and 3 (W1 x7)
+	move.w	32(a0),d4
+	ext.l	d4
+	add.l	d4,d3
+	move.w	48(a0),d4
+	ext.l	d4
+	sub.l	d4,d0
+	.elseif \o7
 	move.w	112(a0),d4		| x7
 	move.w	d4,d5
 	muls.w	#W7,d5
@@ -169,4 +180,6 @@ _\name:
 	COLS	mv_cols68k_add_low, 1, 0, 0, 0
 	COLS	mv_cols68k_add_low7, 1, 0, 0, 1
 	COLS	mv_cols68k_add_all, 1, 1, 1, 1
+	COLS	mv_cols68k_copy_low7m, 0, 0, 0, 2
+	COLS	mv_cols68k_add_low7m, 1, 0, 0, 2
 

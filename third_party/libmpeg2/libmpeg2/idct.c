@@ -380,11 +380,21 @@ static inline void mv_row_7 (int16_t * const b)
 typedef void mv_cols_fct (const int16_t * block, uint8_t * dest, int stride);
 extern mv_cols_fct mv_cols68k_copy_low, mv_cols68k_copy_low7, mv_cols68k_copy_all;
 extern mv_cols_fct mv_cols68k_add_low, mv_cols68k_add_low7, mv_cols68k_add_all;
+extern mv_cols_fct mv_cols68k_copy_low7m, mv_cols68k_add_low7m;
 #endif
 
 #define MV_ROW0 0	/* the columns from: row 0 only */
 #define MV_LOW 1	/* rows 0, 1, 4, 5 */
 #define MV_LOW7 2	/* rows 0, 1, 4, 5, 7 */
+#define MV_LOW7M 4	/* rows 0, 1, 4, 5, and row 7 MPEG-2's mismatch
+			 * coefficient alone: its products per column in
+			 * rows 2 (W7 x7) and 3 (W1 x7) */
+
+/* MPEG-2's mismatch control makes position 63 +16 or -16 in almost every
+ * block, alone in its row: that row's transform (mv_row_7's), and its
+ * products in each column, made once */
+static int16_t mv_mm_row[2][8] ATTR_ALIGN(8);	/* +16, -16 */
+static int16_t mv_mm_col[2][16] ATTR_ALIGN(8);	/* W7 x7 (8), W1 x7 (8) */
 #define MV_ALL 3	/* any */
 
 /* the columns, into the picture (add: added to it) */
@@ -445,6 +455,11 @@ void mv_cols (const int16_t * b, uint8_t * dest, const int stride,
 	    t1 = M16 (W7, d0) - M16 (W1, d3);
 	    t2 = M16 (W3, d1);
 	    t3 = -M16 (W5, d1);
+	} else if (rows == MV_LOW7M) {
+	    t0 = b[8*2] + M16 (W1, d0);
+	    t1 = M16 (W7, d0) - b[8*3];
+	    t2 = M16 (W3, d1);
+	    t3 = -M16 (W5, d1);
 	} else {
 	    t0 = M16 (W1, d0);
 	    t1 = M16 (W7, d0);
@@ -474,7 +489,7 @@ static inline __attribute__ ((always_inline))
 void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	      const int add)
 {
-    int r, used = 0;
+    int r, used = 0, mm = 0;
 
     /* the rows: each one's kind from its coefficients */
     for (r = 0; r < 8; r++) {
@@ -482,6 +497,14 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	int32_t high = ((int32_t *)b)[1] | ((int32_t *)b)[3];
 	int32_t low = ((int32_t *)b)[2] | b[1];
 
+	if (r == 7 && !(low | ((int32_t *)b)[1] | b[0] | b[6]) &&
+	    (b[7] == 16 || b[7] == -16)) {
+	    /* the last row MPEG-2's mismatch coefficient alone, +16 or
+	     * -16: below, not as a row */
+	    mm = b[7] < 0 ? 2 : 1;
+	    used |= 0x80;
+	    break;
+	}
 	if (!(high | low)) {
 	    uint32_t tmp;
 
@@ -503,6 +526,36 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	    mv_row_full (b);
 	else
 	    mv_row_low (b);
+    }
+
+    if (mm) {
+	int32_t * const w = (int32_t *)(block + 8 * 7);
+
+	if (used & 0x4c || !(used & 0x7f)) {
+	    /* other rows than 0, 1, 4, 5 (or none): the row as computed */
+	    const int32_t * const m = (const int32_t *)mv_mm_row[mm - 1];
+
+	    w[0] = m[0];
+	    w[1] = m[1];
+	    w[2] = m[2];
+	    w[3] = m[3];
+	    mm = 0;
+	} else {
+	    /* its products into rows 2 and 3 (zeros till now) */
+	    const int32_t * const m = (const int32_t *)mv_mm_col[mm - 1];
+	    int32_t * const w2 = (int32_t *)(block + 8 * 2);
+
+	    w2[0] = m[0];
+	    w2[1] = m[1];
+	    w2[2] = m[2];
+	    w2[3] = m[3];
+	    w2[4] = m[4];
+	    w2[5] = m[5];
+	    w2[6] = m[6];
+	    w2[7] = m[7];
+	    w[3] = 0;		/* (the row's coefficient: zeroed after) */
+	    used |= 0x0c;
+	}
     }
 
     if (!used) {			/* (no coefficients at all) */
@@ -536,6 +589,12 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	}
     } else if (!(used & ~0x01))
 	mv_cols (block, dest, stride, add, MV_ROW0);
+    else if (mm)
+#ifdef MV_COLS68K
+	(add ? mv_cols68k_add_low7m : mv_cols68k_copy_low7m) (block, dest, stride);
+#else
+	mv_cols (block, dest, stride, add, MV_LOW7M);
+#endif
 #ifdef MV_COLS68K
     else if (!(used & ~0x33))
 	(add ? mv_cols68k_add_low : mv_cols68k_copy_low) (block, dest, stride);
@@ -638,6 +697,16 @@ void mpeg2_idct_init (uint32_t accel)
 	int i, j;
 
 #if defined (MPEGV) && !defined (MPEGV_PLAIN)
+	for (i = 0; i < 2; i++) {
+	    int16_t row[8] = { 0, 0, 0, 0, 0, 0, 0, i ? -16 : 16 };
+
+	    mv_row_7 (row);
+	    for (j = 0; j < 8; j++) {
+		mv_mm_row[i][j] = row[j];
+		mv_mm_col[i][j] = W7 * row[j];
+		mv_mm_col[i][8 + j] = W1 * row[j];
+	    }
+	}
 	mpeg2_idct_copy = mpegv_idct_copy;	/* mpegv: the quicker one */
 	mpeg2_idct_add = mpegv_idct_add;
 #else
