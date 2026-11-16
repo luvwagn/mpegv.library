@@ -24,6 +24,7 @@ struct mv_t16 {
     const WORD *y;
 };
 void mv_row16_68k(UWORD *dst, const UBYTE *y, const UBYTE *terms, ULONG pairs, const struct mv_t16 *t);
+void mv_copy_68k(UBYTE *dst, const ULONG *src, ULONG bytes);
 void mv_row16pc_68k(UWORD *dst, const UBYTE *y, const UBYTE *terms, ULONG pairs, const struct mv_t16 *t);
 #endif
 
@@ -394,21 +395,29 @@ static inline __attribute__((always_inline)) void scale_rgb(const struct MpvPict
  * scaled across in one pass (src/convert_68k.s), each chroma row's sums
  * made once for its two rows, with how many times each source pixel is
  * written (column s at ceil(s * dw / w) up to ceil((s + 1) * dw / w)).
- * FALSE: not this way (an odd width, more than 254 times wider, no
- * memory). */
+ * Taller than the picture, each source row is made once in a line in
+ * fast memory and copied to its rows a longword at a time (to a graphics
+ * card's memory, across the bus): 352 x 240 to 1024 x 768, each row three
+ * or four times. FALSE: not this way (an odd width, more than 254 times
+ * wider, no memory). */
 static BOOL scale_rgb16_68k(const struct MpvPicture *pic, UBYTE *dst, ULONG stride, ULONG dw, ULONG dh,
                             int pk)
 {
     ULONG sw = pic->mpic_Width, sh = pic->mpic_Height, pairs = sw >> 1, s, j, c, q, r, aq, ar, prev;
-    ULONG lastc = ~0UL;
+    ULONG lastc = ~0UL, lasty = ~0UL, lb = 0;
     UBYTE *buf, *n, *terms;
+    ULONG *line = NULL;
     struct mv_t16 t;
     if ((sw & 1) || dw > sw * 254)
         return FALSE;
-    if (!(buf = mpv_malloc(sw + pairs * 8)))
+    if (dh > sh)
+        lb = (dw * 2 + 3) & ~3UL;
+    if (!(buf = mpv_malloc(lb + sw + pairs * 8)))
         return FALSE;
-    n = buf;
-    terms = buf + ((sw + 1) & ~1UL);
+    if (lb)
+        line = (ULONG *)buf;     /* (mpv_malloc's: longword aligned) */
+    n = buf + lb;
+    terms = n + ((sw + 1) & ~1UL);
     q = dw / sw, r = dw % sw, aq = q, ar = r, prev = 0;
     for (s = 0; s < sw; s++) {
         ULONG next = aq + (ar != 0);
@@ -440,7 +449,16 @@ static BOOL scale_rgb16_68k(const struct MpvPicture *pic, UBYTE *dst, ULONG stri
                 tp[7] = n[2 * c + 1];
             }
         }
-        if (pk & 4)
+        if (line) {
+            if (sy != lasty) {
+                lasty = sy;
+                if (pk & 4)
+                    mv_row16pc_68k((UWORD *)line, pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);
+                else
+                    mv_row16_68k((UWORD *)line, pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);
+            }
+            mv_copy_68k(dst + j * stride, line, dw * 2);
+        } else if (pk & 4)
             mv_row16pc_68k((UWORD *)(dst + j * stride), pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);
         else
             mv_row16_68k((UWORD *)(dst + j * stride), pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);

@@ -2,7 +2,8 @@
  * mpegv.library's tests: MpvToRGB and MpvToRGBScaled (src/convert.c),
  * every format, against a plain conversion a pixel at a time (the same
  * BT.601 sums: pl_mpeg's), on random pictures: the same size, larger
- * (720 x 576 to 1024 x 576, as a DVD in a window), smaller, odd sizes.
+ * (720 x 576 to 1024 x 576, as a DVD in a window; 352 x 240 to 1024 x 768,
+ * a VCD on the whole screen), smaller, odd sizes.
  * The same bytes to the bit.
  * GPL-3.0-or-later, (c) 2026 Brian King.
  *
@@ -74,7 +75,8 @@ int main(void)
 {
     static const int sizes[][4] = {
         { 720, 576, 720, 576 }, { 720, 576, 1024, 576 }, { 720, 576, 920, 517 }, { 352, 240, 640, 480 },
-        { 720, 480, 320, 200 }, { 101, 57, 203, 99 }, { 64, 48, 63, 47 }, { 16, 16, 1, 1 }, { 720, 576, 1280, 720 } };
+        { 720, 480, 320, 200 }, { 101, 57, 203, 99 }, { 64, 48, 63, 47 }, { 16, 16, 1, 1 }, { 720, 576, 1280, 720 },
+        { 352, 240, 1024, 768 }, { 64, 48, 133, 97 } };
     int s, f, bad = 0, n = 0;
     for (s = 0; s < (int)(sizeof(sizes) / sizeof(sizes[0])); s++) {
         int sw = sizes[s][0], sh = sizes[s][1], dw = sizes[s][2], dh = sizes[s][3];

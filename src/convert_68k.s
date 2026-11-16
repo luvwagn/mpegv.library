@@ -148,3 +148,34 @@ _mv_grey68k:
 
 	ROW16	_mv_row16_68k, 0
 	ROW16	_mv_row16pc_68k, 1
+
+| ---- void mv_copy_68k (UBYTE * dst, const ULONG * src, ULONG bytes)
+| A line of 16-bit pixels (bytes even; src longword aligned) to dst
+| (word aligned), a longword at a time, eight to a turn of the loop.
+	.globl	_mv_copy_68k
+_mv_copy_68k:
+	movem.l	4(sp),a0-a1		| dst, src
+	move.l	12(sp),d0		| bytes
+	move.l	d0,d1
+	lsr.l	#5,d1			| 32 bytes at a time
+	beq.s	2f
+1:	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	move.l	(a1)+,(a0)+
+	subq.l	#1,d1
+	bne.s	1b
+2:	moveq	#28,d1
+	and.l	d0,d1
+	lsr.l	#2,d1			| the longwords left
+	bra.s	4f
+3:	move.l	(a1)+,(a0)+
+4:	dbra	d1,3b
+	btst	#1,d0
+	beq.s	5f
+	move.w	(a1),(a0)		| the last pixel
+5:	rts
