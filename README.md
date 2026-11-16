@@ -97,8 +97,7 @@ and flags, `mp_SubStream` for private stream 1, `MPVA_VideoStream`,
 
 `MpvToGrey` gives 8-bit chunky greys for `WriteChunkyPixels` or a program's
 own chunky-to-planar routine. Colour on AGA (HAM8) is not in the library
-yet: it would have to be written afresh from the HAM8 encoding (RiVA's
-renderers depend on its GPL-only decoder's tables and globals).
+yet.
 
 ## Building
 
