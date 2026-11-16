@@ -10,6 +10,7 @@ mpegv.library/MpvOpen
 mpegv.library/MpvPump
 mpegv.library/MpvToGrey
 mpegv.library/MpvToRGB
+mpegv.library/MpvToRGBScaled
 mpegv.library/MpvToYUV422
 mpegv.library/MpvVersion
 mpegv.library/MpvWrite
@@ -317,8 +318,39 @@ mpegv.library/MpvToRGB                               mpegv.library/MpvToRGB
         MPVR_RGB24 and MPVR_BGR24 (3 bytes a pixel), MPVR_ARGB32,
         MPVR_RGBA32 and MPVR_BGRA32 (4, alpha 0xFF), MPVR_RGB565 (big-
         endian), MPVR_RGB565PC (little-endian) and MPVR_RGB555 (2).
-        BT.601, as pl_mpeg converts. MPVR_RGB24 is WritePixelArray's
-        RECTFMT_RGB, MPVR_ARGB32 its RECTFMT_ARGB.
+        (V2.3) Also MPVR_RGB555PC, MPVR_BGR565, MPVR_BGR565PC,
+        MPVR_BGR555 and MPVR_BGR555PC: every 15- and 16-bit format of
+        Picasso96's and cybergraphics'. A format it does not know: nothing
+        written. BT.601, as pl_mpeg converts, 2 x 2 pixels at a time (one
+        chroma sample). MPVR_RGB24 is WritePixelArray's RECTFMT_RGB,
+        MPVR_ARGB32 its RECTFMT_ARGB.
+
+    SEE ALSO
+        MpvToRGBScaled
+
+mpegv.library/MpvToRGBScaled                   mpegv.library/MpvToRGBScaled
+
+    NAME
+        MpvToRGBScaled -- a picture made RGB at another size (V2.3)
+
+    SYNOPSIS
+        MpvToRGBScaled(pic, dst, modulo, format, width, height)
+                       A0   A1   D0      D1      D2     D3
+        VOID MpvToRGBScaled(struct MpvPicture *, UBYTE *, ULONG, ULONG,
+                            ULONG, ULONG);
+
+    FUNCTION
+        As MpvToRGB, the picture made width x height as it is written:
+        larger or smaller, the nearest pixel (column x of the output
+        shows the picture's column x * mpic_Width / width, row y its row
+        y * mpic_Height / height), in one pass with no division a
+        pixel: each source row it shows converted once into a row of
+        memory of its own (AllocVec; without it, a pixel at a time),
+        then copied out. Straight into a screen's bitmap in its own format
+        (p96LockBitMap, or LockBitMapTags), with no RGB picture between
+        and no ScalePixelArray. At the picture's own size (even), the
+        same as MpvToRGB. Check the library's version (2, revision 3 or
+        later) before calling it.
 
 mpegv.library/MpvToYUV422                         mpegv.library/MpvToYUV422
 

@@ -41,11 +41,11 @@ __asm__("\tmovel a6@(40:W),a4");             \
 __asm__("\tjsr _" #name)
 
 const char LibName[] = "mpegv.library";
-const char LibIdString[] = "mpegv 2.2 (15.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
+const char LibIdString[] = "mpegv 2.3 (16.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
 static const char __attribute__((used)) LibVerTag[] =
-    "$VER: mpegv.library 2.2 (15.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
+    "$VER: mpegv.library 2.3 (16.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
 const UWORD LibVersion = 2;
-const UWORD LibRevision = 2;
+const UWORD LibRevision = 3;
 
 struct ExecBase *SysBase;
 #endif
@@ -96,7 +96,7 @@ static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 }
 #endif
 
-static const char version[] = "mpegv 2.2, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
+static const char version[] = "mpegv 2.3, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
 
 #define FEED 65536                          /* the most a packet holds: what libmpeg2 is given at once */
 #define QHEAD 12                            /* a queued video packet's head: its length, flags, time */
@@ -840,6 +840,8 @@ API CONST_STRPTR MpvVersion(void)
 API VOID MpvToYUV422(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG order);
 API VOID MpvToRGB(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG format);
 API VOID MpvToGrey(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG levels);
+API VOID MpvToRGBScaled(struct MpvPicture *pic, UBYTE *dst, ULONG modulo, ULONG format, ULONG width,
+                        ULONG height);
 
 #if defined(__amigaos__) && !defined(MPV_STATIC)
 /* ---- the library */
@@ -870,6 +872,18 @@ ADDTABL_4(MpvToRGB, a0, a1, d0, d1);
 ADDTABL_4(MpvToGrey, a0, a1, d0, d1);
 ADDTABL_0(MpvVersion);
 ADDTABL_3(MpvExamine, a0, a1, d0);
+/* (stabs.h has four arguments at most: six, the same way) */
+#define ADDTABL_6(name, arg1, arg2, arg3, arg4, arg5, arg6) \
+    _ADDTABL_START(name);                                  \
+    _ADDTABL_ARG(arg6);                                    \
+    _ADDTABL_ARG(arg5);                                    \
+    _ADDTABL_ARG(arg4);                                    \
+    _ADDTABL_ARG(arg3);                                    \
+    _ADDTABL_ARG(arg2);                                    \
+    _ADDTABL_ARG(arg1);                                    \
+    _ADDTABL_CALL(name);                                   \
+    _ADDTABL_ENDN(name, 6)
+ADDTABL_6(MpvToRGBScaled, a0, a1, d0, d1, d2, d3);
 ADDTABL_END();
 #else
 /* built into a program (the tests): libmpeg2's tables made before the

@@ -73,4 +73,8 @@ typedef ULONG _sfdc_vararg;
       LP3(0x60, LONG, MpvExamine , APTR, ___mpv, a0, struct MpvInfo *, ___info, a1, ULONG, ___size, d0,\
       , MPEGV_BASE_NAME)
 
+#define MpvToRGBScaled(___pic, ___dst, ___modulo, ___format, ___width, ___height) \
+      LP6NR(0x66, MpvToRGBScaled , struct MpvPicture *, ___pic, a0, UBYTE *, ___dst, a1, ULONG, ___modulo, d0, ULONG, ___format, d1, ULONG, ___width, d2, ULONG, ___height, d3,\
+      , MPEGV_BASE_NAME)
+
 #endif /* !_INLINE_MPEGV_H */

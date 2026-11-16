@@ -170,6 +170,12 @@ struct MpvInfo {
 #define MPVR_RGB565     5                   /* big-endian (Picasso96's RGBFB_R5G6B5) */
 #define MPVR_RGB565PC   6                   /* little-endian (RGBFB_R5G6B5PC) */
 #define MPVR_RGB555     7                   /* big-endian, 0RRRRRGG GGGBBBBB (RGBFB_R5G5B5) */
+/* (V2.3) the rest of Picasso96's: 555 little-endian, and blue at the top */
+#define MPVR_RGB555PC   8                   /* little-endian (RGBFB_R5G5B5PC) */
+#define MPVR_BGR565     9                   /* BBBBBGGG GGGRRRRR, big-endian */
+#define MPVR_BGR565PC   10                  /* little-endian (RGBFB_B5G6R5PC) */
+#define MPVR_BGR555     11                  /* 0BBBBBGG GGGRRRRR, big-endian */
+#define MPVR_BGR555PC   12                  /* little-endian (RGBFB_B5G5R5PC) */
 
 /* ---- MpvToGrey's levels: 0 or 256: Y made full range 0-255; 2-255: that
  * many greys, 0 to levels - 1 (pens for a screen's grey palette) */

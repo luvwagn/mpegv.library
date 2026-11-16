@@ -22,8 +22,10 @@ MPEG files and DVDs where there is no ZZ9000 card.
   DVD's or a VCD's; nothing is predicted from them). After a seek,
   `MPVC_FLUSH` starts again at the next I picture.
 - Helpers make a picture what a screen wants: packed YUV 4:2:2 for a
-  graphics card's overlay (Picasso96's PIP, which scales it), RGB in eight
-  formats for `WritePixelArray`, or 8-bit greys for an AGA screen.
+  graphics card's overlay (Picasso96's PIP, which scales it), RGB in
+  thirteen formats (every 15-, 16-, 24- and 32-bit one), at its size for
+  `WritePixelArray` or scaled as it is written straight into a screen's
+  bitmap (`MpvToRGBScaled`, 2.3), or 8-bit greys for an AGA screen.
 
 The decoder is [libmpeg2](https://github.com/cisco-open-source/libmpeg2)
 0.5.1 (Aaron Holtzman, Michel Lespinasse and others), made faster for a

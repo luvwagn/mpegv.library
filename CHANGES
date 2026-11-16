@@ -1,6 +1,26 @@
 mpegv.library: changes
 ======================
 
+2.3 (16 November 2026)
+----------------------
+
+- MpvToRGBScaled: a picture made RGB at another size as it is written,
+  the nearest pixel, straight into a screen's bitmap in its own format:
+  each source row it shows converted once into a row of fast memory (a
+  chroma sample's sums once for its two pixels), then copied out to the
+  output's columns. A DVD picture made 1024 x 576 RGB565: 74 million
+  68020 cycles (vamos' count) where AmigaMCE's own conversion, a pixel
+  at a time, took 158 million (56 ms under Amiberry's JIT, more than a
+  picture's 40). Without memory for the row, a pixel at a time.
+- MpvToRGB's formats (and MpvToRGBScaled's): MPVR_RGB555PC,
+  MPVR_BGR565, MPVR_BGR565PC, MPVR_BGR555, MPVR_BGR555PC, so every 15-
+  and 16-bit screen format is written directly.
+- The 32-bit formats' alpha byte is written with the colours, not in a
+  pass of its own first.
+- tests/rgb_test.c: every format, at its size and scaled (larger,
+  smaller, odd sizes), against a conversion a pixel at a time, on this
+  computer and on a 68020.
+
 2.2 (15 November 2026)
 ----------------------
 

@@ -128,6 +128,16 @@ build/host/%_test: tests/%_test.c $(HDR) $(SRC)
 	@mkdir -p build/host
 	@echo "  CC    $@"
 	@$(HOSTCC) -O2 -w $(INC) -o $@ $< -lm
+# MpvToRGB and MpvToRGBScaled, every format and size, against a pixel at a
+# time (src/convert.c built in; on the 68k with its YUV and grey loops)
+build/host/rgb_test: tests/rgb_test.c src/convert.c $(HDR)
+	@mkdir -p build/host
+	@echo "  CC    $@"
+	@$(HOSTCC) -O2 -w -Itests/host $(INC) -o $@ $<
+build/68k/rgb_test: tests/rgb_test.c src/convert.c $(HDR) build/convert_68k.o
+	@mkdir -p build/68k
+	@echo "  CC    $@"
+	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $< build/convert_68k.o
 build/host/idct_exact: tests/idct_test.c $(HDR) $(SRC)
 	@mkdir -p build/host
 	@echo "  CC    $@"
@@ -149,7 +159,8 @@ build/68k/vlc_test: tests/vlc_test.c $(HDR) $(L2)/libmpeg2/slice.c $(VLCOBJ)
 	@$(CC) -O2 $(CPU) -noixemul -fomit-frame-pointer -w $(INC) -o $@ $< $(VLCOBJ)
 
 test: build/host/mpv_test build/host/mpv_exact build/host/mpv_plain build/68k/mpv_test $(FIX) build/host/idct_test \
-		build/host/idct_exact build/host/mc_test build/68k/idct_test build/68k/mc_test build/68k/vlc_test $(LIB)
+		build/host/idct_exact build/host/mc_test build/68k/idct_test build/68k/mc_test build/68k/vlc_test $(LIB) \
+		build/host/rgb_test build/68k/rgb_test
 	@python3 -c "import sys; d=open('$(LIB)','rb').read(); i=d.find(bytes([0x4a,0xfc])); \
 		sys.exit(0 if i >= 0 and d[i+11] == $(LIBVER) else 'its Resident says version %d, not $(LIBVER)' % d[i+11])" \
 		&& echo "  CHECK the library's Resident: version $(LIBVER), as LibVersion (ramlib turns an older one away)"
@@ -160,6 +171,9 @@ test: build/host/mpv_test build/host/mpv_exact build/host/mpv_plain build/68k/mp
 		&& vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:mc_test 300 \
 		&& vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:vlc_test 20000; } 2>/dev/null \
 		> idct.txt || { cat idct.txt; exit 1; }; sed 's/^/  (68020) /' idct.txt
+	@build/host/rgb_test > build/host/rgb.txt || { cat build/host/rgb.txt; exit 1; }; sed 's/^/  /' build/host/rgb.txt
+	@cd build/68k && vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:rgb_test > rgb.txt 2>/dev/null \
+		|| { cat rgb.txt; exit 1; }; sed 's/^/  (68020) /' rgb.txt
 	@for f in $(FIX); do \
 		build/host/mpv_plain $$f > build/host/ref.txt; \
 		build/host/mpv_exact $$f > build/host/lib.txt; \

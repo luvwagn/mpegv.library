@@ -27,4 +27,6 @@ VOID MpvToGrey(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG levels)
 CONST_STRPTR MpvVersion() ()
 ==version 2
 LONG MpvExamine(APTR mpv, struct MpvInfo * info, ULONG size) (a0,a1,d0)
+* (2.3)
+VOID MpvToRGBScaled(struct MpvPicture * pic, UBYTE * dst, ULONG modulo, ULONG format, ULONG width, ULONG height) (a0,a1,d0,d1,d2,d3)
 ==end
