@@ -12,7 +12,8 @@
 #   make lha        build/mpegv.lha, for Aminet (no source: it points to
 #                   https://github.com/luvwagn/mpegv.library)
 #
-# Needs m68k-amigaos-gcc (bebbo's toolchain, libnix), and for the tests a
+# Needs AmigaPorts' m68k-amigaos-gcc 16.2 (rc24 or later; the continuation
+# of bebbo's amiga-gcc), with libnix (-noixemul), and for the tests a
 # C compiler for this computer and amitools' vamos.
 
 CC      = m68k-amigaos-gcc

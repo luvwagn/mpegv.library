@@ -120,8 +120,9 @@ make prof MPG=file N=60
 make lha        build/mpegv.lha for Aminet
 ```
 
-Needs bebbo's m68k-amigaos-gcc (libnix), and for the tests a C compiler for
-the build computer, the ffmpeg-made fixtures in `tests/fixtures` (720 x 576
+Needs [AmigaPorts' m68k-amigaos-gcc](https://github.com/AmigaPorts/m68k-amigaos-gcc)
+16.2 (rc24 or later; the continuation of bebbo's amiga-gcc) with libnix,
+and for the tests a C compiler for the build computer, the ffmpeg-made fixtures in `tests/fixtures` (720 x 576
 interlaced, 720 x 480 film with 3:2 pulldown, a VOB with AC-3; MPEG-1 too)
 and vamos. `tests/bench.sh` times a set of streams.
 
