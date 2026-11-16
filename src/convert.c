@@ -19,6 +19,12 @@
 #define MV_CONVERT68K
 void mv_yuv_y0uy1v68k(ULONG *dst, const UBYTE *y, const UBYTE *cb, const UBYTE *cr, ULONG n);
 void mv_grey68k(ULONG *dst, const UBYTE *y, const UBYTE *lut, ULONG n);
+struct mv_t16 {
+    const UWORD *r, *g, *b;
+    const WORD *y;
+};
+void mv_row16_68k(UWORD *dst, const UBYTE *y, const UBYTE *terms, ULONG pairs, const struct mv_t16 *t);
+void mv_row16pc_68k(UWORD *dst, const UBYTE *y, const UBYTE *terms, ULONG pairs, const struct mv_t16 *t);
 #endif
 
 /* (the 68k's order in memory: big-endian; the tests on this computer
@@ -383,11 +389,78 @@ static inline __attribute__((always_inline)) void scale_rgb(const struct MpvPict
     }
 }
 
+#ifdef MV_CONVERT68K
+/* 16 bits, on a 68020 or later: each source row converted and written out
+ * scaled across in one pass (src/convert_68k.s), each chroma row's sums
+ * made once for its two rows, with how many times each source pixel is
+ * written (column s at ceil(s * dw / w) up to ceil((s + 1) * dw / w)).
+ * FALSE: not this way (an odd width, more than 254 times wider, no
+ * memory). */
+static BOOL scale_rgb16_68k(const struct MpvPicture *pic, UBYTE *dst, ULONG stride, ULONG dw, ULONG dh,
+                            int pk)
+{
+    ULONG sw = pic->mpic_Width, sh = pic->mpic_Height, pairs = sw >> 1, s, j, c, q, r, aq, ar, prev;
+    ULONG lastc = ~0UL;
+    UBYTE *buf, *n, *terms;
+    struct mv_t16 t;
+    if ((sw & 1) || dw > sw * 254)
+        return FALSE;
+    if (!(buf = mpv_malloc(sw + pairs * 8)))
+        return FALSE;
+    n = buf;
+    terms = buf + ((sw + 1) & ~1UL);
+    q = dw / sw, r = dw % sw, aq = q, ar = r, prev = 0;
+    for (s = 0; s < sw; s++) {
+        ULONG next = aq + (ar != 0);
+        n[s] = (UBYTE)(next - prev);
+        prev = next;
+        aq += q;
+        if ((ar += r) >= sw) {
+            ar -= sw;
+            aq++;
+        }
+    }
+    t.r = mv_pack[pk & 1][pk & 2 ? 2 : 0] + MV_LO;
+    t.g = mv_pack[pk & 1][1] + MV_LO;
+    t.b = mv_pack[pk & 1][pk & 2 ? 0 : 2] + MV_LO;
+    t.y = mv_y;
+    for (j = 0; j < dh; j++) {
+        ULONG sy = j * sh / dh;
+        if ((sy >> 1) != lastc) {
+            const UBYTE *pu = pic->mpic_Cb + (sy >> 1) * pic->mpic_CModulo;
+            const UBYTE *pv = pic->mpic_Cr + (sy >> 1) * pic->mpic_CModulo;
+            UBYTE *tp = terms;
+            lastc = sy >> 1;
+            for (c = 0; c < pairs; c++, tp += 8) {
+                int cr = pv[c], cb = pu[c];
+                *(WORD *)tp = mv_r[cr];
+                *(WORD *)(tp + 2) = (WORD)-((mv_gb[cb] + mv_gr[cr]) >> 16);
+                *(WORD *)(tp + 4) = mv_b[cb];
+                tp[6] = n[2 * c];
+                tp[7] = n[2 * c + 1];
+            }
+        }
+        if (pk & 4)
+            mv_row16pc_68k((UWORD *)(dst + j * stride), pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);
+        else
+            mv_row16_68k((UWORD *)(dst + j * stride), pic->mpic_Y + sy * pic->mpic_YModulo, terms, pairs, &t);
+    }
+    mpv_free(buf);
+    return TRUE;
+}
+#endif
+
 static inline __attribute__((always_inline)) void scale_rgb16(const struct MpvPicture *pic, UBYTE *dst, ULONG stride, ULONG dw,
                       ULONG dh, int pk)
 {
     ULONG sw = pic->mpic_Width;
-    UBYTE *buf = mpv_malloc(sw * 2 + 4 + dw * 2);
+    UBYTE *buf;
+    make_tables();
+#ifdef MV_CONVERT68K
+    if (scale_rgb16_68k(pic, dst, stride, dw, dh, pk))
+        return;
+#endif
+    buf = mpv_malloc(sw * 2 + 4 + dw * 2);
     UWORD *xs = (UWORD *)(buf + ((sw * 2 + 4) & ~3UL));
     make_tables();
     if (buf) {

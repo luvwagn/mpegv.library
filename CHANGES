@@ -1,6 +1,16 @@
 mpegv.library: changes
 ======================
 
+2.4 (16 November 2026)
+----------------------
+
+- MpvToRGBScaled's 16-bit formats on the 68k in one pass written by hand
+  (src/convert_68k.s): each source pixel converted (three look-ups OR'd)
+  and written as many times as the scaling needs, straight out, no row
+  between; each chroma row's sums made once for its two rows. 720 x 576
+  to 1024 x 576 RGB565: 54 M 68020 cycles (2.3: 74 M). The same bytes
+  (tests/rgb_test.c, on a 68020).
+
 2.3 (16 November 2026)
 ----------------------
 

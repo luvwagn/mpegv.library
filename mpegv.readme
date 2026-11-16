@@ -2,7 +2,7 @@ Short:        MPEG-1 and MPEG-2 video decoder library
 Author:       Brian King; libmpeg2 by Aaron Holtzman, Michel Lespinasse et al.
 Uploader:     Brian King
 Type:         util/libs
-Version:      2.3
+Version:      2.4
 Architecture: m68k-amigaos >= 3.0.0
 Distribution: Aminet
 Requires:     68020+
@@ -51,10 +51,11 @@ The includes, the sfd and the autodoc are MIT: any program may open the
 library.
 
 Source (this archive has none): https://github.com/luvwagn/mpegv.library
-The source of this version is the repository's history at "mpegv 2.3",
+The source of this version is the repository's history at "mpegv 2.4",
 with the example's and the tests'.
 
 History:
+2.4  MpvToRGBScaled's 16-bit formats in 68k assembler: 27% fewer cycles.
 2.3  MpvToRGBScaled: RGB at another size as it is written, in a screen's
      own format; every 15- and 16-bit format (555 PC, BGR 565 and 555).
 2.2  Times after MPVC_FLUSH are the new stream's own: an open GOP's first

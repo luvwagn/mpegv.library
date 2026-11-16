@@ -70,3 +70,81 @@ _mv_grey68k:
 	bne.s	1b
 	movem.l	(sp)+,d2-d3/a2
 	rts
+
+| ---- void mv_row16_68k (UWORD * dst, const UBYTE * y, const UBYTE * terms,
+|                         ULONG pairs, const struct mv_t16 * t)
+| One source row made 16-bit pixels and written out scaled across: for
+| each pair of source pixels (one chroma sample) its sums (terms: red's,
+| green's negated, blue's, words, then how many times each of the two is
+| written, a byte each), each pixel's colour three look-ups OR'd together,
+| written that many times. t: the red, green and blue tables (UWORD, at
+| their 0) and the Y table (WORD). mv_row16pc_68k: the same, each pixel's
+| bytes swapped (little-endian formats).
+	.macro	ROW16 name, swap
+	.globl	\name
+\name:
+	movem.l	d2-d7/a2-a6,-(sp)
+	movem.l	48(sp),a0-a1/a6		| dst, y, terms
+	move.l	60(sp),d7		| pairs
+	move.l	64(sp),a5		| t
+	movem.l	(a5),a2-a5		| red, green, blue, Y tables
+	moveq	#0,d6			| (an index: its upper bytes stay 0)
+	subq.l	#1,d7
+	bmi	9f
+1:
+	movem.w	(a6)+,d3-d5		| red's, green's (negated), blue's
+	| the first pixel of the pair
+	move.b	(a1)+,d6
+	move.w	(a5,d6.w*2),d2
+	move.w	d2,d0
+	add.w	d3,d0
+	move.w	(a2,d0.w*2),d1
+	move.w	d2,d0
+	add.w	d4,d0
+	or.w	(a3,d0.w*2),d1
+	add.w	d5,d2
+	or.w	(a4,d2.w*2),d1
+	.if	\swap
+	ror.w	#8,d1
+	.endif
+	moveq	#0,d0
+	move.b	(a6)+,d0
+	subq.w	#1,d0
+	bmi.s	3f
+2:
+	move.w	d1,(a0)+
+	dbra	d0,2b
+3:
+	| the second
+	move.b	(a1)+,d6
+	move.w	(a5,d6.w*2),d2
+	move.w	d2,d0
+	add.w	d3,d0
+	move.w	(a2,d0.w*2),d1
+	move.w	d2,d0
+	add.w	d4,d0
+	or.w	(a3,d0.w*2),d1
+	add.w	d5,d2
+	or.w	(a4,d2.w*2),d1
+	.if	\swap
+	ror.w	#8,d1
+	.endif
+	moveq	#0,d0
+	move.b	(a6)+,d0
+	subq.w	#1,d0
+	bmi.s	5f
+4:
+	move.w	d1,(a0)+
+	dbra	d0,4b
+5:
+	dbra	d7,1b
+	clr.w	d7
+	subq.l	#1,d7
+	bcc	1b
+9:
+	movem.l	(sp)+,d2-d7/a2-a6
+	rts
+	.endm
+
+	ROW16	_mv_row16_68k, 0
+	ROW16	_mv_row16pc_68k, 1
