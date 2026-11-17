@@ -103,4 +103,5 @@ mpegv.library: changes
 ----------------------
 
 - First release: pl_mpeg's MPEG-1 decoder and demultiplexer, made about
-  2.6 times faster on a 68020. Made for AmigaMCE.
+  2.6 times faster on a 68020. Made for Ambiance, an Amiga Media Center
+  application.

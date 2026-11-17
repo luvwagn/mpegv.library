@@ -67,4 +67,5 @@ History:
 2.0  libmpeg2 decodes: MPEG-2 (DVDs) as well as MPEG-1; MPEG-2 Program
      Streams (VOBs); MpvExamine, each picture's fields and duration,
      MPVC_FLUSH. Now GPL-3.0-or-later.
-1.0  First release (pl_mpeg, MPEG-1). Made for AmigaMCE.
+1.0  First release (pl_mpeg, MPEG-1). Made for Ambiance, an Amiga Media
+     Center application.

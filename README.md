@@ -2,8 +2,8 @@
 
 MPEG-1 and MPEG-2 video decoded by the CPU, for any Amiga program (68020
 or better, no FPU needed), as `mpega.library` decodes MPEG audio. Made for
-AmigaMCE, a media centre for the Amiga, which opens it at run time to play
-MPEG files and DVDs where there is no ZZ9000 card.
+Ambiance, an Amiga Media Center application, which opens it at run time
+to play MPEG files and DVDs where there is no ZZ9000 card.
 
 - A Program Stream is demultiplexed as it is read: MPEG-1's (`.mpg`, a
   VCD's `.dat`) and MPEG-2's (a DVD's `.vob`: MPEG-2 packs, private
@@ -177,7 +177,7 @@ manages (the assumption in each case):
 | PiStorm, Emu68 (1.5-5 G: not yet measured) | 140-470 | 20-68 | 25 shown, 8 of them new, at 1.5 G |
 | 68060 at 50 MHz (about 150 M) | about 14 | about 2 | about 2 new a second |
 
-So a DVD plays at its full rate under Amiberry's JIT (AmigaMCE measured
+So a DVD plays at its full rate under Amiberry's JIT (Ambiance measured
 alien there, a 68060 set up with the JIT: 9.6-18.7 ms a picture, 25 a
 second through the overlay) and (very likely) on a PiStorm. A real 68060
 decodes about 14 of a VCD's 30 pictures a second (B
