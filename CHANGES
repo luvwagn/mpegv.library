@@ -1,6 +1,33 @@
 mpegv.library: changes
 ======================
 
+2.5 (19 November 2026)
+----------------------
+
+- MPEG-1 decoding cheaper on the 68k, every picture the same to the bit
+  (weezer, VCD 352 x 240, 60 pictures: instructions executed, what an
+  interpreting emulator and a 68060 pay for, 1.869 M -> 1.657 M a
+  picture, -11.3%; a 68020's cycles 10.59 M -> 9.64 M, -9.0%):
+  - The blocks with no column transform to make (libmpeg2's DC alone, a
+    block of one value, row 0 alone) by hand (idct_aan_68k.s:
+    mv_fill68k_*): two instructions a pixel through the clip table, where
+    the C took a pixel through CLIP.
+  - A block whose every row used has only its DC coefficient (vertical
+    frequencies alone: 18% of weezer's blocks): every column is the same,
+    so one is made and each row filled (mv_aan68k_add_rows, _copy_rows).
+  - Each row tested whole first (most are zeros); the rows used zeroed
+    by eight tests, not a loop; x 181 one MULS.L (gcc's four shifts and
+    adds are cheaper on a 68020, by a little, but not on a 68060 or an
+    emulator).
+  - goodtime: 1.649 M -> 1.494 M instructions (-9.4%), 9.04 M -> 8.47 M
+    cycles; HaleBopp 1.015 M -> 0.977 M, 5.03 M -> 4.88 M; NewHope
+    0.433 M -> 0.403 M, 2.47 M -> 2.37 M.
+  - MPEG-2 (a real PAL DVD, 36 pictures): 14.06 M -> 13.69 M
+    instructions (-2.7%), 73.44 M -> 72.77 M cycles.
+- tests/prof_instr.py, tests/ibench.sh: instructions executed, by
+  function (a 68020's cycles, tests/prof.py, weigh multiplies and shifts
+  far more than a 68060 or an emulator does).
+
 2.4 (16 November 2026)
 ----------------------
 

@@ -41,11 +41,11 @@ __asm__("\tmovel a6@(40:W),a4");             \
 __asm__("\tjsr _" #name)
 
 const char LibName[] = "mpegv.library";
-const char LibIdString[] = "mpegv 2.4 (16.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
+const char LibIdString[] = "mpegv 2.5 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
 static const char __attribute__((used)) LibVerTag[] =
-    "$VER: mpegv.library 2.4 (16.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
+    "$VER: mpegv.library 2.5 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
 const UWORD LibVersion = 2;
-const UWORD LibRevision = 4;
+const UWORD LibRevision = 5;
 
 struct ExecBase *SysBase;
 #endif
@@ -96,7 +96,7 @@ static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 }
 #endif
 
-static const char version[] = "mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
+static const char version[] = "mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
 
 #define FEED 65536                          /* the most a packet holds: what libmpeg2 is given at once */
 #define QHEAD 12                            /* a queued video packet's head: its length, flags, time */

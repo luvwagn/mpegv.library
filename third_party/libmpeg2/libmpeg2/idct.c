@@ -714,7 +714,15 @@ static inline int mv_m16 (int a, int b)
     return r;
 }
 #define M16(a,b) mv_m16 (a, b)
+/* x times 181, one MULS.L (gcc makes it four shifts and adds) */
+static inline int mv_m181 (int x)
+{
+    __asm__ ("muls.l #181,%0" : "+d" (x));
+    return x;
+}
+#define M181(x) mv_m181 (x)
 #else
+#define M181(x) ((x) * 181)
 #define M16(a,b) ((int)(int16_t)(a) * (int)(int16_t)(b))
 #endif
 
@@ -784,8 +792,8 @@ void mv_row_full (int16_t * const b, const int r)
     b3 = t1 + t3;
     t0 -= t2;
     t1 -= t3;
-    b1 = ((t0 + t1) >> 8) * 181;
-    b2 = ((t0 - t1) >> 8) * 181;
+    b1 = M181 ((t0 + t1) >> 8);
+    b2 = M181 ((t0 - t1) >> 8);
 
     b[0] = (a0 + b0) >> 12;
     b[1] = (a1 + b1) >> 12;
@@ -823,8 +831,8 @@ void mv_row_low (int16_t * const b, const int r)
     b3 = t1 + t3;
     t0 -= t2;
     t1 -= t3;
-    b1 = ((t0 + t1) >> 8) * 181;
-    b2 = ((t0 - t1) >> 8) * 181;
+    b1 = M181 ((t0 + t1) >> 8);
+    b2 = M181 ((t0 - t1) >> 8);
 
     b[0] = (a0 + b0) >> 12;
     b[1] = (a1 + b1) >> 12;
@@ -847,8 +855,8 @@ void mv_row_7 (int16_t * const b, const int r)
     t1 = -M16 (W[RW1], b[7]);
     b0 = t0;
     b3 = t1;
-    b1 = ((t0 + t1) >> 8) * 181;
-    b2 = ((t0 - t1) >> 8) * 181;
+    b1 = M181 ((t0 + t1) >> 8);
+    b2 = M181 ((t0 - t1) >> 8);
 
     b[0] = (2048 + b0) >> 12;
     b[1] = (2048 + b1) >> 12;

@@ -1,4 +1,4 @@
-file ps.mpg (mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+file ps.mpg (mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 160x112 rate 3 25/1 period 3600 aspect 1 shown 160 bitrate 0 kind 1
 examine flags 2 profile 0 level 0 chroma 1 aspect 10:7 display 160x112
 pic 0 I n0 t0 d3600 f2 --p- pts48600 3c87be78 y0=6d3381cd y1=57d9818a y2=6b8e1bcd y3=a1f77009 r0=8b67056f r1=223fd113 r2=3e309512 r3=295522c5 r4=386eafc5 r5=2d4f3677 r6=f316ca16 r7=2bad2717 g=6d1c0c17 g16=4ececfb8
@@ -55,7 +55,7 @@ read 50 pictures, 0 B passed over, hash 31254314, end 1; 8 packets (16091 bytes,
 skipb 18 pictures, 32 B passed over, hash bda1c5d2, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
 pushed 50 pictures, 0 B passed over, hash 31254314, end 1; 8 packets (16091 bytes, 8 timed, 0 AC-3, 0 navigation) not video
 flushed 57 pictures, 0 B passed over, hash 7a3503ec, end 1; 9 packets (18128 bytes, 9 timed, 0 AC-3, 0 navigation) not video
-file es.m1v (mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+file es.m1v (mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 176x144 rate 4 30000/1001 period 3003 aspect 8 shown 192 bitrate 0 kind 2
 examine flags 2 profile 0 level 0 chroma 1 aspect 4:3 display 176x144
 pic 0 I n0 t0 d3003 f2 --p- pts0- e1194b90 y0=36b81869 y1=d82cef8c y2=5c136769 y3=9956aa85 r0=f6ed2fb3 r1=f8792482 r2=397a226d r3=cff9eec5 r4=fbe001c5 r5=be70e66f r6=256659c8 r7=bb3c3acf g=db60b48a g16=738cf8e6
@@ -107,7 +107,7 @@ read 45 pictures, 0 B passed over, hash 70e5500a, end 1; 0 packets (0 bytes, 0 t
 skipb 16 pictures, 29 B passed over, hash 5d5cf0e7, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 pushed 45 pictures, 0 B passed over, hash 70e5500a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 flushed 52 pictures, 0 B passed over, hash 39d4639a, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-file pal.m2v (mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+file pal.m2v (mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x576 rate 3 25/1 period 3600 aspect 2 shown 768 bitrate 8000000 kind 2
 examine flags 1 profile 4 level 8 chroma 1 aspect 4:3 display 720x576
 pic 0 I n0 t0 d3600 f2 t--- pts0- 06e90413 y0=44c38169 y1=e374c5de y2=1b9a2569 y3=245b7625 r0=c758c14e r1=fe6c81e0 r2=7e86345f r3=fb3bfdc5 r4=b89db2c5 r5=3c3c1f95 r6=67d2b624 r7=beb05395 g=12d231f4 g16=efd934a7
@@ -126,7 +126,7 @@ read 12 pictures, 0 B passed over, hash b2b53750, end 1; 0 packets (0 bytes, 0 t
 skipb 5 pictures, 7 B passed over, hash 35f2a8da, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 pushed 12 pictures, 0 B passed over, hash b2b53750, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 flushed 19 pictures, 0 B passed over, hash 8ac1f716, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-file ntsc.m2v (mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+file ntsc.m2v (mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x480 rate 4 30000/1001 period 3003 aspect 3 shown 853 bitrate 8000000 kind 2
 examine flags 1 profile 4 level 8 chroma 1 aspect 16:9 display 720x480
 pic 0 I n0 t0 d4504 f3 trp- pts0- eadeccfe y0=d9d2a96d y1=0cc6f3ed y2=6750bf6d y3=6944152d r0=1b16b710 r1=7cb9bd9f r2=51051dfb r3=ef57bfc5 r4=0ec96cc5 r5=73f9c191 r6=e78c43c0 r7=40e923d1 g=cf9e58a6 g16=6d45f684
@@ -145,7 +145,7 @@ read 12 pictures, 0 B passed over, hash f9c8f06c, end 1; 0 packets (0 bytes, 0 t
 skipb 5 pictures, 7 B passed over, hash c6defe14, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 pushed 12 pictures, 0 B passed over, hash f9c8f06c, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
 flushed 19 pictures, 0 B passed over, hash 8fe651f8, end 1; 0 packets (0 bytes, 0 timed, 0 AC-3, 0 navigation) not video
-file dvd.vob (mpegv 2.4, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
+file dvd.vob (mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video))
 info 720x576 rate 3 25/1 period 3600 aspect 3 shown 1024 bitrate 8000000 kind 1
 examine flags b profile 4 level 8 chroma 1 aspect 16:9 display 720x576
 pic 0 I n0 t0 d3600 f2 --p- pts48600 fb82af1a y0=d439ddad y1=80986c00 y2=8fac32ad y3=73f8ab99 r0=000d33fe r1=24ef0d3f r2=5345441a r3=7ac546c5 r4=6dd1fbc5 r5=61f18cbf r6=7b1cc8eb r7=99336a9f g=dce1cd43 g16=7aff12ce
