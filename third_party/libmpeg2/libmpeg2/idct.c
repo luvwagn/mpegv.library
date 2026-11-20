@@ -976,26 +976,34 @@ void mv_aan_signed (int16_t * const block, int * const out)
 typedef void mv_cols_fct (const int16_t * block, uint8_t * dest, int stride);
 extern mv_cols_fct mv_aan68k_copy_low, mv_aan68k_copy_low7, mv_aan68k_copy_all;
 extern mv_cols_fct mv_aan68k_add_low, mv_aan68k_add_low7, mv_aan68k_add_all;
+/* (2.5) the blocks with no column transform: by hand too */
+extern mv_cols_fct mv_fill68k_add_row0, mv_fill68k_copy_row0;
+extern mv_cols_fct mv_aan68k_add_rows, mv_aan68k_copy_rows;
+extern void mv_fill68k_add (int v, uint8_t * dest, int stride);
 #endif
 
 static inline __attribute__ ((always_inline))
 void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	      const int add, const int mpeg2)
 {
-    int r, used = 0;
+    int r, used = 0, dcr = 0;	/* dcr: the rows of one value (their DC alone) */
 
     /* the rows: each one's kind from its coefficients (each row's code
      * its own, its constants immediates) */
 #define MV_AROW(R) do {							\
 	int16_t * const b = block + 8 * (R);				\
-	int32_t high = ((int32_t *)b)[1] | ((int32_t *)b)[3];		\
-	int32_t low = ((int32_t *)b)[2] | b[1];				\
+	const int32_t * const l = (const int32_t *)b;			\
+	int32_t high, low;						\
 									\
+	/* (2.5: most rows are zeros, in MPEG-1 most of all: one test) */\
+	if (!(l[0] | l[1] | l[2] | l[3]))				\
+	    break;							\
+	high = l[1] | l[3];						\
+	low = l[2] | b[1];						\
 	if (!(high | low)) {						\
-	    if (b[0]) {							\
-		used |= 1 << (R);					\
-		mv_row_dc (b, R);					\
-	    }								\
+	    used |= 1 << (R);						\
+	    dcr |= 1 << (R);						\
+	    mv_row_dc (b, R);						\
 	} else {							\
 	    used |= 1 << (R);						\
 	    if (!(low | ((int32_t *)b)[1] | b[0] | b[6]))		\
@@ -1048,6 +1056,11 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	    /* the DC coefficient alone: one value for the block */
 	    int v = ((block[0] << AAN_QB) + AAN_RND) >> 16;
 
+#ifdef MV_ACOLS68K
+	    if (add)
+		mv_fill68k_add (v, dest, stride);
+	    else
+#else
 	    if (add)
 		for (r = 0; r < 8; r++, dest += stride) {
 		    dest[0] = CLIP (v + dest[0]);
@@ -1059,13 +1072,19 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 		    dest[6] = CLIP (v + dest[6]);
 		    dest[7] = CLIP (v + dest[7]);
 		}
-	    else {
+	    else
+#endif
+	    {
 		uint32_t q = CLIP (v) * 0x01010101u;
 
 		for (r = 0; r < 8; r++, dest += stride)
 		    ((uint32_t *)dest)[0] = ((uint32_t *)dest)[1] = q;
 	    }
 	} else
+#ifdef MV_ACOLS68K
+	    (add ? mv_fill68k_add_row0 : mv_fill68k_copy_row0) (block, dest, stride);
+	(void)c;
+#else
 	    for (c = 0; c < 8; c++, dest++) {
 		int v = ((block[c] << AAN_QB) + AAN_RND) >> 16;
 		uint8_t * d = dest;
@@ -1073,8 +1092,14 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 		for (r = 0; r < 8; r++, d += stride)
 		    *d = add ? CLIP (v + *d) : CLIP (v);
 	    }
+#endif
     }
 #ifdef MV_ACOLS68K
+    else if (used == dcr)
+	/* (2.5) every row used one value (its DC coefficient alone: a
+	 * block of vertical frequencies only, common in MPEG-1): every
+	 * column the same, made once, each row filled with its value */
+	(add ? mv_aan68k_add_rows : mv_aan68k_copy_rows) (block, dest, stride);
     else if (!(used & ~0x33))
 	(add ? mv_aan68k_add_low : mv_aan68k_copy_low) (block, dest, stride);
     else if (!(used & ~0xb3))
@@ -1086,13 +1111,24 @@ void mv_idct (int16_t * const block, uint8_t * dest, const int stride,
 	mv_acols (block, dest, stride, add);
 #endif
 
-    /* the rows used made zeros again */
-    for (r = 0; r < 8; r++)
-	if (used & (1 << r)) {
-	    int32_t * const w = (int32_t *)(block + 8 * r);
-
-	    w[0] = w[1] = w[2] = w[3] = 0;
-	}
+    /* the rows used made zeros again (2.5: each its own test, no loop) */
+#define MV_ZROW(R) do {							\
+	if (used & (1 << (R))) {					\
+	    int32_t * const w = (int32_t *)(block + 8 * (R));		\
+									\
+	    w[0] = w[1] = w[2] = w[3] = 0;				\
+	}								\
+    } while (0)
+    MV_ZROW (0);
+    MV_ZROW (1);
+    MV_ZROW (2);
+    MV_ZROW (3);
+    MV_ZROW (4);
+    MV_ZROW (5);
+    MV_ZROW (6);
+    MV_ZROW (7);
+#undef MV_ZROW
+    (void)r;
 }
 
 static void mpegv_idct_copy (int16_t * block, uint8_t * dest,
@@ -1125,6 +1161,10 @@ void mv_add (const int last, int16_t * block, uint8_t * dest,
 
 	DC = (block[0] + 64) >> 7;
 	block[0] = block[63] = 0;
+#ifdef MV_ACOLS68K
+	mv_fill68k_add (DC, dest, stride);
+	(void)i;
+#else
 	i = 8;
 	do {
 	    dest[0] = CLIP (DC + dest[0]);
@@ -1137,6 +1177,7 @@ void mv_add (const int last, int16_t * block, uint8_t * dest,
 	    dest[7] = CLIP (DC + dest[7]);
 	    dest += stride;
 	} while (--i);
+#endif
     }
 }
 
