@@ -1,6 +1,48 @@
 mpegv.library: changes
 ======================
 
+2.6 (19 November 2026)
+----------------------
+
+- Half size decoding, for a CPU too slow for the whole picture (a 68030
+  or 68040 on AGA): MPVA_Half (from the first I picture) and MPVC_HALF
+  (from the next one; an open GOP's B pictures before it, which need the
+  picture of the other size, passed over). Each picture says which it is
+  (MPVPF_HALF): mpic_Width, mpic_Height and mpic_YRows half the stream's,
+  the planes' top left quarter (modulos the same: no buffer made again).
+  - Each block's IDCT a 4x4 one: the whole 8x8 one averaged 2x2, to
+    within rounding (each pixel within 1 of it: tests/idct_test.c, on
+    the host and a 68020), its frequencies 5-7 folded into 3-1 (a 2x2
+    average's aliases: 2-3 dB better than the lowest 4x4 alone, an intra
+    picture 11-18 dB). Every coefficient zeroed after, as ever.
+  - Motion compensation on the half size pictures, vectors halved (their
+    half pixel positions rounded away from 0: better than toward it by
+    0.2-0.9 dB), 8 wide for luma and 4 wide for chroma (new: 4 pixels
+    a longword, tests/mc_test.c), clamped to the half picture.
+  - Field and dual prime prediction, field DCT and field pictures made
+    of half size fields (the half picture's alternate rows): about the
+    whole interlaced picture averaged, not exactly.
+- A 68020's cycles a picture (vamos), whole -> half: weezer 9.62 M ->
+  6.53 M (-32%), goodtime 8.45 -> 6.04 (-29%), HaleBopp 4.87 -> 3.21
+  (-34%), NewHope 2.37 -> 1.65 (-30%), a PAL DVD (the alien excerpt)
+  73.54 -> 44.58 (-39%). Instructions (an emulator's, a 68060's):
+  1.825 M -> 1.275 M, 1.628 -> 1.166, 0.782 -> 0.514, 0.557 -> 0.386,
+  14.08 -> 8.39. Motion compensation a third to a half of the whole's;
+  the IDCT (C, not hand written as the whole's) 61-66%.
+- Its pictures against the whole ones averaged 2x2 (tests/halfpsnr.py,
+  make halfpsnr), Y mean (worst) dB: weezer 38.0 (29.1), goodtime 35.1
+  (24.9), HaleBopp 53.4 (29.1), NewHope 44.1 (30.9), the DVD excerpt
+  40.2 (31.3). I pictures 56-60; then a drift along each GOP, about 1 dB
+  a picture at first (weezer: 42.3 the next, 33.5 twelve on), least on
+  still pictures (HaleBopp: 52-54 throughout).
+- Fuzzed (random damage to MPEG-1, MPEG-2, DVD and field-coded streams,
+  decoded at half size and switched every few pictures, address and
+  undefined behaviour sanitizers): nothing read or written out of place.
+- tests: idct_test (the half size IDCT), mc_test (the 4 wide motion
+  compensation), mpv_test -half and -switch n (expected_half.txt, on the
+  host and through the library on a 68020), halfpsnr.py; bench.sh and
+  ibench.sh take -half.
+
 2.5 (19 November 2026)
 ----------------------
 

@@ -37,12 +37,15 @@ extern void (* mpeg2_idct_copy) (int16_t * block, uint8_t * dest, int stride);
 extern void (* mpegv_idct_copy1) (int16_t * block, uint8_t * dest, int stride);
 extern void (* mpegv_idct_add1) (int last, int16_t * block,
 				 uint8_t * dest, int stride);
-#define MV_IDCT_COPY(d) (d->mpeg1 ? mpegv_idct_copy1 : mpeg2_idct_copy)
-#define MV_IDCT_ADD(d) (d->mpeg1 ? mpegv_idct_add1 : mpeg2_idct_add)
+#define MV_IDCT_COPY1(d) (d->mpeg1 ? mpegv_idct_copy1 : mpeg2_idct_copy)
+#define MV_IDCT_ADD1(d) (d->mpeg1 ? mpegv_idct_add1 : mpeg2_idct_add)
 #else
-#define MV_IDCT_COPY(d) mpeg2_idct_copy
-#define MV_IDCT_ADD(d) mpeg2_idct_add
+#define MV_IDCT_COPY1(d) mpeg2_idct_copy
+#define MV_IDCT_ADD1(d) mpeg2_idct_add
 #endif
+/* mpegv 2.6: as mpeg2_init_fbuf picked them for the picture */
+#define MV_IDCT_COPY(d) ((d)->idct_copy)
+#define MV_IDCT_ADD(d) ((d)->idct_add)
 extern void (* mpeg2_idct_add) (int last, int16_t * block,
 				uint8_t * dest, int stride);
 extern void (* mpeg2_cpu_state_save) (cpu_state_t * state);
@@ -1221,6 +1224,125 @@ static inline int mv_mul (int a, int b)
     table[4] (decoder->dest[2] + (decoder->offset >> 1),		      \
 	      ref[2] + offset, decoder->uv_stride, 8)
 
+/*
+ * mpegv 2.6: half resolution's (4:2:0 only). The references are half the
+ * size, so are the vectors: a luma vector halved (MV_HALFV: a whole-size
+ * half pixel is a quarter of one here, rounded away from 0, which drifts
+ * less than toward it), its chroma's halved again as libmpeg2's, then
+ * used at the half size's half-pixel positions as ever. The
+ * macroblock is 8x8 luma, 4x4 chroma, at half its whole-size position
+ * (offset and v_offset stay whole-size: HO and HV the half ones). table is
+ * mpeg2_mc_half's: [0..3] 8 wide, [4..7] 4 wide. The limits are the half
+ * picture's, so no block is read outside it but for libmpeg2's own one
+ * pixel past the edge for a half-pixel chroma position, which the frame
+ * buffer (whole-size, the half picture in its top left quarter) holds.
+ */
+#define HO (decoder->offset >> 1)
+#define HV (decoder->v_offset >> 1)
+#ifndef MV_HALFV
+#define MV_HALFV(v) (((v) + ((v) > 0) - ((v) < 0)) / 2)
+#endif
+
+#define MOTION_420H(table,ref,motion_x,motion_y,size,y)			      \
+    motion_x = MV_HALFV (motion_x); motion_y = MV_HALFV (motion_y);			      \
+    pos_x = 2 * HO + motion_x;						      \
+    pos_y = 2 * HV + motion_y + y;					      \
+    if (unlikely (pos_x > decoder->hlimit_x)) {				      \
+	pos_x = ((int)pos_x < 0) ? 0 : decoder->hlimit_x;		      \
+	motion_x = pos_x - 2 * HO;					      \
+    }									      \
+    if (unlikely (pos_y > decoder->hlimit_y_ ## size)) {		      \
+	pos_y = ((int)pos_y < 0) ? 0 : decoder->hlimit_y_ ## size;	      \
+	motion_y = pos_y - 2 * HV - y;					      \
+    }									      \
+    xy_half = ((pos_y & 1) << 1) | (pos_x & 1);				      \
+    table[xy_half] (decoder->dest[0] + (y / 2) * decoder->stride + HO,	      \
+		    ref[0] + (pos_x >> 1) + MV_MUL (pos_y >> 1, decoder->stride), \
+		    decoder->stride, size / 2);				      \
+    motion_x /= 2;	motion_y /= 2;					      \
+    xy_half = ((motion_y & 1) << 1) | (motion_x & 1);			      \
+    offset = (((HO + motion_x) >> 1) +					      \
+	      MV_MUL (((HV + motion_y) >> 1) + y / 4, decoder->uv_stride));   \
+    table[4+xy_half] (decoder->dest[1] + (y / 4) * decoder->uv_stride +	      \
+		      (HO >> 1), ref[1] + offset,			      \
+		      decoder->uv_stride, size / 4);			      \
+    table[4+xy_half] (decoder->dest[2] + (y / 4) * decoder->uv_stride +	      \
+		      (HO >> 1), ref[2] + offset,			      \
+		      decoder->uv_stride, size / 4)
+
+#define MOTION_FIELD_420H(table,ref,motion_x,motion_y,dest_field,op,src_field) \
+    motion_x = MV_HALFV (motion_x); motion_y = MV_HALFV (motion_y);			      \
+    pos_x = 2 * HO + motion_x;						      \
+    pos_y = HV + motion_y;						      \
+    if (unlikely (pos_x > decoder->hlimit_x)) {				      \
+	pos_x = ((int)pos_x < 0) ? 0 : decoder->hlimit_x;		      \
+	motion_x = pos_x - 2 * HO;					      \
+    }									      \
+    if (unlikely (pos_y > decoder->hlimit_y)) {				      \
+	pos_y = ((int)pos_y < 0) ? 0 : decoder->hlimit_y;		      \
+	motion_y = pos_y - HV;						      \
+    }									      \
+    xy_half = ((pos_y & 1) << 1) | (pos_x & 1);				      \
+    table[xy_half] (decoder->dest[0] + MV_MUL (dest_field, decoder->stride) + \
+		    HO,							      \
+		    (ref[0] + (pos_x >> 1) +				      \
+		     MV_MUL ((pos_y op) + src_field, decoder->stride)),	      \
+		    2 * decoder->stride, 4);				      \
+    motion_x /= 2;	motion_y /= 2;					      \
+    xy_half = ((motion_y & 1) << 1) | (motion_x & 1);			      \
+    offset = (((HO + motion_x) >> 1) +					      \
+	      MV_MUL ((HV >> 1) + (motion_y op) + src_field,		      \
+		      decoder->uv_stride));					      \
+    table[4+xy_half] (decoder->dest[1] +				      \
+		      MV_MUL (dest_field, decoder->uv_stride) + (HO >> 1),    \
+		      ref[1] + offset, 2 * decoder->uv_stride, 2);	      \
+    table[4+xy_half] (decoder->dest[2] +				      \
+		      MV_MUL (dest_field, decoder->uv_stride) + (HO >> 1),    \
+		      ref[2] + offset, 2 * decoder->uv_stride, 2)
+
+#define MOTION_DMV_420H(table,ref,motion_x,motion_y)			      \
+    motion_x = MV_HALFV (motion_x); motion_y = MV_HALFV (motion_y);			      \
+    pos_x = 2 * HO + motion_x;						      \
+    pos_y = HV + motion_y;						      \
+    if (unlikely (pos_x > decoder->hlimit_x)) {				      \
+	pos_x = ((int)pos_x < 0) ? 0 : decoder->hlimit_x;		      \
+	motion_x = pos_x - 2 * HO;					      \
+    }									      \
+    if (unlikely (pos_y > decoder->hlimit_y)) {				      \
+	pos_y = ((int)pos_y < 0) ? 0 : decoder->hlimit_y;		      \
+	motion_y = pos_y - HV;						      \
+    }									      \
+    xy_half = ((pos_y & 1) << 1) | (pos_x & 1);				      \
+    offset = (pos_x >> 1) + MV_MUL (pos_y & ~1, decoder->stride);	      \
+    table[xy_half] (decoder->dest[0] + HO,				      \
+		    ref[0] + offset, 2 * decoder->stride, 4);		      \
+    table[xy_half] (decoder->dest[0] + decoder->stride + HO,		      \
+		    ref[0] + decoder->stride + offset,			      \
+		    2 * decoder->stride, 4);				      \
+    motion_x /= 2;	motion_y /= 2;					      \
+    xy_half = ((motion_y & 1) << 1) | (motion_x & 1);			      \
+    offset = (((HO + motion_x) >> 1) +					      \
+	      MV_MUL ((HV >> 1) + (motion_y & ~1), decoder->uv_stride));      \
+    table[4+xy_half] (decoder->dest[1] + (HO >> 1),			      \
+		      ref[1] + offset, 2 * decoder->uv_stride, 2);	      \
+    table[4+xy_half] (decoder->dest[1] + decoder->uv_stride + (HO >> 1),      \
+		      ref[1] + decoder->uv_stride + offset,		      \
+		      2 * decoder->uv_stride, 2);			      \
+    table[4+xy_half] (decoder->dest[2] + (HO >> 1),			      \
+		      ref[2] + offset, 2 * decoder->uv_stride, 2);	      \
+    table[4+xy_half] (decoder->dest[2] + decoder->uv_stride + (HO >> 1),      \
+		      ref[2] + decoder->uv_stride + offset,		      \
+		      2 * decoder->uv_stride, 2)
+
+#define MOTION_ZERO_420H(table,ref)					      \
+    table[0] (decoder->dest[0] + HO,					      \
+	      ref[0] + HO + MV_MUL (HV, decoder->stride), decoder->stride, 8); \
+    offset = ((HO >> 1) + MV_MUL (HV >> 1, decoder->uv_stride));	      \
+    table[4] (decoder->dest[1] + (HO >> 1),				      \
+	      ref[1] + offset, decoder->uv_stride, 4);			      \
+    table[4] (decoder->dest[2] + (HO >> 1),				      \
+	      ref[2] + offset, decoder->uv_stride, 4)
+
 #define MOTION_422(table,ref,motion_x,motion_y,size,y)			      \
     pos_x = 2 * decoder->offset + motion_x;				      \
     pos_y = 2 * decoder->v_offset + motion_y + 2 * y;			      \
@@ -1654,6 +1776,38 @@ MOTION_FUNCTIONS (422, MOTION_422, MOTION_FIELD_422, MOTION_DMV_422,
 MOTION_FUNCTIONS (444, MOTION_444, MOTION_FIELD_444, MOTION_DMV_444,
 		  MOTION_ZERO_444)
 
+/* mpegv 2.6: half resolution's (its dual prime's tables the half ones) */
+#define mpeg2_mc mpeg2_mc_half
+MOTION_FUNCTIONS (420h, MOTION_420H, MOTION_FIELD_420H, MOTION_DMV_420H,
+		  MOTION_ZERO_420H)
+#undef mpeg2_mc
+
+static void motion_mp1h (mpeg2_decoder_t * const decoder,
+			 motion_t * const motion,
+			 mpeg2_mc_fct * const * const table)
+{
+    int motion_x, motion_y;
+    unsigned int pos_x, pos_y, xy_half, offset;
+
+    NEEDBITS (bit_buf, bits, bit_ptr);
+    motion_x = (motion->pmv[0][0] +
+		(get_motion_delta (decoder,
+				   motion->f_code[0]) << motion->f_code[1]));
+    motion_x = bound_motion_vector (motion_x,
+				    motion->f_code[0] + motion->f_code[1]);
+    motion->pmv[0][0] = motion_x;
+
+    NEEDBITS (bit_buf, bits, bit_ptr);
+    motion_y = (motion->pmv[0][1] +
+		(get_motion_delta (decoder,
+				   motion->f_code[0]) << motion->f_code[1]));
+    motion_y = bound_motion_vector (motion_y,
+				    motion->f_code[0] + motion->f_code[1]);
+    motion->pmv[0][1] = motion_y;
+
+    MOTION_420H (table, motion->ref[0], motion_x, motion_y, 16, 0);
+}
+
 /* like motion_frame, but parsing without actual motion compensation */
 static void motion_fr_conceal (mpeg2_decoder_t * const decoder)
 {
@@ -1702,11 +1856,11 @@ static void motion_fi_conceal (mpeg2_decoder_t * const decoder)
 #define MOTION_CALL(routine,direction)				\
 do {								\
     if ((direction) & MACROBLOCK_MOTION_FORWARD)		\
-	routine (decoder, &(decoder->f_motion), mpeg2_mc.put);	\
+	routine (decoder, &(decoder->f_motion), decoder->mc_put);	\
     if ((direction) & MACROBLOCK_MOTION_BACKWARD)		\
 	routine (decoder, &(decoder->b_motion),			\
 		 ((direction) & MACROBLOCK_MOTION_FORWARD ?	\
-		  mpeg2_mc.avg : mpeg2_mc.put));		\
+		  decoder->mc_avg : decoder->mc_put));		\
 } while (0)
 
 #define NEXT_MACROBLOCK							\
@@ -1799,7 +1953,45 @@ void mpeg2_init_fbuf (mpeg2_decoder_t * decoder, uint8_t * current_fbuf[3],
     decoder->limit_y_8 = 2 * height - 16;
     decoder->limit_y = height - 16;
 
-    if (decoder->mpeg1) {
+    decoder->idct_copy = MV_IDCT_COPY1 (decoder);
+    decoder->idct_add = MV_IDCT_ADD1 (decoder);
+    decoder->mc_put = mpeg2_mc.put;
+    decoder->mc_avg = mpeg2_mc.avg;
+
+    /* mpegv 2.6: half resolution (4:2:0's only: any other not asked for) */
+    if (decoder->chroma_format != 0)
+	decoder->half = 0;
+    if (decoder->half) {
+	decoder->slice_stride = 8 * stride;
+	decoder->slice_uv_stride = decoder->slice_stride >> 2;
+	decoder->hlimit_x = decoder->limit_x >> 1;
+	decoder->hlimit_y_16 = decoder->limit_y_16 >> 1;
+	decoder->hlimit_y_8 = decoder->limit_y_8 >> 1;
+	decoder->hlimit_y = decoder->limit_y >> 1;
+	decoder->idct_copy = mpegv_idct4_copy;
+	decoder->idct_add = mpegv_idct4_add;
+	decoder->mc_put = mpeg2_mc_half.put;
+	decoder->mc_avg = mpeg2_mc_half.avg;
+	if (decoder->mpeg1) {
+	    decoder->motion_parser[0] = motion_zero_420h;
+	    decoder->motion_parser[MC_FIELD] = motion_dummy;
+	    decoder->motion_parser[MC_FRAME] = motion_mp1h;
+	    decoder->motion_parser[MC_DMV] = motion_dummy;
+	    decoder->motion_parser[4] = motion_reuse_420h;
+	} else if (decoder->picture_structure == FRAME_PICTURE) {
+	    decoder->motion_parser[0] = motion_zero_420h;
+	    decoder->motion_parser[MC_FIELD] = motion_fr_field_420h;
+	    decoder->motion_parser[MC_FRAME] = motion_fr_frame_420h;
+	    decoder->motion_parser[MC_DMV] = motion_fr_dmv_420h;
+	    decoder->motion_parser[4] = motion_reuse_420h;
+	} else {
+	    decoder->motion_parser[0] = motion_zero_420h;
+	    decoder->motion_parser[MC_FIELD] = motion_fi_field_420h;
+	    decoder->motion_parser[MC_16X8] = motion_fi_16x8_420h;
+	    decoder->motion_parser[MC_DMV] = motion_fi_dmv_420h;
+	    decoder->motion_parser[4] = motion_reuse_420h;
+	}
+    } else if (decoder->mpeg1) {
 	decoder->motion_parser[0] = motion_zero_420;
         decoder->motion_parser[MC_FIELD] = motion_dummy;
  	decoder->motion_parser[MC_FRAME] = motion_mp1;
@@ -1986,6 +2178,30 @@ void mpeg2_slice (mpeg2_decoder_t * const decoder, const int code,
 		DCT_stride = decoder->stride;
 	    }
 
+	    if (unlikely (decoder->half)) {
+		/* mpegv 2.6: 4x4 blocks, at half the positions (a field
+		 * block's rows every other row still: the half picture's
+		 * fields its alternate rows, as the whole one's) */
+		if (!(macroblock_modes & DCT_TYPE_INTERLACED))
+		    DCT_offset = decoder->stride * 4;
+		offset = decoder->offset >> 1;
+		dest_y = decoder->dest[0] + offset;
+		slice_intra_DCT (decoder, 0, dest_y, DCT_stride);
+		slice_intra_DCT (decoder, 0, dest_y + 4, DCT_stride);
+		slice_intra_DCT (decoder, 0, dest_y + DCT_offset, DCT_stride);
+		slice_intra_DCT (decoder, 0, dest_y + DCT_offset + 4,
+				 DCT_stride);
+		slice_intra_DCT (decoder, 1, decoder->dest[1] + (offset >> 1),
+				 decoder->uv_stride);
+		slice_intra_DCT (decoder, 2, decoder->dest[2] + (offset >> 1),
+				 decoder->uv_stride);
+		if (decoder->coding_type == D_TYPE) {
+		    NEEDBITS (bit_buf, bits, bit_ptr);
+		    DUMPBITS (bit_buf, bits, 1);
+		}
+		goto intra_done;
+	    }
+
 	    offset = decoder->offset;
 	    dest_y = decoder->dest[0] + offset;
 	    slice_intra_DCT (decoder, 0, dest_y, DCT_stride);
@@ -2024,6 +2240,8 @@ void mpeg2_slice (mpeg2_decoder_t * const decoder, const int code,
 		slice_intra_DCT (decoder, 2, dest_v + DCT_offset + 8,
 				 DCT_stride);
 	    }
+	intra_done:
+	    ;
 	} else {
 
 	    motion_parser_t * parser;
@@ -2054,7 +2272,34 @@ void mpeg2_slice (mpeg2_decoder_t * const decoder, const int code,
 
 		coded_block_pattern = get_coded_block_pattern (decoder);
 
-		if (likely (decoder->chroma_format == 0)) {
+		if (unlikely (decoder->half)) {
+		    /* mpegv 2.6: as the intra blocks' */
+		    int offset = decoder->offset >> 1;
+		    uint8_t * dest_y = decoder->dest[0] + offset;
+
+		    if (!(macroblock_modes & DCT_TYPE_INTERLACED))
+			DCT_offset = decoder->stride * 4;
+		    if (coded_block_pattern & 1)
+			slice_non_intra_DCT (decoder, 0, dest_y, DCT_stride);
+		    if (coded_block_pattern & 2)
+			slice_non_intra_DCT (decoder, 0, dest_y + 4,
+					     DCT_stride);
+		    if (coded_block_pattern & 4)
+			slice_non_intra_DCT (decoder, 0, dest_y + DCT_offset,
+					     DCT_stride);
+		    if (coded_block_pattern & 8)
+			slice_non_intra_DCT (decoder, 0,
+					     dest_y + DCT_offset + 4,
+					     DCT_stride);
+		    if (coded_block_pattern & 16)
+			slice_non_intra_DCT (decoder, 1,
+					     decoder->dest[1] + (offset >> 1),
+					     decoder->uv_stride);
+		    if (coded_block_pattern & 32)
+			slice_non_intra_DCT (decoder, 2,
+					     decoder->dest[2] + (offset >> 1),
+					     decoder->uv_stride);
+		} else if (likely (decoder->chroma_format == 0)) {
 		    int offset = decoder->offset;
 		    uint8_t * dest_y = decoder->dest[0] + offset;
 		    if (coded_block_pattern & 1)

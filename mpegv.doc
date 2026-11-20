@@ -137,6 +137,25 @@ mpegv.library/MpvControl                           mpegv.library/MpvControl
                         from what MpvWrite gives next. mpic_Number and
                         mpic_Time carry on; mpic_PTS is the stream's,
                         (V2.2) none carried on from before the flush.
+        MPVC_HALF       (V2.6) value TRUE: pictures decoded at half size
+                        (half as wide, half as high) from the next I
+                        picture; FALSE: whole again, from the next I
+                        picture. An open GOP's B pictures before that I
+                        picture (which would need the one before it, of
+                        the other size) are passed over. Returns the last
+                        setting. Each picture's MPVPF_HALF says which it
+                        is. For a CPU too slow for the whole picture: an
+                        8x8 block's IDCT becomes a 4x4 one, the motion
+                        compensation is made on half size pictures with
+                        halved vectors; together a quarter of the pixels
+                        and (measured on a 68020) under half the work.
+                        The picture is about the whole one averaged 2x2:
+                        an I picture to within rounding; P and B pictures
+                        drift from it along a GOP (the half size cannot
+                        hold the whole one's half pixel steps), most where
+                        the picture moves in fine detail, and interlaced
+                        pictures (field DCT and field prediction) are made
+                        of half size fields, not the frame averaged.
 
 mpegv.library/MpvDecode                             mpegv.library/MpvDecode
 
@@ -157,7 +176,12 @@ mpegv.library/MpvDecode                             mpegv.library/MpvDecode
         is shown, 90 kHz), mpic_Fields (2, or 3 with its first field
         repeated) and flags: MPVPF_TOPFIRST, MPVPF_REPEAT,
         MPVPF_PROGRESSIVE (a progressive frame), MPVPF_FIELDS (coded as
-        two field pictures).
+        two field pictures). (V2.6) MPVPF_HALF: decoded at half size
+        (MPVC_HALF): mpic_Width, mpic_Height and mpic_YRows are half the
+        stream's (rounded up), and the picture is the top left quarter of
+        its planes, their modulos the same (the rest is not written).
+        MpvToRGB, MpvToRGBScaled, MpvToYUV422 and MpvToGrey take it as
+        any picture.
 
     RESULT
         The picture, or NULL with *error (if error is not NULL):
@@ -261,6 +285,8 @@ mpegv.library/MpvOpen                                 mpegv.library/MpvOpen
         MPVA_SkipB (BOOL) - B pictures passed over from the start.
         MPVA_VideoStream (ULONG) - (V2) which video stream of a Program
             Stream to decode: 0xE0-0xEF (default 0: the first found).
+        MPVA_Half (BOOL) - (V2.6) decoded at half size from the first I
+            picture (MPVC_HALF).
 
     RESULT
         The decoder, or NULL (no memory; or the read hook failed at once).

@@ -7,7 +7,10 @@
  * GPL-3.0-or-later, (c) 2026 Brian King.
  *
  *   mpv_test [-n pictures] [-nohash] [-skipb] [-all] [-s kind] [-dump out.yuv]
- *            [-convert y|r|g] file
+ *            [-convert y|r|g] [-half] [-switch n] file
+ *
+ * -half: decoded at half size (MPVA_Half); -switch n: MPVC_HALF turned
+ * the other way after every n pictures (2.6).
  *
  * Without -all: each picture's hash, and the total. With -all: the
  * stream's details, and each picture's planes, packed YUV (each order),
@@ -39,6 +42,8 @@ static FILE *fh, *dump;
 static int convert;                         /* -convert: each picture made YUV 4:2:2, RGB565 or grey (make prof) */
 static unsigned long packets, packet_bytes, packet_times, packet_sub, packet_nav;
 static unsigned long stream_kind = MPVS_AUTO;
+static int half;                            /* -half: MPVA_Half */
+static long half_switch;                    /* -switch: MPVC_HALF every so many pictures */
 
 /* 32-bit FNV-1a, a longword at a time (as plm_ref's) */
 static unsigned long hash(unsigned long h, const UBYTE *p, unsigned long n)
@@ -80,6 +85,18 @@ static struct Hook rh, ph;
 static unsigned long planes(const struct MpvPicture *p)
 {
     unsigned long h = 2166136261UL;
+    if (p->mpic_Flags & MPVPF_HALF) {
+        /* half size: the planes' top left quarter alone (the rest not
+         * written: whatever the buffers held) */
+        unsigned r, yw = p->mpic_YModulo / 2u, cw = p->mpic_CModulo / 2u;
+        for (r = 0; r < p->mpic_YRows; r++)
+            h = hash(h, p->mpic_Y + r * p->mpic_YModulo, yw);
+        for (r = 0; r < p->mpic_YRows / 2u; r++)
+            h = hash(h, p->mpic_Cb + r * p->mpic_CModulo, cw);
+        for (r = 0; r < p->mpic_YRows / 2u; r++)
+            h = hash(h, p->mpic_Cr + r * p->mpic_CModulo, cw);
+        return h;
+    }
     h = hash(h, p->mpic_Y, (unsigned long)p->mpic_YModulo * p->mpic_YRows);
     h = hash(h, p->mpic_Cb, (unsigned long)p->mpic_CModulo * (p->mpic_YRows / 2));
     h = hash(h, p->mpic_Cr, (unsigned long)p->mpic_CModulo * (p->mpic_YRows / 2));
@@ -122,7 +139,7 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
     long n = 0;
     unsigned long total = 2166136261UL;
     static UBYTE buf[4096];
-    struct TagItem tags[5];
+    struct TagItem tags[6];
     int flush_run = flush != 0;
     if (!(fh = fopen(path, "rb")))
         return -1;
@@ -135,7 +152,9 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
     tags[2].ti_Data = (unsigned long)skipb;
     tags[3].ti_Tag = MPVA_Stream;
     tags[3].ti_Data = stream_kind;
-    tags[4].ti_Tag = TAG_DONE;
+    tags[4].ti_Tag = MPVA_Half;
+    tags[4].ti_Data = (unsigned long)half;
+    tags[5].ti_Tag = TAG_DONE;
     if (!(m = MpvOpen(tags))) {
         fclose(fh);
         return -1;
@@ -149,6 +168,8 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
             MpvControl(m, MPVC_FLUSH, 0);
             flush = 0;
         }
+        if (half_switch && n && n % half_switch == 0 && p)
+            MpvControl(m, MPVC_HALF, !MpvControl(m, MPVC_HALF, 0));
         p = MpvDecode(m, &e);
         if (!p) {
             if (e == MPVE_MORE && push) {
@@ -173,8 +194,8 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
                 fwrite(p->mpic_Cb + r * p->mpic_CModulo, 1, p->mpic_Width / 2u, dump);
             for (r = 0; r < p->mpic_Height / 2u; r++)
                 fwrite(p->mpic_Cr + r * p->mpic_CModulo, 1, p->mpic_Width / 2u, dump);
-            printf("n%lu %ux%u\n", (unsigned long)p->mpic_Number, (unsigned)p->mpic_Width,
-                   (unsigned)p->mpic_Height);
+            printf("n%lu %ux%u %c\n", (unsigned long)p->mpic_Number, (unsigned)p->mpic_Width,
+                   (unsigned)p->mpic_Height, " IPB"[p->mpic_Type & 3]);
         }
         lw = p->mpic_Width;
         lh = p->mpic_Height;
@@ -216,11 +237,13 @@ static long run(const char *path, long max, int nohash, int all, int skipb, int 
                            (p->mpic_Flags & MPVPF_PROGRESSIVE) ? 'p' : '-',
                            (p->mpic_Flags & MPVPF_FIELDS) ? 'f' : '-', (unsigned long)p->mpic_PTS,
                            (p->mpic_Flags & MPVPF_PTS) ? "" : "-", h);
+                    if (p->mpic_Flags & MPVPF_HALF)
+                        printf(" half %ux%u", (unsigned)p->mpic_Width, (unsigned)p->mpic_Height);
                     if (n < 4)
                         helpers(p);         /* (the first few: vamos is slow) */
                     printf("\n");
                 } else
-                    printf("%ld %08lx\n", n, h);
+                    printf("%ld %08lx%s\n", n, h, (p->mpic_Flags & MPVPF_HALF) ? " h" : "");
             }
         }
         n++;
@@ -280,6 +303,10 @@ int main(int argc, char **argv)
             stream_kind = (unsigned long)atol(argv[++i]);
         else if (!strcmp(argv[i], "-all"))
             all = 1;
+        else if (!strcmp(argv[i], "-half"))
+            half = 1;
+        else if (!strcmp(argv[i], "-switch") && i + 1 < argc)
+            half_switch = atol(argv[++i]);
         else
             path = argv[i];
     }

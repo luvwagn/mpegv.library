@@ -41,11 +41,11 @@ __asm__("\tmovel a6@(40:W),a4");             \
 __asm__("\tjsr _" #name)
 
 const char LibName[] = "mpegv.library";
-const char LibIdString[] = "mpegv 2.5 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
+const char LibIdString[] = "mpegv 2.6 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video";
 static const char __attribute__((used)) LibVerTag[] =
-    "$VER: mpegv.library 2.5 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
+    "$VER: mpegv.library 2.6 (19.11.2026) libmpeg2, MPEG-1 and MPEG-2 video (68020+)";
 const UWORD LibVersion = 2;
-const UWORD LibRevision = 5;
+const UWORD LibRevision = 6;
 
 struct ExecBase *SysBase;
 #endif
@@ -96,7 +96,7 @@ static LONG call_hook(struct Hook *h, APTR obj, APTR msg)
 }
 #endif
 
-static const char version[] = "mpegv 2.5, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
+static const char version[] = "mpegv 2.6, libmpeg2 0.5.1 (MPEG-1 and MPEG-2 video)";
 
 #define FEED 65536                          /* the most a packet holds: what libmpeg2 is given at once */
 #define QHEAD 12                            /* a queued video packet's head: its length, flags, time */
@@ -124,7 +124,8 @@ struct Mpv {
     BOOL got_seq;
     BOOL packs2;                            /* MPEG-2 packs seen */
     BOOL skipb;
-    BOOL seen_i;                            /* an I picture since the start (or MPVC_FLUSH) */
+    BOOL half_want, half;                   /* half size asked for (MPVC_HALF); decoded so now */
+    BOOL seen_i;                          /* an I picture since the start (or MPVC_FLUSH) */
     BOOL closed;                            /* the last GOP closed: its first B pictures need no earlier one */
     BOOL have_first, have_pts;
     UWORD refs;                             /* I and P pictures since the start (2 at most) */
@@ -454,6 +455,7 @@ API APTR MpvOpen(struct TagItem *tags)
     m->kind = (ULONG)tag_data(tags, MPVA_Stream, MPVS_AUTO);
     m->readsize = (ULONG)tag_data(tags, MPVA_ReadSize, 16384);
     m->skipb = tag_data(tags, MPVA_SkipB, FALSE) != 0;
+    m->half_want = tag_data(tags, MPVA_Half, FALSE) != 0;
     m->want_vid = (ULONG)tag_data(tags, MPVA_VideoStream, 0);
     if (m->want_vid < 0xE0 || m->want_vid > 0xEF)
         m->want_vid = 0;
@@ -537,6 +539,14 @@ static void begin(struct Mpv *m)
         m->ref_tr = (UWORD)cp->temporal_reference;
     }
     if (t == PIC_FLAG_CODING_TYPE_I) {
+        if (m->half_want != m->half) {
+            /* 2.6: the size changed here, where nothing before is needed
+             * but by an open GOP's B pictures before it: passed over, as
+             * after a flush */
+            m->half = m->half_want;
+            mpegv_half(m->dec, m->half);
+            m->refs = 0;
+        }
         m->seen_i = TRUE;
         if (m->refs < 2)
             m->refs++;
@@ -553,6 +563,8 @@ static void begin(struct Mpv *m)
             m->skipped++;
         }
     }
+    if (cp && m->half)                      /* (as it is shown, perhaps after the next switch) */
+        ((mpeg2_picture_t *)cp)->flags |= PIC_FLAG_MPEGV_HALF;
     mpeg2_skip(m->dec, skip);
 }
 
@@ -602,6 +614,12 @@ static struct MpvPicture *shown(struct Mpv *m)
                     (fields > 2 ? MPVPF_REPEAT : 0) |
                     (dp->flags & PIC_FLAG_PROGRESSIVE_FRAME ? MPVPF_PROGRESSIVE : 0) |
                     (dp->nb_fields == 1 ? MPVPF_FIELDS : 0);
+    if (dp->flags & PIC_FLAG_MPEGV_HALF) {  /* 2.6: in the planes' top left quarter */
+        p->mpic_Width = (UWORD)((s->picture_width + 1) >> 1);
+        p->mpic_Height = (UWORD)((s->picture_height + 1) >> 1);
+        p->mpic_YRows = (UWORD)(s->height >> 1);
+        p->mpic_Flags |= MPVPF_HALF;
+    }
     p->mpic_PTS = m->have_pts ? m->base_pts + (time - m->base_time) : time;
     return p;
 }
@@ -803,6 +821,10 @@ API LONG MpvControl(APTR mpv, ULONG cmd, ULONG value)
         break;
     case MPVC_SKIPPEDB:
         r = (LONG)m->skipped;
+        break;
+    case MPVC_HALF:
+        r = m->half_want;
+        m->half_want = value != 0;
         break;
     case MPVC_ENDED:
         r = m->ended || m->done;

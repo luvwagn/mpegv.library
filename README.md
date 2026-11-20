@@ -21,6 +21,10 @@ to play MPEG files and DVDs where there is no ZZ9000 card.
 - B pictures can be passed over when the CPU is behind (two in three of a
   DVD's or a VCD's; nothing is predicted from them). After a seek,
   `MPVC_FLUSH` starts again at the next I picture.
+- Half size decoding (2.6: `MPVA_Half`, `MPVC_HALF`) for a CPU too slow
+  even then: half as wide and half as high, each 8x8 block's IDCT a 4x4
+  one, motion compensated at half size (a 68020's cycles 29-39%
+  fewer), about the whole picture averaged 2x2, switched at an I picture.
 - Helpers make a picture what a screen wants: packed YUV 4:2:2 for a
   graphics card's overlay (Picasso96's PIP, which scales it), RGB in
   thirteen formats (every 15-, 16-, 24- and 32-bit one), at its size for

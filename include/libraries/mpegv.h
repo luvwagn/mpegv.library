@@ -35,6 +35,8 @@
 #define MPVA_ReadSize   (MPVA_Dummy + 4)    /* bytes asked of the read hook at once (default 16384) */
 #define MPVA_SkipB      (MPVA_Dummy + 5)    /* BOOL: B pictures passed over from the start */
 #define MPVA_VideoStream (MPVA_Dummy + 6)   /* (2) the video's stream id, 0xE0-0xEF (default 0: the first) */
+#define MPVA_Half       (MPVA_Dummy + 7)    /* (2.6) BOOL: decoded at half size from the first I picture
+                                             * (MPVC_HALF; default FALSE) */
 
 /* MPVA_Stream */
 #define MPVS_AUTO       0                   /* from its first bytes: a pack header or a sequence header */
@@ -104,6 +106,9 @@ struct MpvPicture {
 #define MPVPF_REPEAT    (1UL << 2)          /* (2) its first field is shown again (3:2 pulldown) */
 #define MPVPF_PROGRESSIVE (1UL << 3)        /* (2) a progressive frame (always, in MPEG-1) */
 #define MPVPF_FIELDS    (1UL << 4)          /* (2) coded as two field pictures, not one frame */
+#define MPVPF_HALF      (1UL << 5)          /* (2.6) decoded at half size (MPVC_HALF): mpic_Width,
+                                             * _Height and _YRows half the stream's (rounded up),
+                                             * the planes the top left quarter of their modulos */
 
 #define MPVT_I          1
 #define MPVT_P          2
@@ -154,6 +159,14 @@ struct MpvInfo {
 #define MPVC_FLUSH      7                   /* (2) after a seek: what is held dropped, the decoder's
                                              * pictures too; it starts again at the next I picture
                                              * (with a read hook: from its next bytes) */
+#define MPVC_HALF       8                   /* (2.6) value: decoded at half size (TRUE) or whole;
+                                             * returns the last asked. Taken from the next I picture
+                                             * (an open GOP's B pictures before it, which need the
+                                             * one before, passed over); each picture's MPVPF_HALF
+                                             * says which it is. Half: each block's 4x4 lowest
+                                             * frequencies, motion compensated at half size, about
+                                             * a 2x2 average of the whole picture (some drift
+                                             * within a GOP, the most with interlace) */
 
 /* ---- MpvToYUV422's order: packed 4:2:2, two pixels a longword */
 #define MPVY_Y0UY1V     0                   /* Y0 Cb Y1 Cr: Picasso96's RGBFB_YUV422CGX as the ZZ9000 shows it */

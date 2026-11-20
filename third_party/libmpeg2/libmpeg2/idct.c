@@ -1307,3 +1307,248 @@ void mpeg2_idct_init (uint32_t accel)
 	}
     }
 }
+
+/*
+ * mpegv 2.6: half resolution's IDCT: a block's 4x4 picture, its 8x8 one
+ * as the whole IDCT would make it averaged 2x2 (a box filter), to within
+ * rounding. Averaging two neighbours of cos ((2x + 1) u pi / 16) gives
+ * d(u) cos ((2m + 1) u pi / 8), d(u) = cos (u pi / 16): for u < 4 a 4-point
+ * DCT's basis times d(u); u = 4 nothing; u = 8 - k (5 to 7) minus d(u)
+ * times k's basis. So each dimension's 4-point inputs are
+ *
+ *   f0 = F0   f1 = d1 F1 - d7 F7   f2 = d2 F2 - d6 F6   f3 = d3 F3 - d5 F5
+ *
+ * and (constants times 4096, with c = cos (pi / 4), a = cos (pi / 8),
+ * b = cos (3 pi / 8), each product's d folded into its constant)
+ *
+ *   E0 = c (f0 + f2)    O0 = a f1 + b f3     g0 = E0 + O0   g1 = E1 + O1
+ *   E1 = c (f0 - f2)    O1 = b f1 - a f3     g2 = E1 - O1   g3 = E0 - O0
+ *
+ * Only the lowest 4x4 (the frequencies 0 to 3: positions 0, 4, 1 and 5 in
+ * a row and of the rows, as mpeg2_idct_init's scan permutation stores
+ * them) is a 4x4 transform; the higher ones (5, 6, 7: positions 6, 3, 7)
+ * are folded in when they are there, which is seldom but costs little,
+ * and leaves an intra picture the whole one's box filtered (MV_HALF_NOFOLD
+ * builds the lowest 4x4 alone: 2 to 3 dB lower on the streams measured,
+ * its intra pictures 11 to 18).
+ *
+ * The rows first, kept as 16 bits (saturated: only a stream outside the
+ * standard reaches it), so the columns' products are 16 by 16 bits too. A
+ * block's coefficients are 16 times the standard's, and each dimension's
+ * 1 / 2 with them: a pixel is the column's sum over 64 * 4096 * 4096, the
+ * rows' 4096 taken out first. Each output's constants sum to at most
+ * 13771, so at most 13771 * 32767 >> 18, 1721: CLIP's table is never read
+ * outside its bounds, whatever the stream.
+ */
+#define H4_C0 2896	/* c */
+#define H4_C2 2676	/* c d2 */
+#define H4_A1 3711	/* a d1 */
+#define H4_B1 1537	/* b d1 */
+#define H4_A3 3146	/* a d3 */
+#define H4_B3 1303	/* b d3 */
+#define H4_C6 1108	/* c d6 */
+#define H4_A7 738	/* a d7 */
+#define H4_B7 306	/* b d7 */
+#define H4_A5 2102	/* a d5 */
+#define H4_B5 871	/* b d5 */
+
+/* a 16 by 16 bit product (gcc makes a 68020's of a constant shifts and
+ * adds, longer than its MULS.W) */
+#if defined (MPEGV) && !defined (MPEGV_PLAIN) && defined (__mc68020__)
+static inline int32_t mv_mw (const int16_t a, const int16_t k)
+{
+    int32_t r = a;
+
+    __asm__ ("muls.w %1,%0" : "+d" (r) : "di" (k));
+    return r;
+}
+#else
+#define mv_mw(a,k) ((int32_t)(int16_t)(a) * (int32_t)(k))
+#endif
+
+static inline __attribute__ ((always_inline))
+int16_t mv_h4_sat (const int32_t v)
+{
+    const int32_t r = (v + 2048) >> 12;
+
+    return (r != (int16_t) r) ? ((r < 0) ? -32768 : 32767) : r;
+}
+
+/* One dimension: in the frequencies 0, 1, 2, 3, 5, 6, 7 (each 0 passed
+ * over); g its 4 outputs times 4096. (MV_HALF_NOFOLD: the lowest 4x4
+ * alone, for comparison.) */
+static inline __attribute__ ((always_inline))
+void mv_h4 (const int16_t * in, int32_t * g)
+{
+    int32_t E0, E1, O0 = 0, O1 = 0;
+    int16_t f;
+
+    E0 = E1 = mv_mw (in[0], H4_C0);
+    if ((f = in[2])) {
+	const int32_t e = mv_mw (f, H4_C2);
+
+	E0 += e;
+	E1 -= e;
+    }
+    if ((f = in[1])) {
+	O0 = mv_mw (f, H4_A1);
+	O1 = mv_mw (f, H4_B1);
+    }
+    if ((f = in[3])) {
+	O0 += mv_mw (f, H4_B3);
+	O1 -= mv_mw (f, H4_A3);
+    }
+#ifndef MV_HALF_NOFOLD
+    if (in[4] | in[5] | in[6]) {
+	if ((f = in[5])) {
+	    const int32_t e = mv_mw (f, H4_C6);
+
+	    E0 -= e;
+	    E1 += e;
+	}
+	if ((f = in[6])) {
+	    O0 -= mv_mw (f, H4_A7);
+	    O1 -= mv_mw (f, H4_B7);
+	}
+	if ((f = in[4])) {
+	    O0 -= mv_mw (f, H4_B5);
+	    O1 += mv_mw (f, H4_A5);
+	}
+    }
+#endif
+    g[0] = E0 + O0;
+    g[1] = E1 + O1;
+    g[2] = E1 - O1;
+    g[3] = E0 - O0;
+}
+
+static inline __attribute__ ((always_inline))
+void mv_idct4 (int16_t * const block, uint8_t * dest, const int stride,
+	       const int add)
+{
+    /* the rows' positions by frequency (0, 1, 2, 3, 5, 6, 7: 4's basis
+     * averages to nothing); in a row, those frequencies' the same */
+    static const uint8_t pos[7] = { 0, 4, 1, 5, 6, 3, 7 };
+    int32_t * const b32 = (int32_t *) block;
+    int16_t tc[4][8];		/* the rows' outputs by column: tc[m][k] */
+    int32_t g[4], p0 = 0, p1 = 0, p2 = 0, p3 = 0;
+    int k, m, nz = 0, cols = 0;
+
+    /* the rows there (by position) */
+    for (k = 0; k < 8; k++) {
+	const int32_t * const w = b32 + 4 * k;
+
+	if (w[0] | w[1] | w[2] | w[3])
+	    nz |= 1 << k;
+    }
+
+    /* the DC coefficient alone: one value */
+    if (nz == 1 && !(block[1] | block[2] | block[3]) && !(b32[2] | b32[3])) {
+	const int dc = (block[0] + 64) >> 7;
+
+	block[0] = 0;
+	for (k = 0; k < 4; k++, dest += stride)
+	    if (add) {
+		dest[0] = CLIP (dc + dest[0]);
+		dest[1] = CLIP (dc + dest[1]);
+		dest[2] = CLIP (dc + dest[2]);
+		dest[3] = CLIP (dc + dest[3]);
+	    } else
+		dest[0] = dest[1] = dest[2] = dest[3] = CLIP (dc);
+	return;
+    }
+
+    for (k = 0; k < 7; k++) {
+	const int16_t * const r = block + 8 * pos[k];
+
+	if (!(nz & (1 << pos[k])))
+	    tc[0][k] = tc[1][k] = tc[2][k] = tc[3][k] = 0;
+	else if (!(r[1] | r[3] | r[4] | r[5] | r[6] | r[7]))
+	    tc[0][k] = tc[1][k] = tc[2][k] = tc[3][k] =
+		mv_h4_sat (mv_mw (r[0], H4_C0));
+	else {
+	    int16_t in[7];
+
+	    in[0] = r[0]; in[1] = r[4]; in[2] = r[1]; in[3] = r[5];
+	    in[4] = r[6]; in[5] = r[3]; in[6] = r[7];
+	    mv_h4 (in, g);
+	    tc[0][k] = mv_h4_sat (g[0]);
+	    tc[1][k] = mv_h4_sat (g[1]);
+	    tc[2][k] = mv_h4_sat (g[2]);
+	    tc[3][k] = mv_h4_sat (g[3]);
+	    cols = 1;		/* (the columns not all alike) */
+	}
+    }
+
+    if (!(nz & 0xfa)) {
+	/* row 0 alone (and perhaps 4's, nothing here): each column one
+	 * value, down it */
+	for (m = 0; m < 4; m++) {
+	    uint8_t * const d = dest + m;
+
+	    p0 = (mv_mw (tc[m][0], H4_C0) + (1 << 17)) >> 18;
+	    if (add) {
+		d[0] = CLIP (p0 + d[0]);
+		d[stride] = CLIP (p0 + d[stride]);
+		d[2 * stride] = CLIP (p0 + d[2 * stride]);
+		d[3 * stride] = CLIP (p0 + d[3 * stride]);
+	    } else
+		d[0] = d[stride] = d[2 * stride] = d[3 * stride] = CLIP (p0);
+	}
+    } else for (m = 0; m < 4; m++) {
+	uint8_t * const d = dest + m;
+
+	if (cols || !m) {
+	    mv_h4 (tc[m], g);
+	    p0 = (g[0] + (1 << 17)) >> 18;
+	    p1 = (g[1] + (1 << 17)) >> 18;
+	    p2 = (g[2] + (1 << 17)) >> 18;
+	    p3 = (g[3] + (1 << 17)) >> 18;
+	}			/* (else every column the first's) */
+	if (add) {
+	    d[0] = CLIP (p0 + d[0]);
+	    d[stride] = CLIP (p1 + d[stride]);
+	    d[2 * stride] = CLIP (p2 + d[2 * stride]);
+	    d[3 * stride] = CLIP (p3 + d[3 * stride]);
+	} else {
+	    d[0] = CLIP (p0);
+	    d[stride] = CLIP (p1);
+	    d[2 * stride] = CLIP (p2);
+	    d[3 * stride] = CLIP (p3);
+	}
+    }
+
+    /* the rows there made zeros again (the higher frequencies' too) */
+    for (k = 0; k < 8; k++)
+	if (nz & (1 << k)) {
+	    int32_t * const w = b32 + 4 * k;
+
+	    w[0] = w[1] = w[2] = w[3] = 0;
+	}
+}
+
+void mpegv_idct4_copy (int16_t * block, uint8_t * dest, const int stride)
+{
+    mv_idct4 (block, dest, stride, 0);
+}
+
+void mpegv_idct4_add (const int last, int16_t * block, uint8_t * dest,
+		      const int stride)
+{
+    if (last != 129 || (block[0] & (7 << 4)) == (4 << 4))
+	mv_idct4 (block, dest, stride, 1);
+    else {
+	/* the DC coefficient alone */
+	const int DC = (block[0] + 64) >> 7;
+	int i;
+
+	block[0] = block[63] = 0;
+	for (i = 0; i < 4; i++) {
+	    dest[0] = CLIP (DC + dest[0]);
+	    dest[1] = CLIP (DC + dest[1]);
+	    dest[2] = CLIP (DC + dest[2]);
+	    dest[3] = CLIP (DC + dest[3]);
+	    dest += stride;
+	}
+    }
+}

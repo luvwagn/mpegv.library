@@ -43,5 +43,37 @@ int main(int argc, char **argv)
         }
     }
     printf("mpegv's motion compensation against libmpeg2's C: %d calls, %d differ\n", rounds * 16, bad);
+    {
+        /* 2.6: half size's 4 wide ones (chroma's), against the same
+         * sums a pixel at a time */
+        static mpeg2_mc_fct *const four[8] = { MC4(put, o), MC4(put, x), MC4(put, y), MC4(put, xy),
+                                               MC4(avg, o), MC4(avg, x), MC4(avg, y), MC4(avg, xy) };
+        int bad4 = 0;
+        for (n = 0; n < rounds; n++) {
+            for (f = 0; f < 8; f++) {
+                int stride = 64, h = rnd(2) ? 2 : 4, x, y;
+                int ro = rnd(16) + stride * rnd(8), dof = 4 * rnd(8) + stride * rnd(8);
+                for (i = 0; i < (int)sizeof(ref); i++)
+                    ref[i] = (uint8_t)(rnd(4) ? rnd(256) : (rnd(2) ? 0 : 255));
+                for (i = 0; i < (int)sizeof(a); i++)
+                    a[i] = b[i] = (uint8_t)rnd(256);
+                for (y = 0; y < h; y++)
+                    for (x = 0; x < 4; x++) {
+                        const uint8_t *r = ref + ro + y * stride + x;
+                        uint8_t *d = a + dof + y * stride + x;
+                        int p = (f & 3) == 0 ? r[0] : (f & 3) == 1 ? (r[0] + r[1] + 1) >> 1
+                              : (f & 3) == 2 ? (r[0] + r[stride] + 1) >> 1
+                              : (r[0] + r[1] + r[stride] + r[stride + 1] + 2) >> 2;
+                        *d = (uint8_t)(f & 4 ? (*d + p + 1) >> 1 : p);
+                    }
+                four[f](b + dof, ref + ro, stride, h);
+                if (memcmp(a, b, sizeof(a)) && bad4++ < 5)
+                    printf("4 wide function %d (%s), reference at %d: differs\n", f & 3, f < 4 ? "put" : "avg", ro);
+            }
+        }
+        printf("half size's 4 wide motion compensation, a pixel at a time: %d calls, %d differ\n", rounds * 8,
+               bad4);
+        bad += bad4;
+    }
     return bad != 0;
 }

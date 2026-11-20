@@ -85,6 +85,23 @@ struct mpeg2_decoder_s {
     unsigned int limit_y_16;
     unsigned int limit_y_8;
     unsigned int limit_y;
+    /* mpegv: half resolution (MPVC_HALF): the picture made half as wide
+     * and half as high, in the top left quarter of each frame buffer (its
+     * stride the same): 4x4 inverse transforms of each block's lowest
+     * frequencies, motion compensated at half size. Its limits, as limit_x
+     * and limit_y_* for its blocks of half the size (positions still in
+     * whole-size macroblocks: offset, v_offset, limit_y as ever) */
+    int half;
+    unsigned int hlimit_x;
+    unsigned int hlimit_y_16;
+    unsigned int hlimit_y_8;
+    unsigned int hlimit_y;
+    /* mpegv: the picture's IDCTs and motion compensation tables, as
+     * mpeg2_init_fbuf picks them (MPEG-1's or 2's, half resolution's) */
+    void (* idct_copy) (int16_t * block, uint8_t * dest, int stride);
+    void (* idct_add) (int last, int16_t * block, uint8_t * dest, int stride);
+    mpeg2_mc_fct * const * mc_put;
+    mpeg2_mc_fct * const * mc_avg;
 
     /* Motion vectors */
     /* The f_ and b_ correspond to the forward and backward motion */
@@ -317,6 +334,11 @@ extern mpeg2_mc_t mpeg2_mc_altivec;
 extern mpeg2_mc_t mpeg2_mc_alpha;
 extern mpeg2_mc_t mpeg2_mc_vis;
 extern mpeg2_mc_t mpeg2_mc_arm;
-extern mpeg2_mc_t mpeg2_mc_mpegv;	/* mpegv: motion_comp.c's */
+extern mpeg2_mc_t mpeg2_mc_mpegv;
+extern mpeg2_mc_t mpeg2_mc_half;	/* mpegv: half resolution's: 8 wide, then 4 */
+/* mpegv: half resolution's inverse transforms (idct.c): a 4x4 block from
+ * an 8x8 block's lowest frequencies, the block cleared as the others do */
+void mpegv_idct4_copy (int16_t * block, uint8_t * dest, int stride);
+void mpegv_idct4_add (int last, int16_t * block, uint8_t * dest, int stride);	/* mpegv: motion_comp.c's */
 
 #endif /* LIBMPEG2_MPEG2_INTERNAL_H */

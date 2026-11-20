@@ -411,6 +411,11 @@ void mpeg2_skip (mpeg2dec_t * mpeg2dec, int skip)
     mpeg2dec->nb_decode_slices = skip ? 0 : (0xb0 - 1);
 }
 
+void mpegv_half (mpeg2dec_t * mpeg2dec, int half)
+{
+    mpeg2dec->decoder.half = half != 0;
+}
+
 void mpeg2_slice_region (mpeg2dec_t * mpeg2dec, int start, int end)
 {
     start = (start < 1) ? 1 : (start > 0xb0) ? 0xb0 : start;
@@ -477,6 +482,7 @@ mpeg2dec_t * mpeg2_init (void)
 
     memset (mpeg2dec->decoder.DCTblock, 0, 64 * sizeof (int16_t));
     memset (mpeg2dec->quantizer_matrix, 0, 4 * 64 * sizeof (uint8_t));
+    mpeg2dec->decoder.half = 0;		/* mpegv 2.6: whole size till asked */
 
     mpeg2dec->chunk_buffer = (uint8_t *) mpeg2_malloc (BUFFER_SIZE + 4,
 						       MPEG2_ALLOC_CHUNK);

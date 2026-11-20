@@ -30,6 +30,8 @@
 #include "mpeg2_internal.h"
 
 mpeg2_mc_t mpeg2_mc;
+mpeg2_mc_t mpeg2_mc_half;
+static void mv_mc_half_init (void);
 
 void mpeg2_mc_init (uint32_t accel)
 {
@@ -67,6 +69,7 @@ void mpeg2_mc_init (uint32_t accel)
 #else
 	mpeg2_mc = mpeg2_mc_c;
 #endif
+    mv_mc_half_init ();
 }
 
 #define avg2(a,b) ((a+b+1)>>1)
@@ -260,3 +263,72 @@ MV_XY_FUNC (avg,8)
 
 MPEG2_MC_EXTERN (mpegv)
 #endif
+
+
+/* mpegv: half resolution's motion compensation (MPVC_HALF): a luma block
+ * 8 wide (the whole size's 8 wide ones), a chroma block 4 wide (these) */
+#if !defined (MPEGV) || defined (MPEGV_PLAIN)
+#define MC4_FUNC(op,xy)							\
+static void MC_##op##_##xy##_4_h (uint8_t * dest, const uint8_t * ref,	\
+				  const int stride, int height)		\
+{									\
+    do {								\
+	op (predict_##xy, 0);						\
+	op (predict_##xy, 1);						\
+	op (predict_##xy, 2);						\
+	op (predict_##xy, 3);						\
+	ref += stride;							\
+	dest += stride;							\
+    } while (--height);							\
+}
+
+MC4_FUNC (put,o)
+MC4_FUNC (avg,o)
+MC4_FUNC (put,x)
+MC4_FUNC (avg,x)
+MC4_FUNC (put,y)
+MC4_FUNC (avg,y)
+MC4_FUNC (put,xy)
+MC4_FUNC (avg,xy)
+#define MC4(op,xy) MC_##op##_##xy##_4_h
+
+#else
+/* (four pixels a longword, as the whole size's) */
+#define MV_MC4_FUNC(op,xy)						\
+static void MC_##op##_##xy##_4_mpegv (uint8_t * dest, const uint8_t * ref, \
+				      const int stride, int height)	\
+{									\
+    do {								\
+	mv_##op (mv_predict_##xy, 0);					\
+	ref += stride;							\
+	dest += stride;							\
+    } while (--height);							\
+}
+MV_MC4_FUNC (put,o)
+MV_MC4_FUNC (avg,o)
+MV_MC4_FUNC (put,x)
+MV_MC4_FUNC (avg,x)
+MV_MC4_FUNC (put,y)
+MV_MC4_FUNC (avg,y)
+MV_XY_FUNC (put,4)
+MV_XY_FUNC (avg,4)
+#define MC4(op,xy) MC_##op##_##xy##_4_mpegv
+#endif
+
+static void mv_mc_half_init (void)
+{
+    int i;
+
+    for (i = 0; i < 4; i++) {
+	mpeg2_mc_half.put[i] = mpeg2_mc.put[4 + i];
+	mpeg2_mc_half.avg[i] = mpeg2_mc.avg[4 + i];
+    }
+    mpeg2_mc_half.put[4] = MC4 (put,o);
+    mpeg2_mc_half.put[5] = MC4 (put,x);
+    mpeg2_mc_half.put[6] = MC4 (put,y);
+    mpeg2_mc_half.put[7] = MC4 (put,xy);
+    mpeg2_mc_half.avg[4] = MC4 (avg,o);
+    mpeg2_mc_half.avg[5] = MC4 (avg,x);
+    mpeg2_mc_half.avg[6] = MC4 (avg,y);
+    mpeg2_mc_half.avg[7] = MC4 (avg,xy);
+}

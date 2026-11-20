@@ -148,6 +148,84 @@ static int same(int blocks)
     return bad;
 }
 
+/* ---- 2.6: half size's IDCT (mpegv_idct4_copy and _add) against the whole
+ * transform averaged 2x2, rounded: any block (the higher frequencies too,
+ * which it folds in), each pixel within 1, the block zeros after; and
+ * blocks as large as libmpeg2 lets them be (every coefficient), which
+ * must only not be read or written out of place */
+static int half(int blocks)
+{
+    static const int kinds[] = { 0x00, 0x01, 0x33, 0xb3, 0xff };
+    int16_t a[64] ATTR_ALIGN(8), b[64] ATTR_ALIGN(8), z[64] = { 0 };
+    uint8_t pa[8 * 16], pb[8 * 16];
+    int n, i, bad = 0, peak = 0, o[64];
+    long sq = 0, cnt = 0;
+    for (n = 0; n < blocks; n++) {
+        int rows = kinds[rnd(5)], range = rnd(4), add = rnd(2), dconly = !rnd(8), r, c;
+        int big = range >= 2 ? 32752 : range == 1 ? 2000 : 40;
+        memset(a, 0, sizeof(a));
+        for (i = 0; i < 64; i++)
+            if ((rows & (1 << (i >> 3))) && !rnd(3))
+                a[i] = (int16_t)(rnd(2 * big + 1) - big);
+        if (range == 3) /* the largest there is: every coefficient */
+            for (i = 0; i < 64; i++)
+                a[i] = rnd(2) ? 32752 : -32752;
+        if (dconly) {
+            memset(a, 0, sizeof(a));
+            a[0] = (int16_t)(rnd(2 * big + 1) - big);
+        }
+        if (!rnd(4))
+            a[63] = rnd(2) ? 16 : -16;
+        memcpy(b, a, sizeof(a));
+        for (i = 0; i < 8 * 16; i++)
+            pa[i] = pb[i] = (uint8_t)rnd(256);
+        if (add) {
+            int last = 129;
+            for (i = 1; i < 63; i++)
+                if (a[i])
+                    last = 63;
+            mpegv_idct4_add(last, b, pb + 2 * 16 + 2, 16);
+        } else
+            mpegv_idct4_copy(b, pb + 2 * 16 + 2, 16);
+        /* nothing but its 4x4 written */
+        for (r = 0; r < 8; r++)
+            for (c = 0; c < 16; c++)
+                if ((r < 2 || r >= 6 || c < 2 || c >= 6) && pa[r * 16 + c] != pb[r * 16 + c]) {
+                    if (bad++ < 5)
+                        printf("half: block %d written outside its 4x4\n", n);
+                    r = 8;
+                    break;
+                }
+        if (memcmp(b, z, sizeof(z)) && bad++ < 5)
+            printf("half: block %d not zeros after\n", n);
+        if (range >= 2 && !dconly)
+            continue; /* (beyond what a stream can mean: no reference) */
+        transform(a, o);
+        for (r = 0; r < 4; r++)
+            for (c = 0; c < 4; c++) {
+                int v = o[16 * r + 2 * c] + o[16 * r + 2 * c + 1] + o[16 * r + 8 + 2 * c] +
+                        o[16 * r + 8 + 2 * c + 1];
+                int want, d;
+                uint8_t *q = pa + (2 + r) * 16 + 2 + c;
+                v = (v + 2) >> 2;
+                want = CLIP(add ? v + *q : v);
+                d = want - pb[(2 + r) * 16 + 2 + c];
+                if (d < 0)
+                    d = -d;
+                if (d > peak)
+                    peak = d;
+                sq += d * d;
+                cnt++;
+                if (d > 1 && bad++ < 5)
+                    printf("half: block %d (rows %02x, %s) pixel %d,%d off by %d\n", n, rows,
+                           add ? "add" : "copy", c, r, d);
+            }
+    }
+    printf("half size's IDCT against the whole transform averaged 2x2: %d blocks, peak %d "
+           "(squares %ld over %ld pixels), %d wrong\n", blocks, peak, sq, cnt, bad);
+    return bad;
+}
+
 #ifndef NO_IEEE
 /* ---- IEEE 1180: the transform's rows and columns, its coefficients 16
  * times the standard's (as libmpeg2 dequantises them) */
@@ -240,6 +318,7 @@ int main(int argc, char **argv)
     int blocks = argc > 1 ? atoi(argv[1]) : 200000, i, j, bad = 0;
     mpeg2_idct_init(0);
     bad += same(blocks);
+    bad += half(blocks);
 #ifndef NO_IEEE
     for (i = 0; i < 8; i++)
         for (j = 0; j < 8; j++)

@@ -5,15 +5,16 @@
 # stream in its own directory under build/bench, two at a time.
 # GPL-3.0-or-later, (c) 2026 Brian King.
 #
-#   bench.sh pictures [-skipb] file ...
+#   bench.sh pictures [-skipb] [-half] file ...
 set -e
 top=$(cd "$(dirname "$0")/.." && pwd)
 n=$1; shift
 opt=
-if [ "$1" = "-skipb" ]; then opt=-skipb; shift; fi
+while [ "$1" = "-skipb" ] || [ "$1" = "-half" ]; do opt="$opt $1"; shift; done
+tag=$(echo $opt | tr -d ' ')
 py=$(dirname "$(command -v vamos)")/python
 run() {
-    d=$top/build/bench/$(basename "$1")$opt
+    d=$top/build/bench/$(basename "$1")$tag
     rm -rf "$d"; mkdir -p "$d"
     ln -s "$top/build/68k/mpv_prof" "$d/mpv_prof"
     ln -s "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")" "$d/s"

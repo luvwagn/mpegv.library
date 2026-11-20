@@ -3,14 +3,15 @@
 # a stream, by function: the decoder built into build/68k/mpv_prof.
 # GPL-3.0-or-later, (c) 2026 Brian King.
 #
-#   ibench.sh pictures file [-skipb]
+#   ibench.sh pictures file [-skipb] [-half]
 set -e
 top=$(cd "$(dirname "$0")/.." && pwd)
 n=$1
 f=$2
-opt=$3
+shift 2
+opt="$*"
 py=$(dirname "$(command -v vamos)")/python
-d=$top/build/ibench/$(basename "$f")$opt
+d=$top/build/ibench/$(basename "$f")$(echo $opt | tr -d ' ')
 rm -rf "$d"
 mkdir -p "$d"
 ln -s "$top/build/68k/mpv_prof" "$d/mpv_prof"

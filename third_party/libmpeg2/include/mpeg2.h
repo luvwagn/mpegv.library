@@ -87,6 +87,7 @@ typedef struct mpeg2_gop_s {
 #define PIC_FLAG_SKIP 64
 #define PIC_FLAG_TAGS 128
 #define PIC_FLAG_REPEAT_FIRST_FIELD 256
+#define PIC_FLAG_MPEGV_HALF 1024	/* mpegv 2.6: decoded at half size */
 #define PIC_MASK_COMPOSITE_DISPLAY 0xfffff000
 
 typedef struct mpeg2_picture_s {
@@ -181,6 +182,10 @@ mpeg2_state_t mpeg2_parse (mpeg2dec_t * mpeg2dec);
 
 void mpeg2_reset (mpeg2dec_t * mpeg2dec, int full_reset);
 void mpeg2_skip (mpeg2dec_t * mpeg2dec, int skip);
+/* mpegv 2.6: the pictures from the next one decoded at half size (4:2:0's
+ * only; the caller switches at an I picture, its references then the
+ * same size) */
+void mpegv_half (mpeg2dec_t * mpeg2dec, int half);
 void mpeg2_slice_region (mpeg2dec_t * mpeg2dec, int start, int end);
 
 void mpeg2_tag_picture (mpeg2dec_t * mpeg2dec, uint32_t tag, uint32_t tag2);

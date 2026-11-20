@@ -6,6 +6,8 @@
 #                   was released: MPEGV_PLAIN), on this computer, and the
 #                   same through the library on a 68020 under vamos
 #   make psnr       each fixture's pictures against ffmpeg's (needs ffmpeg)
+#   make halfpsnr [MPG=file] [N=pictures]
+#                   half size's pictures against the whole ones averaged 2x2
 #   make prof MPG=file [N=60]
 #                   a 68020's cycles under vamos (the decoder built into a
 #                   program), and where they go, by stage and function
@@ -42,7 +44,7 @@ AS      = m68k-amigaos-as -m68020
 FIX     = tests/fixtures/ps.mpg tests/fixtures/es.m1v tests/fixtures/pal.m2v \
           tests/fixtures/ntsc.m2v tests/fixtures/dvd.vob
 
-.PHONY: all test psnr prof lha clean
+.PHONY: all test psnr halfpsnr prof lha clean
 
 all: $(LIB) build/mpvplay
 
@@ -191,11 +193,27 @@ test: build/host/mpv_test build/host/mpv_exact build/host/mpv_plain build/68k/mp
 		cmp -s all.txt ../../tests/expected.txt \
 		&& echo "  CHECK the same through mpegv.library on a 68020 (vamos) ok" \
 		|| { diff all.txt ../../tests/expected.txt | head; cat err.txt; exit 1; }
+	@for f in $(FIX); do build/host/mpv_test -half $$f; build/host/mpv_test -switch 2 $$f; done > build/host/half.txt; \
+		cmp -s build/host/half.txt tests/expected_half.txt \
+		&& echo "  CHECK half size (MPVA_Half, MPVC_HALF every 2 pictures) as expected (host) ok" \
+		|| { diff build/host/half.txt tests/expected_half.txt | head; exit 1; }
+	@cd build/68k && for f in $(notdir $(FIX)); do \
+		vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:mpv_test -half prog:$$f; \
+		vamos -C 68020 -m 16384 -H disable -V prog:$(abspath build/68k) -- prog:mpv_test -switch 2 prog:$$f; done \
+		> half.txt 2> err.txt; \
+		cmp -s half.txt ../../tests/expected_half.txt \
+		&& echo "  CHECK the same through mpegv.library on a 68020 (vamos) ok" \
+		|| { diff half.txt ../../tests/expected_half.txt | head; cat err.txt; exit 1; }
 
 # each fixture's pictures against ffmpeg's: PSNR (dB) of Y, Cb, Cr, the
 # worst picture's and the mean
 psnr: build/host/mpv_test $(FIX)
 	@for f in $(FIX); do python3 tests/psnr.py build/host/mpv_test $$f; done
+
+# 2.6: half size against the whole picture averaged 2x2 (MPG=file for
+# another stream; N pictures at most)
+halfpsnr: build/host/mpv_test $(FIX)
+	@for f in $(if $(MPG),$(MPG),$(FIX)); do python3 tests/halfpsnr.py build/host/mpv_test $$f $(N); done
 
 # a 68020's cycles (vamos counts them), and where they go: the decoder
 # built into a program, its PC sampled (tests/prof.py), each function put
