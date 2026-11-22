@@ -122,6 +122,10 @@ make prof MPG=file N=60
                 a 68020's cycles under vamos for N pictures, by stage and
                 function
 make lha        build/mpegv.lha for Aminet
+make aminet-check
+                Aminet's readme made from mpegv.readme (plain ASCII) and
+                checked as the upload checks it; the readme's Version:
+                and the library's own the same
 ```
 
 Needs [AmigaPorts' m68k-amigaos-gcc](https://github.com/AmigaPorts/m68k-amigaos-gcc)
@@ -129,6 +133,23 @@ Needs [AmigaPorts' m68k-amigaos-gcc](https://github.com/AmigaPorts/m68k-amigaos-
 and for the tests a C compiler for the build computer, the ffmpeg-made fixtures in `tests/fixtures` (720 x 576
 interlaced, 720 x 480 film with 3:2 pulldown, a VOB with AC-3; MPEG-1 too)
 and vamos. `tests/bench.sh` times a set of streams.
+
+## Releasing
+
+1. Put the new version in `src/mpegv.c` (`LibVersion`, `LibRevision`,
+   the version string), `CHANGES` and `mpegv.readme`'s `Version:`, and
+   check with `make test lha aminet-check`.
+2. **Actions > mpegv Draft Release > Run workflow**, with the tag (`v` and
+   the version, e.g. `v2.6`). It builds and tests `main`, checks that the
+   tag, the readme and the library agree and that Aminet's upload will
+   take the readme, and makes a draft release with `mpegv.lha`.
+3. **Releases:** publish the draft, labelled Latest, not a pre-release.
+   That makes the tag and starts **Publish Aminet release**, which uploads
+   `mpegv.lha` and its readme to Aminet's `util/libs` by anonymous FTP,
+   the uploader's address from the repository secret `AMINET_EMAIL`.
+4. If the upload fails, run **Publish Aminet release** by hand with the
+   tag; it takes the readme from `main`, so the readme can be put right
+   without a new tag.
 
 ## Size and memory
 

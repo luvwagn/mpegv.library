@@ -1,0 +1,98 @@
+name: mpegv Draft Release
+
+# Run by hand (Actions > mpegv Draft Release > Run workflow), with the
+# release's tag, e.g. v2.6, which must be mpegv.readme's Version: and the
+# library's: main is built and tested and a draft release made with its
+# archive. Publishing the draft (Releases) makes the tag on that commit,
+# and publishing starts the Aminet upload (aminet-release.yml). (Not on
+# tag pushes: publishing a release made in the web page pushes its tag,
+# and this would run again over it.)
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The release's tag (v and the version, e.g. v2.6)"
+        required: true
+
+permissions:
+  contents: write  # needed for creating GitHub releases
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    container: stefanreinauer/amiga-gcc:16.2-rc23
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mark git directory as safe
+        run: git config --global --add safe.directory '*'
+
+      - name: GCC 16.2-rc24 (AmigaPorts' m68k-amigaos-gcc), ahead of the image's
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=https://github.com/AmigaPorts/m68k-amigaos-gcc/releases/download/v16.2-rc24/m68k-amigaos-gcc-16.2-rc24-x86_64-linux.tar.xz
+          curl -fsSL -o /tmp/gcc.tar.xz "$url"
+          echo "b93b070ac47d2f01d126f57c03a8405f71fb470c8397b0bda51041217d25c100  /tmp/gcc.tar.xz" | sha256sum -c -
+          mkdir -p /opt/gcc-rc24 && tar xJf /tmp/gcc.tar.xz -C /opt/gcc-rc24 --strip-components=1
+          rm /tmp/gcc.tar.xz
+          echo /opt/gcc-rc24/bin >> "$GITHUB_PATH"
+          /opt/gcc-rc24/bin/m68k-amigaos-gcc --version | head -1
+
+      - name: The tag
+        shell: bash
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+(\.[0-9]+)+$ ]]; then
+            echo "::error::The tag must be v and the version, e.g. v2.6 (not $TAG)"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::$TAG exists already"
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Build and test
+        run: make all && make test
+
+      # the archive, then Aminet's readme made and checked as the upload
+      # will (and the readme's and the library's version the tag's), before
+      # a draft is made: a release is never published with one Aminet's
+      # upload would refuse
+      - name: The archive, and the Aminet readme checked
+        run: make lha && make aminet-check VERSION="$VERSION"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: build/mpegv.lha
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Draft Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: artifacts
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          tag_name: ${{ inputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: mpegv.library ${{ inputs.tag }}
+          files: artifacts/mpegv.lha

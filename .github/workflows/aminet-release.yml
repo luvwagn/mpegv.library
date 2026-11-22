@@ -1,0 +1,139 @@
+name: Publish Aminet release
+
+# On a published release (not a pre-release) whose tag is v and a version;
+# or by hand (Actions > Publish Aminet release > Run workflow) with a tag
+# already released, to try the upload again. The tag's code is built; the
+# readme is this workflow's commit's (the tag's on a release, main's by
+# hand: so the readme can be put right without a new tag), made plain
+# ASCII for Aminet, its Version: the tag's.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The released tag to upload (e.g. v2.6)"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  build:
+    name: Build Aminet upload
+    if: ${{ github.event_name == 'workflow_dispatch' || (!github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v')) }}
+    runs-on: ubuntu-latest
+    container: stefanreinauer/amiga-gcc:16.2-rc23
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+
+      - name: Mark git directory as safe
+        run: git config --global --add safe.directory '*'
+
+      - name: GCC 16.2-rc24 (AmigaPorts' m68k-amigaos-gcc), ahead of the image's
+        shell: bash
+        run: |
+          set -euo pipefail
+          url=https://github.com/AmigaPorts/m68k-amigaos-gcc/releases/download/v16.2-rc24/m68k-amigaos-gcc-16.2-rc24-x86_64-linux.tar.xz
+          curl -fsSL -o /tmp/gcc.tar.xz "$url"
+          echo "b93b070ac47d2f01d126f57c03a8405f71fb470c8397b0bda51041217d25c100  /tmp/gcc.tar.xz" | sha256sum -c -
+          mkdir -p /opt/gcc-rc24 && tar xJf /tmp/gcc.tar.xz -C /opt/gcc-rc24 --strip-components=1
+          rm /tmp/gcc.tar.xz
+          echo /opt/gcc-rc24/bin >> "$GITHUB_PATH"
+          /opt/gcc-rc24/bin/m68k-amigaos-gcc --version | head -1
+
+      - name: Build the archive
+        run: make lha
+
+      - name: Prepare Aminet upload files
+        shell: bash
+        env:
+          WORKFLOW_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+(\.[0-9]+)+$ ]]; then
+            echo "::error::The tag must be v and the version, e.g. v2.6 (not $TAG)"
+            exit 1
+          fi
+          if ! grep -q "mpegv.library ${TAG#v} " build/mpegv.library; then
+            echo "::error::build/mpegv.library is not ${TAG#v} (is the tag on this commit?)"
+            exit 1
+          fi
+          mkdir -p dist
+          cp build/mpegv.lha dist/mpegv.lha
+          # the readme: plain ASCII for Aminet, its Version: the tag's
+          # (tools/aminet_readme.py, as make aminet-check makes it)
+          git show "$WORKFLOW_SHA:mpegv.readme" > /tmp/mpegv.readme
+          git show "$WORKFLOW_SHA:tools/aminet_readme.py" > /tmp/aminet_readme.py
+          python3 /tmp/aminet_readme.py "$TAG" /tmp/mpegv.readme dist/mpegv.readme
+          head -8 dist/mpegv.readme
+
+      - name: Upload Aminet artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aminet-upload
+          path: |
+            dist/mpegv.lha
+            dist/mpegv.readme
+          if-no-files-found: error
+
+  publish:
+    name: Upload to Aminet
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Aminet artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aminet-upload
+          path: dist
+
+      # The uploader's address: the repository secret AMINET_EMAIL (Settings >
+      # Secrets and variables > Actions), not kept in the public readme.
+      # Aminet wants it readable in the readme's Uploader: line, and it is
+      # the FTP password.
+      - name: The uploader's address into the readme
+        shell: bash
+        env:
+          AMINET_EMAIL: ${{ secrets.AMINET_EMAIL }}
+        run: |
+          set -euo pipefail
+          if [ -z "$AMINET_EMAIL" ]; then
+            echo "::error::Set the repository secret AMINET_EMAIL (the uploader's address)"
+            exit 1
+          fi
+          sed -i -E "s|^Uploader:( *).*$|Uploader:\1${AMINET_EMAIL} (Brian King)|" dist/mpegv.readme
+          grep -q "^Uploader: *${AMINET_EMAIL}" dist/mpegv.readme
+
+      - name: Check the readme first (no upload)
+        uses: sidick/aminet-release-action@v1
+        with:
+          filename: dist/mpegv.lha
+          readme: dist/mpegv.readme
+          category: util/libs
+          validate-only: true
+
+      - name: Upload to Aminet
+        uses: sidick/aminet-release-action@v1
+        with:
+          filename: dist/mpegv.lha
+          readme: dist/mpegv.readme
+          category: util/libs
+          uploader-email: ${{ secrets.AMINET_EMAIL }}
+
+      - name: The archive on the release too
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/mpegv.lha --clobber --repo "$GITHUB_REPOSITORY"

@@ -21,7 +21,6 @@
 CC      = m68k-amigaos-gcc
 STRIP   = m68k-amigaos-strip
 HOSTCC ?= cc
-VERSION = 2.0
 # A 68020 or better, tuned as for any of them (its hot paths are integer:
 # one build serves the 68020 to the 68060)
 CPU     = -m68020-60
@@ -44,7 +43,7 @@ AS      = m68k-amigaos-as -m68020
 FIX     = tests/fixtures/ps.mpg tests/fixtures/es.m1v tests/fixtures/pal.m2v \
           tests/fixtures/ntsc.m2v tests/fixtures/dvd.vob
 
-.PHONY: all test psnr halfpsnr prof lha clean
+.PHONY: all test psnr halfpsnr prof lha aminet-check clean
 
 all: $(LIB) build/mpvplay
 
@@ -238,6 +237,25 @@ lha: all
 	@cp mpegv.readme build/lha/mpegv.readme
 	@cd build/lha && rm -f ../mpegv.lha && lha aqo5 ../mpegv.lha mpegv mpegv.readme
 	@echo "  LHA   build/mpegv.lha"
+
+# ---- releasing (README.md, "Releasing"): Aminet's readme made from
+# mpegv.readme (plain ASCII, its Version: VERSION's) and checked as the
+# upload will check it, by sidick/aminet-release-action's own validator;
+# and the library's own version string VERSION's too
+PYTHON            ?= python3
+VERSION           ?= $(shell sed -n 's/^Version: *//p' mpegv.readme)
+AMINET_ACTION_REF  = v1
+AMINET_ACTION      = build/aminet-release-action
+$(AMINET_ACTION)/action/readme_validator.py:
+	@rm -rf $(AMINET_ACTION)
+	@git -c advice.detachedHead=false clone -q --depth 1 --branch $(AMINET_ACTION_REF) \
+		https://github.com/sidick/aminet-release-action $(AMINET_ACTION)
+aminet-check: $(LIB) mpegv.readme tools/aminet_readme.py tools/aminet_check.py $(AMINET_ACTION)/action/readme_validator.py
+	@grep -q "mpegv.library $(VERSION) " $(LIB) \
+		|| { echo "::error::$(LIB)'s version string is not $(VERSION)"; exit 1; }
+	@mkdir -p build/aminet
+	@$(PYTHON) tools/aminet_readme.py $(VERSION) mpegv.readme build/aminet/mpegv.readme
+	@$(PYTHON) tools/aminet_check.py $(AMINET_ACTION) build/aminet/mpegv.readme util/libs mpegv.lha
 
 clean:
 	rm -rf build
