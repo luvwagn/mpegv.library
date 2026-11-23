@@ -22,8 +22,10 @@ CC      = m68k-amigaos-gcc
 STRIP   = m68k-amigaos-strip
 HOSTCC ?= cc
 # A 68020 or better, tuned as for any of them (its hot paths are integer:
-# one build serves the 68020 to the 68060)
-CPU     = -m68020-60
+# one build serves the 68020 to the 68060). No bit field instructions
+# (-mno-bitfield): gcc's BFEXTU for a shift and a mask is several cycles
+# on a 68060 where the two pair; a 68020 counts the same either way
+CPU     = -m68020-60 -mno-bitfield
 LIBCC   = $(CC) -O2 $(CPU) -noixemul -nostartfiles -fomit-frame-pointer
 WARN    = -Wall -Wextra -Wno-unused-parameter
 L2      = third_party/libmpeg2

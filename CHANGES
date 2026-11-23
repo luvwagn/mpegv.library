@@ -1,6 +1,14 @@
 mpegv.library: changes
 ======================
 
+Next
+----
+
+- Built with -mno-bitfield: gcc had used BFEXTU (several cycles on a
+  68060, not paired) for shifts and masks in the IDCT's rows and the
+  motion compensation. The same pictures; about 0.8% faster on a 68060
+  (Ambiance's tools/m68kprof, its 68060 model), the same on a 68020.
+
 2.6 (19 November 2026)
 ----------------------
 
